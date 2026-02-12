@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日めくりジャズ365 | 2026年版</title>
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 React (穩定版本) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 引入 Babel 用於瀏覽器端編譯 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 引入 Google 字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,900;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        .font-zen { font-family: "Zen Old Mincho", serif; }
+        .font-playfair { font-family: "Playfair Display", serif; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #d6d3d1; border-radius: 20px; }
+        
+        .bg-image-paper {
+            background-color: #f2f0e9;
+            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 12s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // ==========================================
+        // 內嵌圖示組件 (解決外部庫加載失敗問題)
+        // ==========================================
+        const IconChevronLeft = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
+        const IconChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
+        const IconDisc = ({ className, size=24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>;
+        const IconMusic = ({ size=24, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>;
+        const IconQuote = ({ size=24, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M3 21c3 0 7-1 7-8V5H3v8h5c0 2-2 3-5 4v4zm11 0c3 0 7-1 7-8V5h-7v8h5c0 2-2 3-5 4v4z"/></svg>;
+        const IconArrowRight = ({ size=16, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+
+        // ==========================================
+        // 資料區
+        // ==========================================
+        const jazzData = {
+            "2026-03-11": {
+                album: "TES ESAT",
+                artist: "Alan Shorter",
+                coverColor: "bg-red-950", 
+                imageUrl: "https://upload.wikimedia.org/wikipedia/en/3/3f/Tes_Esat.jpg",
+                content: `【3月11日】
+                
+優秀な弟がいると色々と大変だ、ということでフリーの道に進んだお兄さん。
+A・シェップ進攻渡歐時期的領軍之作，
+但包含團員在內，這僅僅是一張擴散著充滿破壞性噪音、毫無凝聚力的平凡即興錄音作品。
+    
+---
+    
+這位兄長，因為有個優異的弟弟（註1）而經歷各般艱辛，進而轉向自由爵士之路。
+此張專輯是與艾奇·薛普（Archie Shepp）（註2）赴歐時期，所錄製的主導作品。
+然而，包含團員在內，僅僅只是一張擴散充滿破壞性噪音，毫無凝聚力的一張平凡錄音作品罷了。
+
+----------------
+    
+註1：優秀的弟弟，此處指 Wayne Shorter ，美國薩克斯風樂手、作曲家。曾於 1959 年加入咆勃爵士傳奇樂團 Art Blakey and Jazz Messengers（推薦代表作：Moanin’ ），並在 1970 年與 Joe Zawinul 創立 Fusion Jazz 代表樂團 Weather Report（推薦代表作：Teen Town）。生涯共獲得 12 座葛萊美獎。
+
+註2：Archie Shepp，美國薩克斯風樂手、作曲家及詩人。曾於 1960 年代初與自由爵士先驅 Cecil Taylor 合作，並在 1965 年受 John Coltrane 提攜參與前衛經典專輯《Ascension》的錄製。其作品常融入強烈的非裔美國人權意識與詩歌元素，是自由爵士（Free Jazz）與先鋒爵士（Avant-Garde Jazz）運動的領軍人物（推薦代表作：《Goin’ Home》）。生涯曾獲得葛萊美獎提名，並於 2016 年獲頒 NEA Jazz Masters 終身成就獎。`,
+                spotifyLink: "https://www.youtube.com/watch?v=pwK1OPIwluo"
+            }
+        };
+
+        const AbstractBg = () => (
+            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+                <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl" />
+                <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-blue-900/5 blur-3xl" />
+                <svg className="absolute right-0 top-20 w-[400px] h-[400px] text-stone-300 opacity-20 transform rotate-12" viewBox="0 0 100 100" fill="currentColor">
+                    <path d="M35,20 L40,20 L40,55 C40,65 45,70 55,70 C65,70 70,60 70,50 L70,25 L75,25 L85,15 L60,15 L65,25 L65,50 C65,68 55,75 45,75 C30,75 25,60 25,50 L25,25 C25,22 28,20 35,20 Z" />
+                </svg>
+            </div>
+        );
+
+        const App = () => {
+            const [selectedDate, setSelectedDate] = useState(new Date(2026, 2, 11));
+            const [currentMonth, setCurrentMonth] = useState(new Date(2026, 2, 1));
+
+            const formatDateKey = (date) => {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            };
+
+            const dateKey = formatDateKey(selectedDate);
+            const currentData = jazzData[dateKey];
+
+            const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+            const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+            const handlePrevMonth = () => {
+                const prevMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+                if (prevMonth.getFullYear() < 2026) return;
+                setCurrentMonth(prevMonth);
+            };
+
+            const handleNextMonth = () => {
+                setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+            };
+
+            const renderCalendarDays = () => {
+                const year = currentMonth.getFullYear();
+                const month = currentMonth.getMonth();
+                const daysInMonth = getDaysInMonth(year, month);
+                const firstDay = getFirstDayOfMonth(year, month);
+                const days = [];
+
+                for (let i = 0; i < firstDay; i++) {
+                    days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
+                }
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const currentDate = new Date(year, month, d);
+                    const currentKey = formatDateKey(currentDate);
+                    const isSelected = formatDateKey(selectedDate) === currentKey;
+                    const hasData = jazzData.hasOwnProperty(currentKey);
+
+                    days.push(
+                        <button
+                            key={d}
+                            onClick={() => setSelectedDate(currentDate)}
+                            className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif
+                                ${isSelected ? 'text-amber-400 font-bold scale-125' : 'text-stone-400 hover:text-stone-200'}
+                            `}
+                        >
+                            <span>{d}</span>
+                            {hasData && !isSelected && (
+                                <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>
+                            )}
+                        </button>
+                    );
+                }
+                return days;
+            };
+
+            const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+            return (
+                <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden">
+                    <AbstractBg />
+                    <div className="max-w-[1400px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
+                        {/* 左側日曆 */}
+                        <div className="lg:col-span-3 bg-stone-900 text-stone-300 p-8 lg:min-h-screen flex flex-col justify-between relative z-20 shadow-2xl">
+                            <div>
+                                <div className="mb-12 pt-4">
+                                    <div className="flex items-center gap-3 text-amber-500 mb-2">
+                                        <IconDisc className="animate-spin-slow" size={24} />
+                                        <span className="text-xs tracking-[0.3em] uppercase">Daily Jazz</span>
+                                    </div>
+                                    <h1 className="text-3xl font-zen font-bold text-stone-100 leading-snug">日めくり<br/>ジャズ 365</h1>
+                                    <div className="w-12 h-1 bg-amber-600 mt-4"></div>
+                                </div>
+                                <div className="mb-8">
+                                    <div className="flex items-center justify-between mb-6 border-b border-stone-800 pb-2">
+                                        <span className="font-playfair text-2xl text-stone-100 italic">
+                                            {currentMonth.toLocaleString('en-US', { month: 'short' })} '{currentMonth.getFullYear().toString().slice(2)}
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button onClick={handlePrevMonth} className="hover:text-amber-500 transition disabled:opacity-30" disabled={currentMonth <= new Date(2026, 0, 1)}><IconChevronLeft/></button>
+                                            <button onClick={handleNextMonth} className="hover:text-amber-500 transition"><IconChevronRight/></button>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-y-3 gap-x-1 place-items-center">
+                                        {weekDays.map((d, i) => <span key={i} className="text-[10px] text-stone-600 font-bold">{d}</span>)}
+                                        {renderCalendarDays()}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-[10px] text-stone-600 tracking-widest mt-8">
+                                <p>DESIGNED FOR JAZZ LOVERS</p>
+                                <p className="mt-1">© 2026 ISHISHI TRANS.</p>
+                            </div>
+                        </div>
+
+                        {/* 右側內容 */}
+                        <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-center">
+                            <div className="absolute top-0 right-0 lg:right-20 -z-10 select-none opacity-10 pointer-events-none">
+                                <span className="font-playfair text-[20rem] lg:text-[25rem] leading-none text-stone-900">
+                                    {String(selectedDate.getDate()).padStart(2, '0')}
+                                </span>
+                            </div>
+
+                            {currentData ? (
+                                <div className="relative w-full max-w-5xl mx-auto">
+                                    <div className="flex flex-col lg:flex-row items-baseline gap-6 mb-16 ml-0 lg:ml-12 relative z-20">
+                                        <div className="font-playfair text-6xl lg:text-8xl font-black text-stone-900">
+                                            {selectedDate.getDate()}
+                                            <span className="text-2xl lg:text-3xl font-normal text-amber-700 ml-2 italic">
+                                                {selectedDate.toLocaleString('en-US', { month: 'long' })}
+                                            </span>
+                                        </div>
+                                        <div className="h-px w-20 bg-stone-400 lg:hidden"></div>
+                                        <div className="font-zen text-stone-500 text-lg">
+                                            {selectedDate.toLocaleDateString('zh-TW', { weekday: 'long' })}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                                        <div className="lg:col-span-4 relative group lg:translate-x-4 z-10">
+                                            <div className={`aspect-square w-full shadow-2xl relative ${currentData.coverColor || 'bg-stone-800'} overflow-hidden transition-transform duration-700 group-hover:-rotate-2 group-hover:scale-105`}>
+                                                {currentData.imageUrl ? (
+                                                    <img src={currentData.imageUrl} alt={currentData.album} className="absolute inset-0 w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="absolute inset-0 flex items-center justify-center opacity-30">
+                                                        <IconDisc size={200} className="text-white animate-spin-slow" />
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent pointer-events-none"></div>
+                                                <div className="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black/80 to-transparent text-white">
+                                                    <p className="text-xs font-bold tracking-widest uppercase mb-1 text-amber-400">Now Playing</p>
+                                                    <h2 className="text-3xl font-playfair italic leading-tight">{currentData.album}</h2>
+                                                    <p className="text-sm mt-2 font-light opacity-90">{currentData.artist}</p>
+                                                </div>
+                                            </div>
+                                            <div className="absolute -bottom-6 -right-6 w-full h-full border-2 border-stone-800 -z-10 hidden lg:block"></div>
+                                        </div>
+
+                                        <div className="lg:col-span-8 lg:pl-12 lg:pt-0">
+                                            <IconQuote size={48} className="text-amber-600/20 mb-4" />
+                                            <div className="prose prose-lg prose-stone font-zen leading-loose text-stone-700 whitespace-pre-line max-w-none">
+                                                {currentData.content}
+                                            </div>
+                                            <div className="mt-12 flex justify-end lg:justify-start">
+                                                <a href={currentData.spotifyLink} target="_blank" rel="noopener noreferrer" className="group relative px-8 py-3 bg-stone-900 text-amber-50 overflow-hidden font-zen text-sm tracking-widest transition-all hover:pr-12 inline-block">
+                                                    <span className="relative z-10 flex items-center gap-2">LISTEN NOW</span>
+                                                    <div className="absolute inset-0 bg-amber-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+                                                    <IconArrowRight className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0" size={16} />
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full opacity-40">
+                                    <IconDisc size={64} className="text-stone-400 mb-4" />
+                                    <p className="font-zen text-xl tracking-widest">NO RECORD</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
