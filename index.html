@@ -58,7 +58,6 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // 修正：補上 useMemo
         const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
         // Icons
@@ -94,6 +93,20 @@
             </svg>
         );
 
+        // 石頭人拿黑膠的小圖示
+        const StoneVinylIcon = ({ size = 20, className }) => (
+            <svg width={size} height={size} viewBox="0 0 100 100" className={className}>
+                <path d="M20,80 C20,40 40,20 60,20 C85,20 85,50 80,80" fill="currentColor" />
+                <circle cx="45" cy="45" r="5" fill="white" />
+                <circle cx="45" cy="45" r="2" fill="black" />
+                <circle cx="65" cy="45" r="5" fill="white" />
+                <circle cx="65" cy="45" r="2" fill="black" />
+                <circle cx="75" cy="60" r="18" fill="black" stroke="white" strokeWidth="2" />
+                <circle cx="75" cy="60" r="6" fill="#333" />
+                <circle cx="75" cy="60" r="2" fill="white" />
+            </svg>
+        );
+
         // YouTube Player Hook
         const useYouTubePlayer = (videoId) => {
             const [player, setPlayer] = useState(null);
@@ -112,7 +125,6 @@
                     if (!videoId) return;
                     
                     if (player) {
-                        // 如果 player 已存在，直接 load 新的 videoId
                         player.cueVideoById(videoId);
                         return;
                     }
@@ -434,14 +446,14 @@
                                                     <div className="absolute bottom-0 left-0 p-6 w-full text-white"><p className="text-xs font-bold tracking-widest uppercase mb-1 text-amber-400">Now Playing</p><h2 className="text-2xl lg:text-3xl font-playfair italic leading-tight">{currentData.album}</h2><p className="text-base lg:text-lg mt-2 font-light tracking-wider">{currentData.artist}</p></div>
                                                 </div>
                                                 
-                                                {/* Vinyl Mode 按鈕 */}
+                                                {/* Vinyl Mode 按鈕 (放大後) */}
                                                 {youtubeId && (
                                                     <button 
                                                         onClick={() => setIsImmersive(true)} 
-                                                        className="absolute -top-12 right-0 z-30 flex items-center gap-2 px-3 py-1.5 text-stone-500 hover:text-stone-800 text-[10px] font-bold tracking-[0.2em] uppercase transition-all duration-300 hover:scale-105 border-b border-transparent hover:border-amber-600"
+                                                        className="absolute -top-14 right-0 z-30 flex items-center gap-3 px-4 py-2 text-stone-500 hover:text-stone-800 text-sm font-bold tracking-[0.1em] transition-all duration-300 hover:scale-105 border-b-2 border-transparent hover:border-amber-600 font-zen"
                                                     >
-                                                        <IconMaximize size={14} />
-                                                        <span>Vinyl Mode</span>
+                                                        <StoneVinylIcon size={24} />
+                                                        <span>進入黑膠模式</span>
                                                     </button>
                                                 )}
                                             </div>
