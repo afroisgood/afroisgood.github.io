@@ -27,6 +27,7 @@
         .animate-spin-fast { animation: spin 3s linear infinite; }
         .animate-spin-slow { animation: spin 12s linear infinite; }
 
+        /* 撕紙效果 */
         .tear-forward { animation: tearToLeft 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
         @keyframes tearToLeft {
             0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
@@ -55,6 +56,14 @@
 
         .needle-drop { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .needle-drop:active { transform: scale(0.98) translateY(4px); }
+        
+        .changelog-panel {
+            animation: slideInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -96,12 +105,17 @@
             const [selectedDate, setSelectedDate] = useState(today);
             const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
             const [jazzData, setJazzData] = useState({});
+            const [changelogData, setChangelogData] = useState([]);
             const [loading, setLoading] = useState(true);
             const [isPlaying, setIsPlaying] = useState(false);
             const [tearDirection, setTearDirection] = useState(null);
             const [isHoveringLink, setIsHoveringLink] = useState(false);
+            const [showChangelog, setShowChangelog] = useState(false);
             
-            const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTluUWYKc4YGQwNvjR-aAYJGDmhkc-umEEgCis548UWm7cR0MkJk_6kxnn4jmDpzEgfghXBGheCdU2l/pub?output=csv";
+            // 基礎網址與 gid 修正
+            const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTluUWYKc4YGQwNvjR-aAYJGDmhkc-umEEgCis548UWm7cR0MkJk_6kxnn4jmDpzEgfghXBGheCdU2l/pub?output=csv";
+            const DATA_URL = `${SHEET_BASE_URL}&gid=0`;
+            const LOG_URL = `${SHEET_BASE_URL}&gid=1202139946`;
 
             const genreColors = {
                 "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE",
@@ -110,25 +124,20 @@
 
             const formatDateString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
-            // --- 路由邏輯：處理網址 Hash ---
             useEffect(() => {
                 const handleHashChange = () => {
                     const hash = window.location.hash.replace('#', '');
                     if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
                         const [y, m, d] = hash.split('-').map(Number);
                         const hashDate = new Date(y, m - 1, d);
-                        if (!isNaN(hashDate)) {
-                            // 使用特殊的方向判斷，如果跟當前不同才觸發動畫
-                            if (formatDateString(hashDate) !== formatDateString(selectedDate)) {
-                                triggerTransition(hashDate);
-                            }
+                        if (!isNaN(hashDate) && formatDateString(hashDate) !== formatDateString(selectedDate)) {
+                            triggerTransition(hashDate);
                         }
                     }
                 };
-
                 window.addEventListener('hashchange', handleHashChange);
                 return () => window.removeEventListener('hashchange', handleHashChange);
-            }, [selectedDate, jazzData]);
+            }, [selectedDate]);
 
             const triggerTransition = (newDate) => {
                 const direction = newDate > selectedDate ? 'forward' : 'backward';
@@ -144,66 +153,40 @@
 
             const handleDateChange = (newDate) => {
                 if (tearDirection) return;
-                const dateStr = formatDateString(newDate);
-                // 更新網址 Hash，這會觸發 hashchange 事件或歷史紀錄
-                window.location.hash = dateStr;
+                window.location.hash = formatDateString(newDate);
             };
 
             useEffect(() => {
-                Papa.parse(CSV_URL, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: (results) => {
-                        const dataMap = {};
-                        results.data.forEach(row => { if (row.date) dataMap[row.date.trim()] = row; });
-                        setJazzData(dataMap);
-                        
-                        // 初始載入時檢查 Hash
-                        const hash = window.location.hash.replace('#', '');
-                        if (hash && dataMap[hash]) {
-                            const [y, m, d] = hash.split('-').map(Number);
-                            const initialDate = new Date(y, m - 1, d);
-                            setSelectedDate(initialDate);
-                            setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+                const fetchAllData = async () => {
+                    // 抓取內容分頁
+                    Papa.parse(DATA_URL, {
+                        download: true, header: true, skipEmptyLines: true,
+                        complete: (results) => {
+                            const dataMap = {};
+                            results.data.forEach(row => { if (row.date) dataMap[row.date.trim()] = row; });
+                            setJazzData(dataMap);
+                            const hash = window.location.hash.replace('#', '');
+                            if (hash && dataMap[hash]) {
+                                const [y, m, d] = hash.split('-').map(Number);
+                                const initialDate = new Date(y, m - 1, d);
+                                setSelectedDate(initialDate);
+                                setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+                            }
                         }
-                        
-                        setTimeout(() => {
-                            setLoading(false);
-                            setIsPlaying(true);
-                        }, 2000);
-                    }
-                });
+                    });
+
+                    // 抓取 Changelog 分頁
+                    Papa.parse(LOG_URL, {
+                        download: true, header: true, skipEmptyLines: true,
+                        complete: (results) => {
+                            setChangelogData(results.data);
+                        }
+                    });
+
+                    setTimeout(() => { setLoading(false); setIsPlaying(true); }, 2000);
+                };
+                fetchAllData();
             }, []);
-
-            const dateKey = formatDateString(selectedDate);
-            const currentData = jazzData[dateKey];
-
-            const renderCalendarDays = () => {
-                const year = currentMonth.getFullYear();
-                const month = currentMonth.getMonth();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const firstDay = new Date(year, month, 1).getDay();
-                const days = [];
-                for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
-                for (let d = 1; d <= daysInMonth; d++) {
-                    const currDate = new Date(year, month, d);
-                    const currKey = formatDateString(currDate);
-                    const isSelected = dateKey === currKey;
-                    const isToday = formatDateString(today) === currKey;
-                    days.push(
-                        <button key={d} onClick={() => handleDateChange(currDate)}
-                            className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif
-                                ${isSelected ? 'text-amber-400 font-bold scale-125' : 'text-stone-400 hover:text-stone-200'}
-                                ${isToday && !isSelected ? 'border border-stone-600 rounded-full' : ''}
-                            `}>
-                            <span>{d}</span>
-                            {jazzData.hasOwnProperty(currKey) && !isSelected && <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>}
-                        </button>
-                    );
-                }
-                return days;
-            };
 
             if (loading) return (
                 <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-amber-500 font-zen p-6 text-center">
@@ -215,9 +198,35 @@
                 </div>
             );
 
+            const dateKey = formatDateString(selectedDate);
+            const currentData = jazzData[dateKey];
+            const latestVersion = changelogData[0]?.version || "v1.0.0";
+
             return (
                 <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden" style={{ backgroundColor: genreColors[currentData?.mood?.trim()] || currentData?.mood || "#f2f0e9" }}>
+                    
+                    {/* 動態連動的更新內容看板 */}
+                    {showChangelog && (
+                        <div className="fixed inset-0 z-[100] flex items-end lg:items-center justify-start lg:pl-20 pointer-events-none">
+                            <div className="changelog-panel bg-stone-900/95 backdrop-blur-xl text-stone-300 p-8 w-full lg:w-[400px] h-3/4 lg:h-auto lg:max-h-[600px] shadow-2xl pointer-events-auto border-t lg:border border-amber-900/50 overflow-y-auto">
+                                <div className="flex justify-between items-start mb-8">
+                                    <h3 className="font-zen font-black text-amber-500 tracking-[0.3em] text-lg uppercase">更新履歷</h3>
+                                    <button onClick={() => setShowChangelog(false)} className="text-stone-500 hover:text-white transition"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+                                </div>
+                                <div className="space-y-8 font-zen text-sm leading-relaxed">
+                                    {changelogData.map((log, idx) => (
+                                        <div key={idx} className={`border-l-2 ${idx === 0 ? 'border-amber-700' : 'border-stone-700 opacity-50'} pl-4`}>
+                                            <p className={`${idx === 0 ? 'text-amber-600' : ''} font-bold mb-1`}>{log.version} ({log.date})</p>
+                                            <p className="whitespace-pre-line">{log.content}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="max-w-[1400px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
+                        {/* 左側日曆導航 */}
                         <div className="lg:col-span-3 bg-stone-900 text-stone-300 p-8 lg:min-h-screen flex flex-col justify-between relative z-20 shadow-2xl">
                             <div>
                                 <div className="mb-12 pt-4 flex flex-col items-start">
@@ -240,15 +249,45 @@
                                     </div>
                                     <div className="grid grid-cols-7 gap-y-3 gap-x-1 place-items-center">
                                         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => <span key={i} className="text-[10px] text-stone-600 font-bold">{day}</span>)}
-                                        {renderCalendarDays()}
+                                        {
+                                            (() => {
+                                                const year = currentMonth.getFullYear();
+                                                const month = currentMonth.getMonth();
+                                                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                                                const firstDay = new Date(year, month, 1).getDay();
+                                                const days = [];
+                                                for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
+                                                for (let d = 1; d <= daysInMonth; d++) {
+                                                    const currDate = new Date(year, month, d);
+                                                    const currKey = formatDateString(currDate);
+                                                    const isSelected = dateKey === currKey;
+                                                    days.push(
+                                                        <button key={d} onClick={() => handleDateChange(currDate)}
+                                                            className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif
+                                                                ${isSelected ? 'text-amber-400 font-bold scale-125' : 'text-stone-400 hover:text-stone-200'}
+                                                            `}>
+                                                            <span>{d}</span>
+                                                            {jazzData.hasOwnProperty(currKey) && !isSelected && <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>}
+                                                        </button>
+                                                    );
+                                                }
+                                                return days;
+                                            })()
+                                        }
                                     </div>
                                 </div>
                             </div>
-                            <div className="text-[10px] text-stone-600 tracking-widest mt-8"><p>© 2026 TEYLUNG TRANS.</p></div>
+                            
+                            <div className="flex flex-col gap-2 mt-8">
+                                <button onClick={() => setShowChangelog(true)} className="text-[10px] text-amber-600/60 hover:text-amber-500 transition tracking-widest text-left w-fit uppercase font-bold border-b border-amber-900/30 pb-0.5">{latestVersion} Log</button>
+                                <div className="text-[10px] text-stone-600 tracking-widest uppercase">
+                                    <p>© 2026 TEYLUNG TRANS.</p>
+                                </div>
+                            </div>
                         </div>
                         
                         <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-start pt-20 lg:pt-32 min-h-screen">
-                            {currentData && currentData.editorNote && currentData.editorNote.trim() !== "" && (
+                            {currentData?.editorNote?.trim() && (
                                 <div className="absolute top-12 right-12 z-40 max-w-[300px] editor-note-box hidden lg:block">
                                     <div className="bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
                                         <div className="flex items-center gap-3 mb-3">
@@ -265,11 +304,7 @@
                             </div>
 
                             {currentData ? (
-                                <div className={`relative w-full max-w-5xl mx-auto 
-                                    ${tearDirection === 'forward' ? 'tear-forward' : ''} 
-                                    ${tearDirection === 'backward' ? 'tear-backward' : ''} 
-                                    ${!tearDirection ? 'page-reveal' : ''}`}>
-                                    
+                                <div className={`relative w-full max-w-5xl mx-auto ${tearDirection === 'forward' ? 'tear-forward' : tearDirection === 'backward' ? 'tear-backward' : 'page-reveal'}`}>
                                     <div className="flex flex-col lg:flex-row items-baseline gap-6 mb-16 ml-0 lg:ml-12 relative z-20">
                                         <div className="font-playfair text-6xl lg:text-8xl font-black text-stone-900">
                                             {selectedDate.getDate()}
@@ -280,11 +315,9 @@
 
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
                                         <div className="lg:col-span-4 relative lg:translate-x-4 z-10">
-                                            <div className={`absolute top-1/2 -translate-y-1/2 right-0 w-[95%] aspect-square -z-10 transition-all duration-700 ease-in-out flex items-center justify-center
-                                                ${isHoveringLink ? 'translate-x-[25%] opacity-100' : 'translate-x-0 opacity-0'}`}>
+                                            <div className={`absolute top-1/2 -translate-y-1/2 right-0 w-[95%] aspect-square -z-10 transition-all duration-700 ease-in-out flex items-center justify-center ${isHoveringLink ? 'translate-x-[25%] opacity-100' : 'translate-x-0 opacity-0'}`}>
                                                 <IconDisc size="100%" isPureBlack={true} className="drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]" />
                                             </div>
-
                                             <div className="aspect-square w-full shadow-2xl relative bg-stone-800 overflow-hidden transition-transform duration-700 needle-drop z-10">
                                                 {currentData.imageUrl ? <img src={currentData.imageUrl} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><IconDisc size={200} className="text-white" /></div>}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
@@ -294,14 +327,12 @@
                                                     <p className="text-base lg:text-lg mt-2 font-light tracking-wider">{currentData.artist}</p>
                                                 </div>
                                             </div>
-                                            
                                             <div className="mt-6 grid grid-cols-1 gap-2" onMouseEnter={() => setIsHoveringLink(true)} onMouseLeave={() => setIsHoveringLink(false)}>
                                                 {currentData.youtube && <a href={currentData.youtube} target="_blank" className="px-4 py-2.5 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-all hover:translate-x-1">YOUTUBE <IconArrowRight size={14}/></a>}
                                                 {currentData.spotify && <a href={currentData.spotify} target="_blank" className="px-4 py-2.5 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-all hover:translate-x-1">SPOTIFY <IconArrowRight size={14}/></a>}
                                                 {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" className="px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1">APPLE MUSIC <IconArrowRight size={14}/></a>}
                                             </div>
                                         </div>
-
                                         <div className="lg:col-span-8 lg:pl-12">
                                             <IconQuote className="text-amber-600/20 mb-6" />
                                             <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-lg">{currentData.content}</div>
