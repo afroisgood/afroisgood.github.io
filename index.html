@@ -93,7 +93,6 @@
             </svg>
         );
 
-        // 石頭人拿黑膠的小圖示
         const StoneVinylIcon = ({ size = 20, className }) => (
             <svg width={size} height={size} viewBox="0 0 100 100" className={className}>
                 <path d="M20,80 C20,40 40,20 60,20 C85,20 85,50 80,80" fill="currentColor" />
@@ -107,13 +106,15 @@
             </svg>
         );
 
-        // YouTube Player Hook
+        // 修正後的 YouTube Player Hook：強制銷毀與重建
         const useYouTubePlayer = (videoId) => {
             const [player, setPlayer] = useState(null);
-            const [playerState, setPlayerState] = useState(-1); // -1: unstarted
+            const [playerState, setPlayerState] = useState(-1);
             const [isReady, setIsReady] = useState(false);
+            const playerRef = useRef(null);
 
             useEffect(() => {
+                // 載入 API
                 if (!window.YT) {
                     const tag = document.createElement('script');
                     tag.src = "https://www.youtube.com/iframe_api";
@@ -121,12 +122,21 @@
                     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
                 }
 
-                const initPlayer = () => {
-                    if (!videoId) return;
-                    
-                    if (player) {
-                        player.cueVideoById(videoId);
-                        return;
+                // 核心邏輯：如果沒有 ID，或者 DOM 元素不存在，就清理
+                if (!videoId || !document.getElementById('yt-player-mount')) {
+                    if (playerRef.current) {
+                        playerRef.current.destroy();
+                        playerRef.current = null;
+                        setPlayer(null);
+                        setPlayerState(-1);
+                    }
+                    return;
+                }
+
+                const createPlayer = () => {
+                    // 如果有舊實例，先銷毀，確保是全新的
+                    if (playerRef.current) {
+                        playerRef.current.destroy();
                     }
 
                     const newPlayer = new window.YT.Player('yt-player-mount', {
@@ -137,26 +147,42 @@
                             'playsinline': 1,
                             'controls': 0,
                             'rel': 0,
-                            'modestbranding': 1
+                            'modestbranding': 1,
+                            'autoplay': 1, // 嘗試自動播放
+                            'mute': 0 
                         },
                         events: {
                             'onReady': (event) => {
                                 setIsReady(true);
+                                // 嘗試解決手機端第一次可能不播放的問題
+                                // 但主要依賴使用者的點擊操作
                             },
                             'onStateChange': (event) => {
                                 setPlayerState(event.data);
+                            },
+                            'onError': (e) => {
+                                console.error("YouTube Error:", e);
                             }
                         }
                     });
+                    playerRef.current = newPlayer;
                     setPlayer(newPlayer);
                 };
 
                 if (window.YT && window.YT.Player) {
-                    initPlayer();
+                    createPlayer();
                 } else {
-                    window.onYouTubeIframeAPIReady = initPlayer;
+                    window.onYouTubeIframeAPIReady = createPlayer;
                 }
-            }, [videoId]);
+
+                // Cleanup function
+                return () => {
+                    if (playerRef.current) {
+                        // 不要在此處完全銷毀，因為依賴 videoId 變化來觸發重建
+                        // 但如果是組件卸載，則需要銷毀
+                    }
+                };
+            }, [videoId]); // 當 videoId 改變時，完全重新執行
 
             return { player, playerState, isReady };
         };
@@ -193,20 +219,23 @@
             
             const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
             
+            // 這裡傳入的 id 會隨日期改變
+            // useYouTubePlayer 內部會偵測到變化並銷毀舊的 -> 建立新的
             const { player, playerState, isReady } = useYouTubePlayer(isImmersive ? youtubeId : null);
             
             const isVinylSpinning = playerState === 1 || playerState === 3;
 
             const togglePlay = useCallback((e) => {
                 if (e) e.stopPropagation();
-                if (!player || !isReady) return;
-
-                if (playerState === 1) {
-                    player.pauseVideo();
-                } else {
-                    player.playVideo();
+                // 增加防呆：如果有 player 實例但狀態不對，或者剛剛切換過來，確保執行 playVideo
+                if (player && typeof player.playVideo === 'function') {
+                    if (playerState === 1) {
+                        player.pauseVideo();
+                    } else {
+                        player.playVideo();
+                    }
                 }
-            }, [player, playerState, isReady]);
+            }, [player, playerState]);
 
             useEffect(() => {
                 const handleHashChange = () => {
@@ -234,14 +263,15 @@
             }, [isImmersive]);
 
             const handleCloseImmersive = () => {
-                if (player && playerState === 1) {
+                if (player && typeof player.pauseVideo === 'function') {
                     player.pauseVideo();
                 }
                 setIsImmersive(false);
             };
 
             const triggerTransition = (newDate) => {
-                if (player && playerState === 1) {
+                // 切換日期時，如果正在播放，嘗試暫停 (雖然 hook 會銷毀它)
+                if (player && playerState === 1 && typeof player.pauseVideo === 'function') {
                    player.pauseVideo();
                 }
 
