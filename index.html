@@ -27,43 +27,23 @@
         .animate-spin-fast { animation: spin 3s linear infinite; }
         .animate-spin-slow { animation: spin 12s linear infinite; }
 
-        /* 撕紙效果 */
         .tear-forward { animation: tearToLeft 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
-        @keyframes tearToLeft {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            20% { transform: translate(-15px, 10px) rotate(-2deg); }
-            100% { transform: translate(-120vw, -80vh) rotate(-35deg); opacity: 0; }
-        }
-
+        @keyframes tearToLeft { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 20% { transform: translate(-15px, 10px) rotate(-2deg); } 100% { transform: translate(-120vw, -80vh) rotate(-35deg); opacity: 0; } }
+        
         .tear-backward { animation: tearToRight 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
-        @keyframes tearToRight {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            20% { transform: translate(15px, -10px) rotate(2deg); }
-            100% { transform: translate(120vw, 80vh) rotate(35deg); opacity: 0; }
-        }
+        @keyframes tearToRight { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 20% { transform: translate(15px, -10px) rotate(2deg); } 100% { transform: translate(120vw, 80vh) rotate(35deg); opacity: 0; } }
 
         .page-reveal { animation: revealPage 1s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
-        @keyframes revealPage {
-            0% { opacity: 0; transform: scale(0.96) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
+        @keyframes revealPage { 0% { opacity: 0; transform: scale(0.96) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 
         .editor-note-box { animation: slideInDown 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
-        @keyframes slideInDown {
-            from { opacity: 0; transform: translateY(-15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        @keyframes slideInDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+        
         .needle-drop { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .needle-drop:active { transform: scale(0.98) translateY(4px); }
-        
-        .changelog-panel {
-            animation: slideInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
-        }
-        @keyframes slideInUp {
-            from { transform: translateY(100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+
+        .changelog-panel { animation: slideInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -76,7 +56,7 @@
         const IconChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
         const IconQuote = ({ size=40, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M3 21c3 0 7-1 7-8V5H3v8h5c0 2-2 3-5 4v4zm11 0c3 0 7-1 7-8V5h-7v8h5c0 2-2 3-5 4v4z"/></svg>;
         const IconArrowRight = ({ size=16, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
-
+        
         const IconDisc = ({ className, size=24, isPureBlack=false }) => (
             <svg width={size} height={size} viewBox="0 0 100 100" className={className}>
                 <circle cx="50" cy="50" r="48" fill={isPureBlack ? "#111" : "none"} stroke="currentColor" strokeWidth="1" />
@@ -112,16 +92,11 @@
             const [isHoveringLink, setIsHoveringLink] = useState(false);
             const [showChangelog, setShowChangelog] = useState(false);
             
-            // 基礎網址與 gid 修正
             const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTluUWYKc4YGQwNvjR-aAYJGDmhkc-umEEgCis548UWm7cR0MkJk_6kxnn4jmDpzEgfghXBGheCdU2l/pub?output=csv";
             const DATA_URL = `${SHEET_BASE_URL}&gid=0`;
             const LOG_URL = `${SHEET_BASE_URL}&gid=1202139946`;
 
-            const genreColors = {
-                "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE",
-                "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0"
-            };
-
+            const genreColors = { "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE", "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0" };
             const formatDateString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
             useEffect(() => {
@@ -158,7 +133,6 @@
 
             useEffect(() => {
                 const fetchAllData = async () => {
-                    // 抓取內容分頁
                     Papa.parse(DATA_URL, {
                         download: true, header: true, skipEmptyLines: true,
                         complete: (results) => {
@@ -174,15 +148,10 @@
                             }
                         }
                     });
-
-                    // 抓取 Changelog 分頁
                     Papa.parse(LOG_URL, {
                         download: true, header: true, skipEmptyLines: true,
-                        complete: (results) => {
-                            setChangelogData(results.data);
-                        }
+                        complete: (results) => { setChangelogData(results.data); }
                     });
-
                     setTimeout(() => { setLoading(false); setIsPlaying(true); }, 2000);
                 };
                 fetchAllData();
@@ -202,148 +171,90 @@
             const currentData = jazzData[dateKey];
             const latestVersion = changelogData[0]?.version || "v1.0.0";
 
+            // 石編的話組件，便於重複使用
+            const EditorNote = () => (
+                <div className="editor-note-box bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
+                    <div className="flex items-center gap-3 mb-3">
+                        <StoneEditorIcon />
+                        <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
+                    </div>
+                    <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">{currentData.editorNote}</p>
+                </div>
+            );
+
             return (
                 <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden" style={{ backgroundColor: genreColors[currentData?.mood?.trim()] || currentData?.mood || "#f2f0e9" }}>
                     
-                    {/* 動態連動的更新內容看板 */}
                     {showChangelog && (
                         <div className="fixed inset-0 z-[100] flex items-end lg:items-center justify-start lg:pl-20 pointer-events-none">
                             <div className="changelog-panel bg-stone-900/95 backdrop-blur-xl text-stone-300 p-8 w-full lg:w-[400px] h-3/4 lg:h-auto lg:max-h-[600px] shadow-2xl pointer-events-auto border-t lg:border border-amber-900/50 overflow-y-auto">
-                                <div className="flex justify-between items-start mb-8">
-                                    <h3 className="font-zen font-black text-amber-500 tracking-[0.3em] text-lg uppercase">更新履歷</h3>
-                                    <button onClick={() => setShowChangelog(false)} className="text-stone-500 hover:text-white transition"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-                                </div>
+                                <div className="flex justify-between items-start mb-8"><h3 className="font-zen font-black text-amber-500 tracking-[0.3em] text-lg uppercase">更新履歷</h3><button onClick={() => setShowChangelog(false)} className="text-stone-500 hover:text-white transition"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
                                 <div className="space-y-8 font-zen text-sm leading-relaxed">
-                                    {changelogData.map((log, idx) => (
-                                        <div key={idx} className={`border-l-2 ${idx === 0 ? 'border-amber-700' : 'border-stone-700 opacity-50'} pl-4`}>
-                                            <p className={`${idx === 0 ? 'text-amber-600' : ''} font-bold mb-1`}>{log.version} ({log.date})</p>
-                                            <p className="whitespace-pre-line">{log.content}</p>
-                                        </div>
-                                    ))}
+                                    {changelogData.map((log, idx) => (<div key={idx} className={`border-l-2 ${idx === 0 ? 'border-amber-700' : 'border-stone-700 opacity-50'} pl-4`}><p className={`${idx === 0 ? 'text-amber-600' : ''} font-bold mb-1`}>{log.version} ({log.date})</p><p className="whitespace-pre-line">{log.content}</p></div>))}
                                 </div>
                             </div>
                         </div>
                     )}
 
                     <div className="max-w-[1400px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
-                        {/* 左側日曆導航 */}
                         <div className="lg:col-span-3 bg-stone-900 text-stone-300 p-8 lg:min-h-screen flex flex-col justify-between relative z-20 shadow-2xl">
                             <div>
-                                <div className="mb-12 pt-4 flex flex-col items-start">
-                                    <div className="flex items-center gap-3 text-amber-500 mb-2">
-                                        <IconDisc className={isPlaying ? "animate-spin-fast" : "animate-spin-slow"} size={28} />
-                                        <span className="text-xs tracking-[0.3em] uppercase font-bold">Daily Jazz</span>
-                                    </div>
-                                    <h1 className="text-3xl font-zen font-bold text-stone-100 leading-snug">日めくり<br/>ジャズ 365</h1>
-                                    <div className="w-12 h-1 bg-amber-600 mt-4"></div>
-                                </div>
-                                <div className="mb-8">
-                                    <div className="flex items-center justify-between mb-6 border-b border-stone-800 pb-2">
-                                        <span className="font-playfair text-2xl text-stone-100 italic">
-                                            {currentMonth.toLocaleString('en-US', { month: 'short' })} '{currentMonth.getFullYear().toString().slice(2)}
-                                        </span>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}><IconChevronLeft/></button>
-                                            <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}><IconChevronRight/></button>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-7 gap-y-3 gap-x-1 place-items-center">
-                                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => <span key={i} className="text-[10px] text-stone-600 font-bold">{day}</span>)}
-                                        {
-                                            (() => {
-                                                const year = currentMonth.getFullYear();
-                                                const month = currentMonth.getMonth();
-                                                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                                                const firstDay = new Date(year, month, 1).getDay();
-                                                const days = [];
-                                                for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
-                                                for (let d = 1; d <= daysInMonth; d++) {
-                                                    const currDate = new Date(year, month, d);
-                                                    const currKey = formatDateString(currDate);
-                                                    const isSelected = dateKey === currKey;
-                                                    days.push(
-                                                        <button key={d} onClick={() => handleDateChange(currDate)}
-                                                            className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif
-                                                                ${isSelected ? 'text-amber-400 font-bold scale-125' : 'text-stone-400 hover:text-stone-200'}
-                                                            `}>
-                                                            <span>{d}</span>
-                                                            {jazzData.hasOwnProperty(currKey) && !isSelected && <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>}
-                                                        </button>
-                                                    );
-                                                }
-                                                return days;
-                                            })()
+                                <div className="mb-12 pt-4 flex flex-col items-start"><div className="flex items-center gap-3 text-amber-500 mb-2"><IconDisc className={isPlaying ? "animate-spin-fast" : "animate-spin-slow"} size={28} /><span className="text-xs tracking-[0.3em] uppercase font-bold">Daily Jazz</span></div><h1 className="text-3xl font-zen font-bold text-stone-100 leading-snug">日めくり<br/>ジャズ 365</h1><div className="w-12 h-1 bg-amber-600 mt-4"></div></div>
+                                <div className="mb-8"><div className="flex items-center justify-between mb-6 border-b border-stone-800 pb-2"><span className="font-playfair text-2xl text-stone-100 italic">{currentMonth.toLocaleString('en-US', { month: 'short' })} '{currentMonth.getFullYear().toString().slice(2)}</span><div className="flex gap-2"><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}><IconChevronLeft/></button><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}><IconChevronRight/></button></div></div><div className="grid grid-cols-7 gap-y-3 gap-x-1 place-items-center">{['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => <span key={i} className="text-[10px] text-stone-600 font-bold">{day}</span>)}{
+                                    (() => {
+                                        const year = currentMonth.getFullYear(); const month = currentMonth.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate(); const firstDay = new Date(year, month, 1).getDay(); const days = [];
+                                        for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
+                                        for (let d = 1; d <= daysInMonth; d++) {
+                                            const currDate = new Date(year, month, d); const currKey = formatDateString(currDate); const isSelected = dateKey === currKey;
+                                            days.push(<button key={d} onClick={() => handleDateChange(currDate)} className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif ${isSelected ? 'text-amber-400 font-bold scale-125' : 'text-stone-400 hover:text-stone-200'}`}><span>{d}</span>{jazzData.hasOwnProperty(currKey) && !isSelected && <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>}</button>);
                                         }
-                                    </div>
-                                </div>
+                                        return days;
+                                    })()
+                                }</div></div>
                             </div>
-                            
-                            <div className="flex flex-col gap-2 mt-8">
-                                <button onClick={() => setShowChangelog(true)} className="text-[10px] text-amber-600/60 hover:text-amber-500 transition tracking-widest text-left w-fit uppercase font-bold border-b border-amber-900/30 pb-0.5">{latestVersion} Log</button>
-                                <div className="text-[10px] text-stone-600 tracking-widest uppercase">
-                                    <p>© 2026 TEYLUNG TRANS.</p>
-                                </div>
-                            </div>
+                            <div className="flex flex-col gap-2 mt-8"><button onClick={() => setShowChangelog(true)} className="text-[10px] text-amber-600/60 hover:text-amber-500 transition tracking-widest text-left w-fit uppercase font-bold border-b border-amber-900/30 pb-0.5">{latestVersion} Log</button><div className="text-[10px] text-stone-600 tracking-widest uppercase"><p>© 2026 TEYLUNG TRANS.</p></div></div>
                         </div>
                         
                         <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-start pt-20 lg:pt-32 min-h-screen">
+                            
+                            {/* 電腦版：絕對定位在右上 */}
                             {currentData?.editorNote?.trim() && (
-                                <div className="absolute top-12 right-12 z-40 max-w-[300px] editor-note-box hidden lg:block">
-                                    <div className="bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <StoneEditorIcon />
-                                            <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
-                                        </div>
-                                        <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">{currentData.editorNote}</p>
-                                    </div>
+                                <div className="absolute top-12 right-12 z-40 max-w-[300px] hidden lg:block">
+                                    <EditorNote />
                                 </div>
                             )}
 
-                            <div className="absolute top-0 right-0 lg:right-20 -z-10 select-none opacity-5 pointer-events-none">
-                                <span className="font-playfair text-[20rem] lg:text-[25rem] leading-none text-stone-900">{String(selectedDate.getDate()).padStart(2, '0')}</span>
-                            </div>
-
+                            <div className="absolute top-0 right-0 lg:right-20 -z-10 select-none opacity-5 pointer-events-none"><span className="font-playfair text-[20rem] lg:text-[25rem] leading-none text-stone-900">{String(selectedDate.getDate()).padStart(2, '0')}</span></div>
+                            
                             {currentData ? (
                                 <div className={`relative w-full max-w-5xl mx-auto ${tearDirection === 'forward' ? 'tear-forward' : tearDirection === 'backward' ? 'tear-backward' : 'page-reveal'}`}>
                                     <div className="flex flex-col lg:flex-row items-baseline gap-6 mb-16 ml-0 lg:ml-12 relative z-20">
-                                        <div className="font-playfair text-6xl lg:text-8xl font-black text-stone-900">
-                                            {selectedDate.getDate()}
-                                            <span className="text-2xl lg:text-3xl font-normal text-amber-700 ml-4 italic">{selectedDate.toLocaleString('en-US', { month: 'long' })}</span>
-                                        </div>
+                                        <div className="font-playfair text-6xl lg:text-8xl font-black text-stone-900">{selectedDate.getDate()}<span className="text-2xl lg:text-3xl font-normal text-amber-700 ml-4 italic">{selectedDate.toLocaleString('en-US', { month: 'long' })}</span></div>
                                         <div className="font-zen text-stone-500 text-lg">{selectedDate.toLocaleDateString('zh-TW', { weekday: 'long' })}</div>
                                     </div>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
                                         <div className="lg:col-span-4 relative lg:translate-x-4 z-10">
-                                            <div className={`absolute top-1/2 -translate-y-1/2 right-0 w-[95%] aspect-square -z-10 transition-all duration-700 ease-in-out flex items-center justify-center ${isHoveringLink ? 'translate-x-[25%] opacity-100' : 'translate-x-0 opacity-0'}`}>
-                                                <IconDisc size="100%" isPureBlack={true} className="drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]" />
-                                            </div>
-                                            <div className="aspect-square w-full shadow-2xl relative bg-stone-800 overflow-hidden transition-transform duration-700 needle-drop z-10">
-                                                {currentData.imageUrl ? <img src={currentData.imageUrl} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><IconDisc size={200} className="text-white" /></div>}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                                                <div className="absolute bottom-0 left-0 p-6 w-full text-white">
-                                                    <p className="text-xs font-bold tracking-widest uppercase mb-1 text-amber-400">Now Playing</p>
-                                                    <h2 className="text-2xl lg:text-3xl font-playfair italic leading-tight">{currentData.album}</h2>
-                                                    <p className="text-base lg:text-lg mt-2 font-light tracking-wider">{currentData.artist}</p>
-                                                </div>
-                                            </div>
-                                            <div className="mt-6 grid grid-cols-1 gap-2" onMouseEnter={() => setIsHoveringLink(true)} onMouseLeave={() => setIsHoveringLink(false)}>
-                                                {currentData.youtube && <a href={currentData.youtube} target="_blank" className="px-4 py-2.5 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-all hover:translate-x-1">YOUTUBE <IconArrowRight size={14}/></a>}
-                                                {currentData.spotify && <a href={currentData.spotify} target="_blank" className="px-4 py-2.5 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-all hover:translate-x-1">SPOTIFY <IconArrowRight size={14}/></a>}
-                                                {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" className="px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1">APPLE MUSIC <IconArrowRight size={14}/></a>}
-                                            </div>
+                                            <div className={`absolute top-1/2 -translate-y-1/2 right-0 w-[95%] aspect-square -z-10 transition-all duration-700 ease-in-out flex items-center justify-center ${isHoveringLink ? 'translate-x-[25%] opacity-100' : 'translate-x-0 opacity-0'}`}><IconDisc size="100%" isPureBlack={true} className="drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]" /></div>
+                                            <div className="aspect-square w-full shadow-2xl relative bg-stone-800 overflow-hidden transition-transform duration-700 needle-drop z-10">{currentData.imageUrl ? <img src={currentData.imageUrl} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-20"><IconDisc size={200} className="text-white" /></div>}<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div><div className="absolute bottom-0 left-0 p-6 w-full text-white"><p className="text-xs font-bold tracking-widest uppercase mb-1 text-amber-400">Now Playing</p><h2 className="text-2xl lg:text-3xl font-playfair italic leading-tight">{currentData.album}</h2><p className="text-base lg:text-lg mt-2 font-light tracking-wider">{currentData.artist}</p></div></div>
+                                            <div className="mt-6 grid grid-cols-1 gap-2" onMouseEnter={() => setIsHoveringLink(true)} onMouseLeave={() => setIsHoveringLink(false)}>{currentData.youtube && <a href={currentData.youtube} target="_blank" className="px-4 py-2.5 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-all hover:translate-x-1">YOUTUBE <IconArrowRight size={14}/></a>}{currentData.spotify && <a href={currentData.spotify} target="_blank" className="px-4 py-2.5 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-all hover:translate-x-1">SPOTIFY <IconArrowRight size={14}/></a>}{currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" className="px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1">APPLE MUSIC <IconArrowRight size={14}/></a>}</div>
                                         </div>
+                                        
                                         <div className="lg:col-span-8 lg:pl-12">
+                                            {/* 手機版：插入在封面與內文之間 */}
+                                            {currentData?.editorNote?.trim() && (
+                                                <div className="mb-10 lg:hidden">
+                                                    <EditorNote />
+                                                </div>
+                                            )}
+
                                             <IconQuote className="text-amber-600/20 mb-6" />
                                             <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-lg">{currentData.content}</div>
                                         </div>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center justify-center h-64 opacity-30 text-center">
-                                    <IconDisc size={64} className="mb-4" />
-                                    <p className="font-zen text-xl tracking-widest uppercase">本日無資料</p>
-                                </div>
+                                <div className="flex flex-col items-center justify-center h-64 opacity-30 text-center"><IconDisc size={64} className="mb-4" /><p className="font-zen text-xl tracking-widest uppercase">本日無資料</p></div>
                             )}
                         </div>
                     </div>
