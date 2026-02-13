@@ -22,6 +22,18 @@
         }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin-slow { animation: spin-slow 12s linear infinite; }
+        
+        .fade-in { animation: fadeIn 1.2s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .editor-note-box { animation: slideInDown 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -30,35 +42,34 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // 圖示組件
         const IconChevronLeft = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
         const IconChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
         const IconDisc = ({ className, size=24 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>;
         const IconQuote = ({ size=24, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M3 21c3 0 7-1 7-8V5H3v8h5c0 2-2 3-5 4v4zm11 0c3 0 7-1 7-8V5h-7v8h5c0 2-2 3-5 4v4z"/></svg>;
         const IconArrowRight = ({ size=16, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
 
-        const AbstractBg = () => (
-            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl" />
-                <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-blue-900/5 blur-3xl" />
-            </div>
+        const StoneEditorIcon = () => (
+            <svg width="28" height="24" viewBox="0 0 100 80" className="text-stone-600">
+                <path d="M10,70 C10,30 40,10 70,10 C95,10 95,40 90,70 C85,85 15,85 10,70 Z" fill="currentColor" />
+                <circle cx="45" cy="45" r="6" fill="white" />
+                <circle cx="45" cy="45" r="2.5" fill="black" />
+                <circle cx="70" cy="45" r="6" fill="white" />
+                <circle cx="70" cy="45" r="2.5" fill="black" />
+                <path d="M50,60 Q57,65 65,60" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+            </svg>
         );
 
         const App = () => {
-            // 初始化日期
             const today = new Date();
             const [selectedDate, setSelectedDate] = useState(today);
             const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-            
             const [jazzData, setJazzData] = useState({});
             const [loading, setLoading] = useState(true);
 
-            // ==========================================
-            // 已整合：你的 Google Sheets CSV 網址
-            // ==========================================
             const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTluUWYKc4YGQwNvjR-aAYJGDmhkc-umEEgCis548UWm7cR0MkJk_6kxnn4jmDpzEgfghXBGheCdU2l/pub?output=csv";
 
             useEffect(() => {
+                const startTime = Date.now();
                 Papa.parse(CSV_URL, {
                     download: true,
                     header: true,
@@ -66,17 +77,13 @@
                     complete: (results) => {
                         const dataMap = {};
                         results.data.forEach(row => {
-                            if (row.date) {
-                                // 將 CSV 中的日期字串清理後作為 Key
-                                dataMap[row.date.trim()] = row;
-                            }
+                            if (row.date) dataMap[row.date.trim()] = row;
                         });
-                        setJazzData(dataMap);
-                        setLoading(false);
-                    },
-                    error: (err) => {
-                        console.error("無法載入 CSV 資料:", err);
-                        setLoading(false);
+                        const elapsedTime = Date.now() - startTime;
+                        setTimeout(() => {
+                            setJazzData(dataMap);
+                            setLoading(false);
+                        }, Math.max(0, 2500 - elapsedTime));
                     }
                 });
             }, []);
@@ -96,32 +103,22 @@
                 const month = currentMonth.getMonth();
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const firstDay = new Date(year, month, 1).getDay();
-                
                 const days = [];
-                for (let i = 0; i < firstDay; i++) {
-                    days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
-                }
-
+                for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
                 for (let d = 1; d <= daysInMonth; d++) {
                     const currDate = new Date(year, month, d);
                     const currKey = formatDateKey(currDate);
                     const isSelected = formatDateKey(selectedDate) === currKey;
                     const isToday = formatDateKey(today) === currKey;
                     const hasData = jazzData.hasOwnProperty(currKey);
-
                     days.push(
-                        <button 
-                            key={d} 
-                            onClick={() => setSelectedDate(currDate)}
+                        <button key={d} onClick={() => setSelectedDate(currDate)}
                             className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif
                                 ${isSelected ? 'text-amber-400 font-bold scale-125' : 'text-stone-400 hover:text-stone-200'}
                                 ${isToday && !isSelected ? 'border border-stone-600 rounded-full' : ''}
-                            `}
-                        >
+                            `}>
                             <span>{d}</span>
-                            {hasData && !isSelected && (
-                                <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>
-                            )}
+                            {hasData && !isSelected && <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>}
                         </button>
                     );
                 }
@@ -129,18 +126,23 @@
             };
 
             if (loading) return (
-                <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-amber-500 font-zen gap-4">
-                    <IconDisc className="animate-spin-slow" size={48} />
-                    <p className="tracking-widest animate-pulse uppercase">Syncing with Google Sheets...</p>
+                <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-amber-500 font-zen p-6 text-center">
+                    <IconDisc className="animate-spin-slow mb-10" size={50} />
+                    <div className="fade-in">
+                        <p className="text-lg lg:text-xl tracking-[0.2em] leading-relaxed max-w-2xl font-medium">JAZZ，是一種帶著焦臭味、撲面而來的文字</p>
+                        <p className="text-sm mt-6 opacity-60 tracking-[0.3em] uppercase">— 平岡正明</p>
+                    </div>
                 </div>
             );
 
             return (
                 <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden">
-                    <AbstractBg />
-                    
+                    <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+                        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-amber-500/5 blur-3xl" />
+                        <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-blue-900/5 blur-3xl" />
+                    </div>
+
                     <div className="max-w-[1400px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
-                        
                         {/* 左側日曆導覽 */}
                         <div className="lg:col-span-3 bg-stone-900 text-stone-300 p-8 lg:min-h-screen flex flex-col justify-between relative z-20 shadow-2xl">
                             <div>
@@ -152,7 +154,6 @@
                                     <h1 className="text-3xl font-zen font-bold text-stone-100 leading-snug">日めくり<br/>ジャズ 365</h1>
                                     <div className="w-12 h-1 bg-amber-600 mt-4"></div>
                                 </div>
-
                                 <div className="mb-8">
                                     <div className="flex items-center justify-between mb-6 border-b border-stone-800 pb-2">
                                         <span className="font-playfair text-2xl text-stone-100 italic">
@@ -164,22 +165,31 @@
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-7 gap-y-3 gap-x-1 place-items-center">
-                                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                                            <span key={i} className="text-[10px] text-stone-600 font-bold">{day}</span>
-                                        ))}
+                                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => <span key={i} className="text-[10px] text-stone-600 font-bold">{day}</span>)}
                                         {renderCalendarDays()}
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div className="text-[10px] text-stone-600 tracking-widest mt-8">
-                                <p>© 2026 ISHISHI TRANS.</p>
-                            </div>
+                            <div className="text-[10px] text-stone-600 tracking-widest mt-8"><p>© 2026 ISHISHI TRANS.</p></div>
                         </div>
 
                         {/* 右側內容區 */}
-                        <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-center">
-                            
+                        <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-center min-h-screen">
+                            {/* 石編的話 (已改為 absolute 固定於右側內容區塊內) */}
+                            {currentData && currentData.editorNote && currentData.editorNote.trim() !== "" && (
+                                <div className="absolute top-12 right-12 z-40 max-w-[300px] editor-note-box hidden lg:block">
+                                    <div className="bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <StoneEditorIcon />
+                                            <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
+                                        </div>
+                                        <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">
+                                            {currentData.editorNote}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="absolute top-0 right-0 lg:right-20 -z-10 select-none opacity-5 pointer-events-none">
                                 <span className="font-playfair text-[20rem] lg:text-[25rem] leading-none text-stone-900">
                                     {String(selectedDate.getDate()).padStart(2, '0')}
@@ -187,8 +197,7 @@
                             </div>
 
                             {currentData ? (
-                                <div className="relative w-full max-w-5xl mx-auto">
-                                    
+                                <div className="relative w-full max-w-5xl mx-auto fade-in">
                                     <div className="flex flex-col lg:flex-row items-baseline gap-6 mb-16 ml-0 lg:ml-12 relative z-20">
                                         <div className="font-playfair text-6xl lg:text-8xl font-black text-stone-900">
                                             {selectedDate.getDate()}
@@ -196,30 +205,29 @@
                                                 {selectedDate.toLocaleString('en-US', { month: 'long' })}
                                             </span>
                                         </div>
-                                        <div className="font-zen text-stone-500 text-lg">
-                                            {selectedDate.toLocaleDateString('zh-TW', { weekday: 'long' })}
-                                        </div>
+                                        <div className="font-zen text-stone-500 text-lg">{selectedDate.toLocaleDateString('zh-TW', { weekday: 'long' })}</div>
                                     </div>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-                                        
                                         <div className="lg:col-span-4 relative group lg:translate-x-4 z-10">
-                                            <div className="aspect-square w-full shadow-2xl relative bg-stone-800 overflow-hidden transition-transform duration-700 group-hover:-rotate-1 group-hover:scale-[1.02]">
+                                            <div className="aspect-square w-full shadow-2xl relative bg-stone-800 overflow-hidden transition-transform duration-700 group-hover:-rotate-1">
                                                 {currentData.imageUrl ? (
                                                     <img src={currentData.imageUrl} alt={currentData.album} className="absolute inset-0 w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                                                        <IconDisc size={120} />
-                                                    </div>
+                                                    <div className="absolute inset-0 flex items-center justify-center opacity-20"><IconDisc size={120} /></div>
                                                 )}
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                                                 <div className="absolute bottom-0 left-0 p-6 w-full text-white">
                                                     <p className="text-xs font-bold tracking-widest uppercase mb-1 text-amber-400">Now Playing</p>
                                                     <h2 className="text-2xl lg:text-3xl font-playfair italic leading-tight">{currentData.album}</h2>
-                                                    <p className="text-sm mt-2 font-light opacity-90">{currentData.artist}</p>
+                                                    <p className="text-base lg:text-lg mt-2 font-light tracking-wider opacity-100">{currentData.artist}</p>
                                                 </div>
                                             </div>
-                                            <div className="absolute -bottom-4 -right-4 w-full h-full border border-stone-300 -z-10 hidden lg:block"></div>
+                                            <div className="mt-6 grid grid-cols-1 gap-2">
+                                                {currentData.youtube && <a href={currentData.youtube} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-lg">YOUTUBE <IconArrowRight size={14}/></a>}
+                                                {currentData.spotify && <a href={currentData.spotify} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg">SPOTIFY <IconArrowRight size={14}/></a>}
+                                                {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-colors flex items-center justify-center gap-2 shadow-lg">APPLE MUSIC <IconArrowRight size={14}/></a>}
+                                            </div>
                                         </div>
 
                                         <div className="lg:col-span-8 lg:pl-12">
@@ -227,35 +235,13 @@
                                             <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-lg">
                                                 {currentData.content}
                                             </div>
-                                            
-                                            <div className="mt-12 flex flex-wrap gap-3">
-                                                {currentData.youtube && (
-                                                    <a href={currentData.youtube} target="_blank" rel="noopener noreferrer" 
-                                                       className="px-5 py-2 bg-red-800 text-white text-[10px] tracking-widest font-bold hover:bg-red-700 transition-colors flex items-center gap-2">
-                                                        YOUTUBE <IconArrowRight size={14}/>
-                                                    </a>
-                                                )}
-                                                {currentData.spotify && (
-                                                    <a href={currentData.spotify} target="_blank" rel="noopener noreferrer" 
-                                                       className="px-5 py-2 bg-green-800 text-white text-[10px] tracking-widest font-bold hover:bg-green-700 transition-colors flex items-center gap-2">
-                                                        SPOTIFY <IconArrowRight size={14}/>
-                                                    </a>
-                                                )}
-                                                {currentData.appleMusic && (
-                                                    <a href={currentData.appleMusic} target="_blank" rel="noopener noreferrer" 
-                                                       className="px-5 py-2 bg-stone-800 text-white text-[10px] tracking-widest font-bold hover:bg-stone-700 transition-colors flex items-center gap-2">
-                                                        APPLE MUSIC <IconArrowRight size={14}/>
-                                                    </a>
-                                                )}
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-64 opacity-30 text-center">
                                     <IconDisc size={64} className="mb-4" />
-                                    <p className="font-zen text-xl tracking-widest uppercase">No record for today</p>
-                                    <p className="text-sm mt-2 font-serif italic">請檢查 Google Sheets 是否已填寫此日期的資料。</p>
+                                    <p className="font-zen text-xl tracking-widest uppercase">本日無資料</p>
                                 </div>
                             )}
                         </div>
