@@ -58,7 +58,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useCallback, useMemo } = React;
+        // 修正：補上 useMemo
+        const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
         // Icons
         const IconChevronLeft = ({size=24}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
@@ -93,6 +94,61 @@
             </svg>
         );
 
+        // YouTube Player Hook
+        const useYouTubePlayer = (videoId) => {
+            const [player, setPlayer] = useState(null);
+            const [playerState, setPlayerState] = useState(-1); // -1: unstarted
+            const [isReady, setIsReady] = useState(false);
+
+            useEffect(() => {
+                if (!window.YT) {
+                    const tag = document.createElement('script');
+                    tag.src = "https://www.youtube.com/iframe_api";
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                }
+
+                const initPlayer = () => {
+                    if (!videoId) return;
+                    
+                    if (player) {
+                        // 如果 player 已存在，直接 load 新的 videoId
+                        player.cueVideoById(videoId);
+                        return;
+                    }
+
+                    const newPlayer = new window.YT.Player('yt-player-mount', {
+                        height: '100%',
+                        width: '100%',
+                        videoId: videoId,
+                        playerVars: {
+                            'playsinline': 1,
+                            'controls': 0,
+                            'rel': 0,
+                            'modestbranding': 1
+                        },
+                        events: {
+                            'onReady': (event) => {
+                                setIsReady(true);
+                            },
+                            'onStateChange': (event) => {
+                                setPlayerState(event.data);
+                            }
+                        }
+                    });
+                    setPlayer(newPlayer);
+                };
+
+                if (window.YT && window.YT.Player) {
+                    initPlayer();
+                } else {
+                    window.onYouTubeIframeAPIReady = initPlayer;
+                }
+            }, [videoId]);
+
+            return { player, playerState, isReady };
+        };
+
         const App = () => {
             const today = new Date();
             const [selectedDate, setSelectedDate] = useState(today);
@@ -106,8 +162,6 @@
             const [showChangelog, setShowChangelog] = useState(false);
             const [isImmersive, setIsImmersive] = useState(false);
             
-            const [isYoutubePlaying, setIsYoutubePlaying] = useState(false);
-            
             const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTluUWYKc4YGQwNvjR-aAYJGDmhkc-umEEgCis548UWm7cR0MkJk_6kxnn4jmDpzEgfghXBGheCdU2l/pub?output=csv";
             const DATA_URL = `${SHEET_BASE_URL}&gid=0`;
             const LOG_URL = `${SHEET_BASE_URL}&gid=1202139946`;
@@ -115,12 +169,32 @@
             const genreColors = { "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE", "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0" };
             const formatDateString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
+            const dateKey = formatDateString(selectedDate);
+            const currentData = jazzData[dateKey];
+            
             const getYouTubeVideoId = (url) => {
                 if (!url) return null;
                 const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
                 const match = url.match(regExp);
                 return (match && match[2].length === 11) ? match[2] : null;
             };
+            
+            const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
+            
+            const { player, playerState, isReady } = useYouTubePlayer(isImmersive ? youtubeId : null);
+            
+            const isVinylSpinning = playerState === 1 || playerState === 3;
+
+            const togglePlay = useCallback((e) => {
+                if (e) e.stopPropagation();
+                if (!player || !isReady) return;
+
+                if (playerState === 1) {
+                    player.pauseVideo();
+                } else {
+                    player.playVideo();
+                }
+            }, [player, playerState, isReady]);
 
             useEffect(() => {
                 const handleHashChange = () => {
@@ -148,12 +222,16 @@
             }, [isImmersive]);
 
             const handleCloseImmersive = () => {
+                if (player && playerState === 1) {
+                    player.pauseVideo();
+                }
                 setIsImmersive(false);
-                setIsYoutubePlaying(false);
             };
 
             const triggerTransition = (newDate) => {
-                setIsYoutubePlaying(false);
+                if (player && playerState === 1) {
+                   player.pauseVideo();
+                }
 
                 const direction = newDate > selectedDate ? 'forward' : 'backward';
                 setTearDirection(direction);
@@ -218,12 +296,8 @@
                     </div>
                 </div>
             );
-
-            const dateKey = formatDateString(selectedDate);
-            const currentData = jazzData[dateKey];
-            const latestVersion = changelogData[0]?.version || "v1.0.0";
             
-            const youtubeId = getYouTubeVideoId(currentData?.youtube);
+            const latestVersion = changelogData[0]?.version || "v1.0.0";
 
             const EditorNote = () => (
                 <div className="editor-note-box bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
@@ -252,27 +326,22 @@
                                     {selectedDate.getFullYear()} . {selectedDate.toLocaleString('en-US', { month: 'long' })} . {selectedDate.getDate()}
                                 </div>
 
+                                {/* 唱片區域 */}
                                 <div 
                                     className="relative w-[70vw] max-w-[450px] aspect-square flex items-center justify-center mb-12 group cursor-pointer"
-                                    onClick={() => setIsYoutubePlaying(!isYoutubePlaying)}
+                                    onClick={togglePlay}
                                 >
                                     <button onClick={(e) => {e.stopPropagation(); handlePrevDay();}} className="absolute -left-16 lg:-left-24 top-1/2 -translate-y-1/2 p-4 text-stone-600 hover:text-white transition opacity-50 hover:opacity-100 hover:scale-110 z-40"><IconChevronLeft size={40}/></button>
                                     <button onClick={(e) => {e.stopPropagation(); handleNextDay();}} className="absolute -right-16 lg:-right-24 top-1/2 -translate-y-1/2 p-4 text-stone-600 hover:text-white transition opacity-50 hover:opacity-100 hover:scale-110 z-40"><IconChevronRight size={40}/></button>
                                     
-                                    {isYoutubePlaying && youtubeId && (
+                                    {/* YouTube Player Mount Point */}
+                                    {youtubeId && (
                                         <div className="absolute inset-0 z-0 opacity-0 pointer-events-none">
-                                            <iframe 
-                                                width="100%" 
-                                                height="100%" 
-                                                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&controls=0&loop=1&playlist=${youtubeId}`} 
-                                                title="YouTube audio" 
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowFullScreen
-                                            ></iframe>
+                                            <div id="yt-player-mount"></div>
                                         </div>
                                     )}
 
-                                    <div className={`w-full h-full rounded-full shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden relative z-10 border border-stone-800 transition-all duration-1000 ${isYoutubePlaying ? 'animate-spin-vinyl' : ''}`}>
+                                    <div className={`w-full h-full rounded-full shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden relative z-10 border border-stone-800 transition-all duration-1000 ${isVinylSpinning ? 'animate-spin-vinyl' : ''}`}>
                                         {currentData?.imageUrl ? (
                                             <img src={currentData.imageUrl} className="w-full h-full object-cover opacity-90" />
                                         ) : (
@@ -282,9 +351,9 @@
                                         <div className="absolute inset-0 rounded-full border-[1px] border-white/5"></div>
                                     </div>
                                     
-                                    <div className={`absolute inset-0 z-20 flex items-center justify-center rounded-full bg-black/30 transition-all duration-300 ${isYoutubePlaying ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`}>
+                                    <div className={`absolute inset-0 z-20 flex items-center justify-center rounded-full bg-black/30 transition-all duration-300 ${isVinylSpinning ? 'opacity-0 hover:opacity-100' : 'opacity-100'}`}>
                                         <div className="w-20 h-20 rounded-full bg-stone-100/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-2xl transform transition-transform group-hover:scale-110">
-                                            {isYoutubePlaying ? <IconPause size={32} /> : <IconPlay size={32} />}
+                                            {isVinylSpinning ? <IconPause size={32} /> : <IconPlay size={32} />}
                                         </div>
                                     </div>
 
@@ -301,7 +370,7 @@
                                 </div>
                                 
                                 <div className="mt-8 text-stone-600 text-xs tracking-[0.2em] uppercase font-bold opacity-60">
-                                    {isYoutubePlaying ? "Now Spinning" : "Click Vinyl to Play"}
+                                    {isVinylSpinning ? "Now Spinning" : "Click Vinyl to Play"}
                                 </div>
                             </div>
                         </div>
@@ -365,7 +434,7 @@
                                                     <div className="absolute bottom-0 left-0 p-6 w-full text-white"><p className="text-xs font-bold tracking-widest uppercase mb-1 text-amber-400">Now Playing</p><h2 className="text-2xl lg:text-3xl font-playfair italic leading-tight">{currentData.album}</h2><p className="text-base lg:text-lg mt-2 font-light tracking-wider">{currentData.artist}</p></div>
                                                 </div>
                                                 
-                                                {/* Vinyl Mode 按鈕：調整至上方 (-top-12) */}
+                                                {/* Vinyl Mode 按鈕 */}
                                                 {youtubeId && (
                                                     <button 
                                                         onClick={() => setIsImmersive(true)} 
