@@ -27,30 +27,21 @@
         .animate-spin-fast { animation: spin 3s linear infinite; }
         .animate-spin-slow { animation: spin 12s linear infinite; }
 
-        /* 撕紙效果物理模擬 */
-        .tear-forward {
-            animation: tearToLeft 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            pointer-events: none;
-        }
+        .tear-forward { animation: tearToLeft 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
         @keyframes tearToLeft {
             0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
             20% { transform: translate(-15px, 10px) rotate(-2deg); }
             100% { transform: translate(-120vw, -80vh) rotate(-35deg); opacity: 0; }
         }
 
-        .tear-backward {
-            animation: tearToRight 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            pointer-events: none;
-        }
+        .tear-backward { animation: tearToRight 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
         @keyframes tearToRight {
             0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
             20% { transform: translate(15px, -10px) rotate(2deg); }
             100% { transform: translate(120vw, 80vh) rotate(35deg); opacity: 0; }
         }
 
-        .page-reveal {
-            animation: revealPage 1s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-        }
+        .page-reveal { animation: revealPage 1s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
         @keyframes revealPage {
             0% { opacity: 0; transform: scale(0.96) translateY(20px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -117,6 +108,47 @@
                 "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0"
             };
 
+            const formatDateString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+            // --- 路由邏輯：處理網址 Hash ---
+            useEffect(() => {
+                const handleHashChange = () => {
+                    const hash = window.location.hash.replace('#', '');
+                    if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
+                        const [y, m, d] = hash.split('-').map(Number);
+                        const hashDate = new Date(y, m - 1, d);
+                        if (!isNaN(hashDate)) {
+                            // 使用特殊的方向判斷，如果跟當前不同才觸發動畫
+                            if (formatDateString(hashDate) !== formatDateString(selectedDate)) {
+                                triggerTransition(hashDate);
+                            }
+                        }
+                    }
+                };
+
+                window.addEventListener('hashchange', handleHashChange);
+                return () => window.removeEventListener('hashchange', handleHashChange);
+            }, [selectedDate, jazzData]);
+
+            const triggerTransition = (newDate) => {
+                const direction = newDate > selectedDate ? 'forward' : 'backward';
+                setTearDirection(direction);
+                setIsPlaying(false);
+                setTimeout(() => {
+                    setSelectedDate(newDate);
+                    setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
+                    setTearDirection(null);
+                    setTimeout(() => setIsPlaying(true), 400);
+                }, 850);
+            };
+
+            const handleDateChange = (newDate) => {
+                if (tearDirection) return;
+                const dateStr = formatDateString(newDate);
+                // 更新網址 Hash，這會觸發 hashchange 事件或歷史紀錄
+                window.location.hash = dateStr;
+            };
+
             useEffect(() => {
                 Papa.parse(CSV_URL, {
                     download: true,
@@ -125,8 +157,18 @@
                     complete: (results) => {
                         const dataMap = {};
                         results.data.forEach(row => { if (row.date) dataMap[row.date.trim()] = row; });
+                        setJazzData(dataMap);
+                        
+                        // 初始載入時檢查 Hash
+                        const hash = window.location.hash.replace('#', '');
+                        if (hash && dataMap[hash]) {
+                            const [y, m, d] = hash.split('-').map(Number);
+                            const initialDate = new Date(y, m - 1, d);
+                            setSelectedDate(initialDate);
+                            setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+                        }
+                        
                         setTimeout(() => {
-                            setJazzData(dataMap);
                             setLoading(false);
                             setIsPlaying(true);
                         }, 2000);
@@ -134,19 +176,7 @@
                 });
             }, []);
 
-            const handleDateChange = (newDate) => {
-                if (tearDirection) return;
-                const direction = newDate > selectedDate ? 'forward' : 'backward';
-                setTearDirection(direction);
-                setIsPlaying(false);
-                setTimeout(() => {
-                    setSelectedDate(newDate);
-                    setTearDirection(null);
-                    setTimeout(() => setIsPlaying(true), 400);
-                }, 850);
-            };
-
-            const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+            const dateKey = formatDateString(selectedDate);
             const currentData = jazzData[dateKey];
 
             const renderCalendarDays = () => {
@@ -158,9 +188,9 @@
                 for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
                 for (let d = 1; d <= daysInMonth; d++) {
                     const currDate = new Date(year, month, d);
-                    const currKey = `${currDate.getFullYear()}-${String(currDate.getMonth() + 1).padStart(2, '0')}-${String(currDate.getDate()).padStart(2, '0')}`;
+                    const currKey = formatDateString(currDate);
                     const isSelected = dateKey === currKey;
-                    const isToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}` === currKey;
+                    const isToday = formatDateString(today) === currKey;
                     days.push(
                         <button key={d} onClick={() => handleDateChange(currDate)}
                             className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif
@@ -188,7 +218,6 @@
             return (
                 <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden" style={{ backgroundColor: genreColors[currentData?.mood?.trim()] || currentData?.mood || "#f2f0e9" }}>
                     <div className="max-w-[1400px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
-                        {/* 左側日曆導航 */}
                         <div className="lg:col-span-3 bg-stone-900 text-stone-300 p-8 lg:min-h-screen flex flex-col justify-between relative z-20 shadow-2xl">
                             <div>
                                 <div className="mb-12 pt-4 flex flex-col items-start">
@@ -215,12 +244,10 @@
                                     </div>
                                 </div>
                             </div>
-                            {/* 版權修正處 */}
                             <div className="text-[10px] text-stone-600 tracking-widest mt-8"><p>© 2026 TEYLUNG TRANS.</p></div>
                         </div>
                         
                         <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-start pt-20 lg:pt-32 min-h-screen">
-                            
                             {currentData && currentData.editorNote && currentData.editorNote.trim() !== "" && (
                                 <div className="absolute top-12 right-12 z-40 max-w-[300px] editor-note-box hidden lg:block">
                                     <div className="bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
