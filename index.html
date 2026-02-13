@@ -106,7 +106,17 @@
             </svg>
         );
 
-        // 修正後的 YouTube Player Hook：強制銷毀與重建
+        // 修正：將 EditorNote 移到 App 外部，防止因 App 重新渲染(hover時)導致 EditorNote 被卸載重裝而觸發動畫
+        const EditorNote = ({ note }) => (
+            <div className="editor-note-box bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
+                <div className="flex items-center gap-3 mb-3">
+                    <StoneEditorIcon />
+                    <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
+                </div>
+                <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">{note}</p>
+            </div>
+        );
+
         const useYouTubePlayer = (videoId) => {
             const [player, setPlayer] = useState(null);
             const [playerState, setPlayerState] = useState(-1);
@@ -114,7 +124,6 @@
             const playerRef = useRef(null);
 
             useEffect(() => {
-                // 載入 API
                 if (!window.YT) {
                     const tag = document.createElement('script');
                     tag.src = "https://www.youtube.com/iframe_api";
@@ -122,7 +131,6 @@
                     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
                 }
 
-                // 核心邏輯：如果沒有 ID，或者 DOM 元素不存在，就清理
                 if (!videoId || !document.getElementById('yt-player-mount')) {
                     if (playerRef.current) {
                         playerRef.current.destroy();
@@ -134,7 +142,6 @@
                 }
 
                 const createPlayer = () => {
-                    // 如果有舊實例，先銷毀，確保是全新的
                     if (playerRef.current) {
                         playerRef.current.destroy();
                     }
@@ -148,14 +155,12 @@
                             'controls': 0,
                             'rel': 0,
                             'modestbranding': 1,
-                            'autoplay': 1, // 嘗試自動播放
+                            'autoplay': 1,
                             'mute': 0 
                         },
                         events: {
                             'onReady': (event) => {
                                 setIsReady(true);
-                                // 嘗試解決手機端第一次可能不播放的問題
-                                // 但主要依賴使用者的點擊操作
                             },
                             'onStateChange': (event) => {
                                 setPlayerState(event.data);
@@ -175,14 +180,12 @@
                     window.onYouTubeIframeAPIReady = createPlayer;
                 }
 
-                // Cleanup function
                 return () => {
                     if (playerRef.current) {
-                        // 不要在此處完全銷毀，因為依賴 videoId 變化來觸發重建
-                        // 但如果是組件卸載，則需要銷毀
+                        // Cleanup
                     }
                 };
-            }, [videoId]); // 當 videoId 改變時，完全重新執行
+            }, [videoId]);
 
             return { player, playerState, isReady };
         };
@@ -219,15 +222,12 @@
             
             const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
             
-            // 這裡傳入的 id 會隨日期改變
-            // useYouTubePlayer 內部會偵測到變化並銷毀舊的 -> 建立新的
             const { player, playerState, isReady } = useYouTubePlayer(isImmersive ? youtubeId : null);
             
             const isVinylSpinning = playerState === 1 || playerState === 3;
 
             const togglePlay = useCallback((e) => {
                 if (e) e.stopPropagation();
-                // 增加防呆：如果有 player 實例但狀態不對，或者剛剛切換過來，確保執行 playVideo
                 if (player && typeof player.playVideo === 'function') {
                     if (playerState === 1) {
                         player.pauseVideo();
@@ -270,7 +270,6 @@
             };
 
             const triggerTransition = (newDate) => {
-                // 切換日期時，如果正在播放，嘗試暫停 (雖然 hook 會銷毀它)
                 if (player && playerState === 1 && typeof player.pauseVideo === 'function') {
                    player.pauseVideo();
                 }
@@ -340,16 +339,6 @@
             );
             
             const latestVersion = changelogData[0]?.version || "v1.0.0";
-
-            const EditorNote = () => (
-                <div className="editor-note-box bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
-                    <div className="flex items-center gap-3 mb-3">
-                        <StoneEditorIcon />
-                        <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
-                    </div>
-                    <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">{currentData.editorNote}</p>
-                </div>
-            );
 
             return (
                 <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden transition-colors duration-1000" style={{ backgroundColor: genreColors[currentData?.mood?.trim()] || currentData?.mood || "#f2f0e9" }}>
@@ -452,7 +441,7 @@
                         <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-start pt-20 lg:pt-32 min-h-screen">
                             {currentData?.editorNote?.trim() && (
                                 <div className="absolute top-12 right-12 z-40 max-w-[300px] hidden lg:block">
-                                    <EditorNote />
+                                    <EditorNote note={currentData.editorNote} />
                                 </div>
                             )}
 
@@ -494,7 +483,7 @@
                                         <div className="lg:col-span-8 lg:pl-12">
                                             {currentData?.editorNote?.trim() && (
                                                 <div className="mb-10 lg:hidden">
-                                                    <EditorNote />
+                                                    <EditorNote note={currentData.editorNote} />
                                                 </div>
                                             )}
 
