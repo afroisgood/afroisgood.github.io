@@ -135,6 +135,21 @@
                 </div>
             );
 
+            // 石編的話組件 - 統一邏輯
+            const EditorNote = ({ isMobile }) => (
+                <div className={`${isMobile ? 'mt-8 mb-4' : 'absolute top-12 right-12 z-40 hidden lg:block'} max-w-[300px] editor-note-box`}>
+                    <div className="bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
+                        <div className="flex items-center gap-3 mb-3">
+                            <StoneEditorIcon />
+                            <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
+                        </div>
+                        <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">
+                            {currentData.editorNote}
+                        </p>
+                    </div>
+                </div>
+            );
+
             return (
                 <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden">
                     <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
@@ -175,20 +190,9 @@
 
                         {/* 右側內容區 */}
                         <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-center min-h-screen">
-                            {/* 石編的話 (已改為 absolute 固定於右側內容區塊內) */}
-                            {currentData && currentData.editorNote && currentData.editorNote.trim() !== "" && (
-                                <div className="absolute top-12 right-12 z-40 max-w-[300px] editor-note-box hidden lg:block">
-                                    <div className="bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <StoneEditorIcon />
-                                            <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
-                                        </div>
-                                        <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">
-                                            {currentData.editorNote}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+                            
+                            {/* 電腦版石編的話 (維持原位) */}
+                            {currentData && currentData.editorNote && currentData.editorNote.trim() !== "" && <EditorNote isMobile={false} />}
 
                             <div className="absolute top-0 right-0 lg:right-20 -z-10 select-none opacity-5 pointer-events-none">
                                 <span className="font-playfair text-[20rem] lg:text-[25rem] leading-none text-stone-900">
@@ -208,7 +212,7 @@
                                         <div className="font-zen text-stone-500 text-lg">{selectedDate.toLocaleDateString('zh-TW', { weekday: 'long' })}</div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
                                         <div className="lg:col-span-4 relative group lg:translate-x-4 z-10">
                                             <div className="aspect-square w-full shadow-2xl relative bg-stone-800 overflow-hidden transition-transform duration-700 group-hover:-rotate-1">
                                                 {currentData.imageUrl ? (
@@ -223,11 +227,20 @@
                                                     <p className="text-base lg:text-lg mt-2 font-light tracking-wider opacity-100">{currentData.artist}</p>
                                                 </div>
                                             </div>
+                                            
+                                            {/* 音樂按鈕 */}
                                             <div className="mt-6 grid grid-cols-1 gap-2">
                                                 {currentData.youtube && <a href={currentData.youtube} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 shadow-lg">YOUTUBE <IconArrowRight size={14}/></a>}
                                                 {currentData.spotify && <a href={currentData.spotify} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg">SPOTIFY <IconArrowRight size={14}/></a>}
                                                 {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" rel="noopener noreferrer" className="px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-colors flex items-center justify-center gap-2 shadow-lg">APPLE MUSIC <IconArrowRight size={14}/></a>}
                                             </div>
+
+                                            {/* 手機版石編的話 (僅在小螢幕顯示，放在專輯下方) */}
+                                            {currentData && currentData.editorNote && currentData.editorNote.trim() !== "" && (
+                                                <div className="lg:hidden">
+                                                    <EditorNote isMobile={true} />
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="lg:col-span-8 lg:pl-12">
