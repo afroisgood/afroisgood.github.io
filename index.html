@@ -106,7 +106,7 @@
             </svg>
         );
 
-        // 修正：將 EditorNote 移到 App 外部，防止因 App 重新渲染(hover時)導致 EditorNote 被卸載重裝而觸發動畫
+        // EditorNote 組件
         const EditorNote = ({ note }) => (
             <div className="editor-note-box bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
                 <div className="flex items-center gap-3 mb-3">
@@ -117,6 +117,7 @@
             </div>
         );
 
+        // YouTube Player Hook
         const useYouTubePlayer = (videoId) => {
             const [player, setPlayer] = useState(null);
             const [playerState, setPlayerState] = useState(-1);
@@ -477,7 +478,12 @@
                                                 )}
                                             </div>
 
-                                            <div className="mt-6 grid grid-cols-1 gap-2" onMouseEnter={() => setIsHoveringLink(true)} onMouseLeave={() => setIsHoveringLink(false)}>{currentData.youtube && <a href={currentData.youtube} target="_blank" className="px-4 py-2.5 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-all hover:translate-x-1">YOUTUBE <IconArrowRight size={14}/></a>}{currentData.spotify && <a href={currentData.spotify} target="_blank" className="px-4 py-2.5 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-all hover:translate-x-1">SPOTIFY <IconArrowRight size={14}/></a>}{currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" className="px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1">APPLE MUSIC <IconArrowRight size={14}/></a>}</div>
+                                            <div className="mt-6 grid grid-cols-1 gap-2" onMouseEnter={() => setIsHoveringLink(true)} onMouseLeave={() => setIsHoveringLink(false)}>
+                                                {currentData.youtube && <a href={currentData.youtube} target="_blank" className="px-4 py-2.5 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-all hover:translate-x-1">YOUTUBE <IconArrowRight size={14}/></a>}
+                                                {currentData.spotify && <a href={currentData.spotify} target="_blank" className="px-4 py-2.5 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-all hover:translate-x-1">SPOTIFY <IconArrowRight size={14}/></a>}
+                                                {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" className="px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1">APPLE MUSIC <IconArrowRight size={14}/></a>}
+                                                {currentData.other && <a href={currentData.other} target="_blank" className="px-4 py-2.5 bg-slate-600 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-slate-500 transition-all hover:translate-x-1">OTHER <IconArrowRight size={14}/></a>}
+                                            </div>
                                         </div>
                                         
                                         <div className="lg:col-span-8 lg:pl-12">
