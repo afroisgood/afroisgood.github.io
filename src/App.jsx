@@ -1,17 +1,14 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Papa from 'papaparse';
 
+// 引入已經拆分出去的工具與組件
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
+import { Sidebar } from './components/Sidebar';
 import { EditorNote } from './components/EditorNote';
-
-import {
-    IconChevronLeft, IconChevronRight, IconQuote, IconArrowRight,
-    IconMaximize, IconX, IconPlay, IconPause, IconDisc,
-    StoneEditorIcon, StoneVinylIcon
+import { 
+    IconDisc, IconChevronLeft, IconChevronRight, IconQuote, 
+    IconArrowRight, IconX, IconPlay, IconPause, StoneVinylIcon 
 } from './components/Icons';
-
-
-
 
 const App = () => {
     const today = new Date();
@@ -45,7 +42,7 @@ const App = () => {
     
     const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
     
-    const { player, playerState, isReady } = useYouTubePlayer(isImmersive ? youtubeId : null);
+    const { player, playerState } = useYouTubePlayer(isImmersive ? youtubeId : null);
     
     const isVinylSpinning = playerState === 1 || playerState === 3;
 
@@ -230,11 +227,11 @@ const App = () => {
                 </div>
             )}
             
-            {/* 一般模式內容 */}
+            {/* 更新履歷內容 */}
             {showChangelog && (
                 <div className="fixed inset-0 z-[100] flex items-end lg:items-center justify-start lg:pl-20 pointer-events-none">
                     <div className="changelog-panel bg-stone-900/95 backdrop-blur-xl text-stone-300 p-8 w-full lg:w-[400px] h-3/4 lg:h-auto lg:max-h-[600px] shadow-2xl pointer-events-auto border-t lg:border border-amber-900/50 overflow-y-auto">
-                        <div className="flex justify-between items-start mb-8"><h3 className="font-zen font-black text-amber-500 tracking-[0.3em] text-lg uppercase">更新履歷</h3><button onClick={() => setShowChangelog(false)} className="text-stone-500 hover:text-white transition"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+                        <div className="flex justify-between items-start mb-8"><h3 className="font-zen font-black text-amber-500 tracking-[0.3em] text-lg uppercase">更新履歷</h3><button onClick={() => setShowChangelog(false)} className="text-stone-500 hover:text-white transition"><IconX size={24}/></button></div>
                         <div className="space-y-8 font-zen text-sm leading-relaxed">
                             {changelogData.map((log, idx) => (<div key={idx} className={`border-l-2 ${idx === 0 ? 'border-amber-700' : 'border-stone-700 opacity-50'} pl-4`}><p className={`${idx === 0 ? 'text-amber-600' : ''} font-bold mb-1`}>{log.version} ({log.date})</p><p className="whitespace-pre-line">{log.content}</p></div>))}
                         </div>
@@ -243,23 +240,18 @@ const App = () => {
             )}
 
             <div className="max-w-[1400px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
-                <div className="lg:col-span-3 bg-stone-900 text-stone-300 p-8 lg:min-h-screen flex flex-col justify-between relative z-20 shadow-2xl">
-                    <div>
-                        <div className="mb-12 pt-4 flex flex-col items-start"><div className="flex items-center gap-3 text-amber-500 mb-2"><IconDisc className={isPlaying ? "animate-spin-fast" : "animate-spin-slow"} size={28} /><span className="text-xs tracking-[0.3em] uppercase font-bold">Daily Jazz</span></div><h1 className="text-3xl font-zen font-bold text-stone-100 leading-snug">日めくり<br/>ジャズ 365</h1><div className="w-12 h-1 bg-amber-600 mt-4"></div></div>
-                        <div className="mb-8"><div className="flex items-center justify-between mb-6 border-b border-stone-800 pb-2"><span className="font-playfair text-2xl text-stone-100 italic">{currentMonth.toLocaleString('en-US', { month: 'short' })} '{currentMonth.getFullYear().toString().slice(2)}</span><div className="flex gap-2"><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}><IconChevronLeft/></button><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}><IconChevronRight/></button></div></div><div className="grid grid-cols-7 gap-y-3 gap-x-1 place-items-center">{['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => <span key={i} className="text-[10px] text-stone-600 font-bold">{day}</span>)}{
-                            (() => {
-                                const year = currentMonth.getFullYear(); const month = currentMonth.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate(); const firstDay = new Date(year, month, 1).getDay(); const days = [];
-                                for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`} className="h-8 w-8"></div>);
-                                for (let d = 1; d <= daysInMonth; d++) {
-                                    const currDate = new Date(year, month, d); const currKey = formatDateString(currDate); const isSelected = dateKey === currKey;
-                                    days.push(<button key={d} onClick={() => handleDateChange(currDate)} className={`h-8 w-8 flex items-center justify-center text-sm relative transition-all duration-300 font-serif ${isSelected ? 'text-amber-400 font-bold scale-125' : 'text-stone-400 hover:text-stone-200'}`}><span>{d}</span>{jazzData.hasOwnProperty(currKey) && !isSelected && <span className="absolute -bottom-1 w-1 h-1 bg-amber-600 rounded-full"></span>}</button>);
-                                }
-                                return days;
-                            })()
-                        }</div></div>
-                    </div>
-                    <div className="flex flex-col gap-2 mt-8"><button onClick={() => setShowChangelog(true)} className="text-[10px] text-amber-600/60 hover:text-amber-500 transition tracking-widest text-left w-fit uppercase font-bold border-b border-amber-900/30 pb-0.5">{latestVersion} Log</button><div className="text-[10px] text-stone-600 tracking-widest uppercase"><p>© 2026 TEYLUNG TRANS.</p></div></div>
-                </div>
+                
+                {/* 引入左側日曆組件 */}
+                <Sidebar 
+                    isPlaying={isPlaying}
+                    currentMonth={currentMonth}
+                    setCurrentMonth={setCurrentMonth}
+                    selectedDate={selectedDate}
+                    handleDateChange={handleDateChange}
+                    jazzData={jazzData}
+                    setShowChangelog={setShowChangelog}
+                    latestVersion={latestVersion}
+                />
                 
                 <div className="lg:col-span-9 relative p-6 lg:p-12 flex flex-col justify-start pt-20 lg:pt-32 min-h-screen">
                     {currentData?.editorNote?.trim() && (
@@ -288,6 +280,7 @@ const App = () => {
                                             <div className="absolute bottom-0 left-0 p-6 w-full text-white"><p className="text-xs font-bold tracking-widest uppercase mb-1 text-amber-400">Now Playing</p><h2 className="text-2xl lg:text-3xl font-playfair italic leading-tight">{currentData.album}</h2><p className="text-base lg:text-lg mt-2 font-light tracking-wider">{currentData.artist}</p></div>
                                         </div>
                                         
+                                        {/* Vinyl Mode 按鈕 */}
                                         {youtubeId && (
                                             <button 
                                                 onClick={() => setIsImmersive(true)} 
