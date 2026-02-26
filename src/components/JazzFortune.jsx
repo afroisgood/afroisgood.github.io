@@ -14,12 +14,10 @@ export const JazzFortune = ({ jazzData, onNavigate }) => {
         setLoading(true);
 
         try {
-            // 1. 篩選出「有專輯資料」的日期，並隨機抽取一天
             const availableDates = Object.keys(jazzData).filter(key => jazzData[key] && jazzData[key].album);
             const randomDateKey = availableDates[Math.floor(Math.random() * availableDates.length)];
             const randomSong = jazzData[randomDateKey];
 
-            // 2. 呼叫 AI 大腦，傳入這首隨機抽到的歌
             const { data, error } = await supabase.functions.invoke('jazz-fortune-ai', {
                 body: { 
                     name: formData.name, 
@@ -32,10 +30,8 @@ export const JazzFortune = ({ jazzData, onNavigate }) => {
 
             if (error) throw error;
 
-            // 3. 顯示結果
             setResult({ text: data.ai_text });
             
-            // 4. 自動觸發日期跳轉 (將 YYYY-MM-DD 轉回 Date 物件)
             const [y, m, d] = randomDateKey.split('-').map(Number);
             onNavigate(new Date(y, m - 1, d));
 
@@ -58,18 +54,25 @@ export const JazzFortune = ({ jazzData, onNavigate }) => {
                     <div className="space-y-3 mb-4">
                         <input 
                             type="text" placeholder="你的姓名" 
-                            className="w-full bg-transparent border-b border-stone-300 py-1 text-xs focus:outline-none focus:border-amber-600"
+                            className="w-full bg-transparent border-b border-stone-300 py-1 text-xs focus:outline-none focus:border-amber-600 text-stone-700"
                             onChange={e => setFormData({...formData, name: e.target.value})}
                         />
-                        {/* 修正：解決 iOS 手機版不顯示 Placeholder 的問題 */}
-                        <input 
-                            type="text" 
-                            placeholder="選擇出生年月日" 
-                            className="w-full bg-transparent border-b border-stone-300 py-1 text-xs focus:outline-none focus:border-amber-600 text-stone-500 cursor-pointer"
-                            onFocus={(e) => e.target.type = 'date'}
-                            onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
-                            onChange={e => setFormData({...formData, date: e.target.value})}
-                        />
+                        
+                        {/* 🌟 終極修正：透明疊加法 (解決 iOS 鍵盤跳出問題) */}
+                        <div className="relative w-full">
+                            {/* 底層的假 Placeholder (點擊會穿透) */}
+                            {!formData.date && (
+                                <div className="absolute left-0 top-1 text-xs text-stone-400 pointer-events-none">
+                                    選擇出生年月日
+                                </div>
+                            )}
+                            {/* 上層的真實 Date Input (永遠都是 date 屬性) */}
+                            <input 
+                                type="date" 
+                                className={`w-full bg-transparent border-b border-stone-300 py-1 text-xs focus:outline-none focus:border-amber-600 cursor-pointer relative z-10 transition-colors ${!formData.date ? 'text-transparent' : 'text-stone-700'}`}
+                                onChange={e => setFormData({...formData, date: e.target.value})}
+                            />
+                        </div>
                     </div>
 
                     <div className="flex gap-1 mb-4">
