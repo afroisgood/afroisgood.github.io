@@ -16,10 +16,19 @@ export const DailyArticle = ({
 
     // 處理分享的精緻邏輯
     const handleShare = async () => {
-        // 準備要分享的專屬文案與當日專屬網址 (包含 #hash)
+        // 1. 判斷選取的日期是不是「今天」
+        const now = new Date();
+        const isToday = selectedDate.getFullYear() === now.getFullYear() &&
+                        selectedDate.getMonth() === now.getMonth() &&
+                        selectedDate.getDate() === now.getDate();
+        
+        // 2. 根據判斷結果，決定文案的開頭
+        const dateText = isToday ? '今天' : `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
+
+        // 3. 準備要分享的專屬文案與當日專屬網址
         const shareData = {
             title: `日めくりジャズ365 | ${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`,
-            text: `🎵 今天的爵士推薦是 ${currentData.artist} 的《${currentData.album}》！快來聽聽看：`,
+            text: `🎵 ${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》！快來聽聽看：`,
             url: window.location.href, 
         };
 
@@ -33,7 +42,7 @@ export const DailyArticle = ({
         } else {
             // 如果不支援 (如一般桌機)，優雅地降級為「複製到剪貼簿」
             try {
-                await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+                await navigator.clipboard.writeText(`${shareData.text} \n${shareData.url}`);
                 setIsCopied(true);
                 // 2 秒後把 COPIED 狀態變回原來的 SHARE
                 setTimeout(() => setIsCopied(false), 2000); 
@@ -106,7 +115,7 @@ export const DailyArticle = ({
                         {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1">APPLE MUSIC <IconArrowRight size={14}/></a>}
                         {currentData.other && <a href={currentData.other} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-2.5 bg-slate-600 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-slate-500 transition-all hover:translate-x-1">OTHER <IconArrowRight size={14}/></a>}
                         
-                        {/* 專屬分享按鈕，如果沒有前面四個按鈕，它會獨自佔滿寬度或排在最後 */}
+                        {/* 專屬分享按鈕 */}
                         <button 
                             onClick={handleShare}
                             className={`flex items-center justify-between px-4 py-2.5 transition-all hover:translate-x-1 text-[10px] tracking-[0.2em] font-bold ${isCopied ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-800 hover:bg-stone-300'} ${(!currentData.youtube && !currentData.spotify && !currentData.appleMusic && !currentData.other) ? 'col-span-2' : ''}`}
