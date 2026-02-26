@@ -1,6 +1,7 @@
 // src/components/DailyArticle.jsx
 import { useState } from 'react';
 import { EditorNote } from './EditorNote';
+import { SongRating } from './SongRating';
 import { IconDisc, StoneVinylIcon, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
 
 export const DailyArticle = ({
@@ -11,20 +12,22 @@ export const DailyArticle = ({
     setIsImmersive
 }) => {
     const [isCopied, setIsCopied] = useState(false);
+    // 效能優化：將懸停狀態留在組件內部，避免觸發全網頁重繪
     const [isHoveringLink, setIsHoveringLink] = useState(false);
 
-    // 處理分享的精緻邏輯
+    // 格式化日期 key (YYYY-MM-DD)，用於資料庫與快取索引
+    const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+
+    // 處理動態分享邏輯
     const handleShare = async () => {
-        // 1. 判斷選取的日期是不是「今天」
         const now = new Date();
         const isToday = selectedDate.getFullYear() === now.getFullYear() &&
                         selectedDate.getMonth() === now.getMonth() &&
                         selectedDate.getDate() === now.getDate();
         
-        // 2. 根據判斷結果，決定文案的開頭
+        // 根據日期狀態切換文案：今天 vs 特定日期
         const dateText = isToday ? '今天' : `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
 
-        // 3. 準備要分享的專屬文案與當日專屬網址
         const shareData = {
             title: `日めくりジャズ365 | ${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`,
             text: `🎵 ${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》！快來聽聽看：`,
@@ -32,18 +35,15 @@ export const DailyArticle = ({
         };
 
         if (navigator.share) {
-            // 如果裝置支援原生分享 (如手機)，叫出系統分享選單
             try {
                 await navigator.share(shareData);
             } catch (err) {
-                console.log('分享動作已取消或失敗', err);
+                console.log('分享取消', err);
             }
         } else {
-            // 如果不支援 (如一般桌機)，優雅地降級為「複製到剪貼簿」
             try {
                 await navigator.clipboard.writeText(`${shareData.text} \n${shareData.url}`);
                 setIsCopied(true);
-                // 2 秒後把 COPIED 狀態變回原來的 SHARE
                 setTimeout(() => setIsCopied(false), 2000); 
             } catch (err) {
                 console.error('複製失敗', err);
@@ -62,6 +62,7 @@ export const DailyArticle = ({
 
     return (
         <div className={`relative w-full max-w-5xl mx-auto ${tearDirection === 'forward' ? 'tear-forward' : tearDirection === 'backward' ? 'tear-backward' : 'page-reveal'}`}>
+            {/* 日期標題區 */}
             <div className="flex flex-col lg:flex-row items-baseline gap-6 mb-16 ml-0 lg:ml-12 relative z-20">
                 <div className="font-playfair text-6xl lg:text-8xl font-black text-stone-900">
                     {selectedDate.getDate()}
@@ -75,6 +76,7 @@ export const DailyArticle = ({
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                {/* 左側：唱片封面與連結 */}
                 <div className="lg:col-span-4 relative lg:translate-x-4 z-10">
                     <div className={`absolute top-1/2 -translate-y-1/2 right-0 w-[95%] aspect-square -z-10 transition-all duration-700 ease-in-out flex items-center justify-center ${isHoveringLink ? 'translate-x-[25%] opacity-100' : 'translate-x-0 opacity-0'}`}>
                         <IconDisc size="100%" isPureBlack={true} className="drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]" />
@@ -114,7 +116,6 @@ export const DailyArticle = ({
                         {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-2.5 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1">APPLE MUSIC <IconArrowRight size={14}/></a>}
                         {currentData.other && <a href={currentData.other} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-2.5 bg-slate-600 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-slate-500 transition-all hover:translate-x-1">OTHER <IconArrowRight size={14}/></a>}
                         
-                        {/* 專屬分享按鈕 */}
                         <button 
                             onClick={handleShare}
                             className={`flex items-center justify-between px-4 py-2.5 transition-all hover:translate-x-1 text-[10px] tracking-[0.2em] font-bold ${isCopied ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-800 hover:bg-stone-300'} ${(!currentData.youtube && !currentData.spotify && !currentData.appleMusic && !currentData.other) ? 'col-span-2' : ''}`}
@@ -125,6 +126,7 @@ export const DailyArticle = ({
                     </div>
                 </div>
                 
+                {/* 右側：文章內容與評分 */}
                 <div className="lg:col-span-8 lg:pl-12">
                     {currentData?.editorNote?.trim() && (
                         <div className="mb-10 lg:hidden">
@@ -133,9 +135,12 @@ export const DailyArticle = ({
                     )}
 
                     <IconQuote className="text-amber-600/20 mb-6" />
-                    <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-lg">
+                    <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-lg mb-12">
                         {currentData.content}
                     </div>
+
+                    {/* 雲端評分系統組件 */}
+                    <SongRating dateKey={dateKey} />
                 </div>
             </div>
         </div>
