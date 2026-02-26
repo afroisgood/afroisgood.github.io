@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+/* 背景紙張材質 */
+.bg-image-paper {
+    background-color: #f2f0e9;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    transition: background-color 1.2s ease-in-out;
+}
+
+/* 唱片旋轉動畫 */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin-fast { animation: spin 3s linear infinite; }
+.animate-spin-slow { animation: spin 12s linear infinite; }
+.animate-spin-vinyl { animation: spin 4s linear infinite; } 
+
+/* 撕頁特效 */
+.tear-forward { animation: tearToLeft 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
+@keyframes tearToLeft { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 20% { transform: translate(-15px, 10px) rotate(-2deg); } 100% { transform: translate(-120vw, -80vh) rotate(-35deg); opacity: 0; } }
+
+.tear-backward { animation: tearToRight 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
+@keyframes tearToRight { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 20% { transform: translate(15px, -10px) rotate(2deg); } 100% { transform: translate(120vw, 80vh) rotate(35deg); opacity: 0; } }
+
+/* 介面進場特效 */
+.page-reveal { animation: revealPage 1s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
+@keyframes revealPage { 0% { opacity: 0; transform: scale(0.96) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+
+.editor-note-box { animation: slideInDown 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+@keyframes slideInDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+
+.needle-drop { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.needle-drop:active { transform: scale(0.98) translateY(4px); }
+
+.changelog-panel { animation: slideInUp 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+@keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* 沉浸模式特效 */
+.immersive-overlay { animation: fadeIn 0.8s ease-in-out forwards; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.immersive-bg {
+    background: radial-gradient(circle at center, #2a2a2a 0%, #050505 85%);
+}
