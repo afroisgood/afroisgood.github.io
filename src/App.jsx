@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Papa from 'papaparse';
 
+import { useYouTubePlayer } from './hooks/useYouTubePlayer';
+import { EditorNote } from './components/EditorNote';
+
 import {
     IconChevronLeft, IconChevronRight, IconQuote, IconArrowRight,
     IconMaximize, IconX, IconPlay, IconPause, IconDisc,
@@ -8,88 +11,7 @@ import {
 } from './components/Icons';
 
 
-const EditorNote = ({ note }) => (
-    <div className="editor-note-box bg-[#fffdf9]/95 backdrop-blur-xl border-l-2 border-stone-800 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative">
-        <div className="flex items-center gap-3 mb-3">
-            <StoneEditorIcon />
-            <span className="font-zen font-bold text-stone-900 tracking-[0.1em] text-xs">石編的話</span>
-        </div>
-        <p className="font-zen text-sm lg:text-[0.95rem] leading-relaxed text-stone-800 tracking-wide">{note}</p>
-    </div>
-);
 
-const useYouTubePlayer = (videoId) => {
-    const [player, setPlayer] = useState(null);
-    const [playerState, setPlayerState] = useState(-1);
-    const [isReady, setIsReady] = useState(false);
-    const playerRef = useRef(null);
-
-    useEffect(() => {
-        if (!window.YT) {
-            const tag = document.createElement('script');
-            tag.src = "https://www.youtube.com/iframe_api";
-            const firstScriptTag = document.getElementsByTagName('script')[0];
-            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        }
-
-        if (!videoId || !document.getElementById('yt-player-mount')) {
-            if (playerRef.current) {
-                playerRef.current.destroy();
-                playerRef.current = null;
-                setPlayer(null);
-                setPlayerState(-1);
-            }
-            return;
-        }
-
-        const createPlayer = () => {
-            if (playerRef.current) {
-                playerRef.current.destroy();
-            }
-
-            const newPlayer = new window.YT.Player('yt-player-mount', {
-                height: '100%',
-                width: '100%',
-                videoId: videoId,
-                playerVars: {
-                    'playsinline': 1,
-                    'controls': 0,
-                    'rel': 0,
-                    'modestbranding': 1,
-                    'autoplay': 1,
-                    'mute': 0 
-                },
-                events: {
-                    'onReady': (event) => {
-                        setIsReady(true);
-                    },
-                    'onStateChange': (event) => {
-                        setPlayerState(event.data);
-                    },
-                    'onError': (e) => {
-                        console.error("YouTube Error:", e);
-                    }
-                }
-            });
-            playerRef.current = newPlayer;
-            setPlayer(newPlayer);
-        };
-
-        if (window.YT && window.YT.Player) {
-            createPlayer();
-        } else {
-            window.onYouTubeIframeAPIReady = createPlayer;
-        }
-
-        return () => {
-            if (playerRef.current) {
-                // Cleanup
-            }
-        };
-    }, [videoId]);
-
-    return { player, playerState, isReady };
-};
 
 const App = () => {
     const today = new Date();
