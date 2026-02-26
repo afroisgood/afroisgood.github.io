@@ -61,9 +61,13 @@ export const JazzFortune = ({ jazzData, onNavigate }) => {
                             className="w-full bg-transparent border-b border-stone-300 py-1 text-xs focus:outline-none focus:border-amber-600"
                             onChange={e => setFormData({...formData, name: e.target.value})}
                         />
+                        {/* 修正：解決 iOS 手機版不顯示 Placeholder 的問題 */}
                         <input 
-                            type="date" 
-                            className="w-full bg-transparent border-b border-stone-300 py-1 text-xs focus:outline-none focus:border-amber-600 text-stone-500"
+                            type="text" 
+                            placeholder="選擇出生年月日" 
+                            className="w-full bg-transparent border-b border-stone-300 py-1 text-xs focus:outline-none focus:border-amber-600 text-stone-500 cursor-pointer"
+                            onFocus={(e) => e.target.type = 'date'}
+                            onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                             onChange={e => setFormData({...formData, date: e.target.value})}
                         />
                     </div>
@@ -85,7 +89,7 @@ export const JazzFortune = ({ jazzData, onNavigate }) => {
 
                     <button 
                         onClick={handleAnalyze} disabled={loading}
-                        className="w-full py-3 bg-amber-700 text-white text-[11px] font-black tracking-widest hover:bg-amber-800 disabled:opacity-50"
+                        className="w-full py-3 bg-amber-700 text-white text-[11px] font-black tracking-widest hover:bg-amber-800 disabled:opacity-50 transition-colors"
                     >
                         {loading ? "感應星象中..." : "抽取今日命定爵士"}
                     </button>
@@ -98,7 +102,7 @@ export const JazzFortune = ({ jazzData, onNavigate }) => {
                     <p className="leading-relaxed font-zen italic text-stone-200 mb-4 whitespace-pre-line">
                         {result.text}
                     </p>
-                    <button onClick={() => setResult(null)} className="text-[10px] text-stone-500 hover:text-amber-500 tracking-widest">
+                    <button onClick={() => setResult(null)} className="text-[10px] text-stone-500 hover:text-amber-500 tracking-widest transition-colors">
                         ← 重新抽取
                     </button>
                 </div>
