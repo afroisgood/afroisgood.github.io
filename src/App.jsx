@@ -24,9 +24,9 @@ const App = () => {
     const [showChangelog, setShowChangelog] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
     
-    const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTluUWYKc4YGQwNvjR-aAYJGDmhkc-umEEgCis548UWm7cR0MkJk_6kxnn4jmDpzEgfghXBGheCdU2l/pub?output=csv";
-    const DATA_URL = `${SHEET_BASE_URL}&gid=0`;
-    const LOG_URL = `${SHEET_BASE_URL}&gid=1202139946`;
+    const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHKaZyF61C3xBsReTpqR7f4_acrKWq6QIyDadZ3t2P_NkhmBh9hgCJF0tLwjrXqXVmMl14YF3BUC_b/pub?output=csv";
+    const DATA_URL = `${SHEET_BASE_URL}&gid=1417154704`;
+    const LOG_URL = `${SHEET_BASE_URL}&gid=647085179`;
 
     const genreColors = { "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE", "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0" };
     const formatDateString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
