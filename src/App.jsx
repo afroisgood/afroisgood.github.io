@@ -203,14 +203,14 @@ const App = () => {
                     <DailyArticle 
                         currentData={currentData} 
                         selectedDate={selectedDate} 
-                        tearDirection={tearDirection}
-                        youtubeId={youtubeId} 
+                        tearDirection={tearDirection} 
+                        youtubeId={youtubeId}  
                         setIsImmersive={setIsImmersive}
                     />
 
                 </div>
             </div>
-        </div>
+        </div> 
     );
 };
 
