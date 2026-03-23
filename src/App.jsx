@@ -10,6 +10,7 @@ import { EditorNote } from './components/EditorNote';
 import { IconDisc } from './components/Icons';
 import { AdminPanel } from './components/AdminPanel';
 import { MobileNav } from './components/MobileNav';
+import { RetroMenuBar } from './components/RetroMenuBar';
 
 const App = () => {
     const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
@@ -205,30 +206,50 @@ const App = () => {
     }, []);
 
     if (loading) return (
-        <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center text-amber-500 font-zen p-6 text-center">
-            <IconDisc className="animate-spin-fast mb-10" size={80} />
-            <div className="page-reveal">
-                <p className="text-lg lg:text-xl tracking-[0.2em] leading-relaxed max-w-2xl font-medium">JAZZ，是一種帶著焦臭味、撲面而來的文字</p>
-                <p className="text-sm mt-6 opacity-60 tracking-[0.3em] uppercase">— 平岡正明</p>
+        <div className="retro-desktop min-h-screen flex flex-col items-center justify-center p-6 text-center">
+            <div className="retro-win" style={{ width: '300px' }}>
+                <div className="retro-titlebar" style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 8px' }}>
+                    <span className="retro-ctrl">&#215;</span>
+                    <span className="retro-ctrl">&#8722;</span>
+                    <span className="retro-ctrl">&#9633;</span>
+                    <span style={{ flex: 1, textAlign: 'center', fontSize: '11px', letterSpacing: '0.14em' }}>LOADING…</span>
+                </div>
+                <div className="retro-body" style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                    <IconDisc className="animate-spin-fast" size={48} style={{ color: '#7a5840' }} />
+                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#5a3820' }}>
+                        JAZZ，是一種帶著焦臭味、<br />撲面而來的文字
+                    </p>
+                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '9px', color: '#9a7860', letterSpacing: '0.2em' }}>
+                        — 平岡正明
+                    </p>
+                </div>
             </div>
         </div>
     );
     
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
+    const winTitle = currentData
+        ? `${String(selectedDate.getDate()).padStart(2,'0')} ${selectedDate.toLocaleDateString('en-US',{month:'short'}).toUpperCase()} \u2014 ${(currentData.song||'').toUpperCase().slice(0,38)}${(currentData.song||'').length>38?'...':''}`
+        : 'DAILY JAZZ ALMANAC';
+
     return (
-        <div className="min-h-screen bg-image-paper font-sans text-stone-800 relative overflow-x-hidden transition-colors duration-1000" style={{ backgroundColor: moodHex, '--mood-accent': moodAccent, '--mood-glow': moodGlow }}>
-            
-            <ImmersiveMode 
+        <div className="retro-desktop min-h-screen font-sans text-stone-800 relative overflow-x-hidden"
+             style={{ '--mood-accent': moodAccent, '--mood-glow': moodGlow }}>
+
+            {/* Fixed top menu bar */}
+            <RetroMenuBar />
+
+            <ImmersiveMode
                 isImmersive={isImmersive} handleCloseImmersive={handleCloseImmersive} selectedDate={selectedDate}
                 togglePlay={togglePlay} handlePrevDay={handlePrevDay} handleNextDay={handleNextDay}
                 youtubeId={youtubeId} currentData={currentData} isVinylSpinning={isVinylSpinning}
             />
-            <ChangelogModal 
-                showChangelog={showChangelog} setShowChangelog={setShowChangelog} changelogData={changelogData} 
+            <ChangelogModal
+                showChangelog={showChangelog} setShowChangelog={setShowChangelog} changelogData={changelogData}
             />
 
-            {/* 手機底部導航欄 + 日曆抽屜 */}
+            {/* Mobile bottom nav */}
             <MobileNav
                 selectedDate={selectedDate}
                 currentMonth={currentMonth}
@@ -240,7 +261,9 @@ const App = () => {
                 isPlaying={isPlaying}
             />
 
-            <div className="max-w-[1400px] mx-auto min-h-screen grid grid-cols-1 lg:grid-cols-12 gap-0 relative">
+            {/* Desktop layout: two floating windows on the pink desktop */}
+            <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 relative"
+                 style={{ padding: '4px 12px 12px', paddingTop: '28px' }}>
 
                 <Sidebar
                     isPlaying={isPlaying} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth}
@@ -248,33 +271,47 @@ const App = () => {
                     setShowChangelog={setShowChangelog} latestVersion={latestVersion}
                 />
 
-                {/* 手機加 pb-16 讓內容不被底部導航遮住 */}
-                <div className="lg:col-span-9 relative p-5 lg:p-12 flex flex-col justify-start pt-6 lg:pt-8 pb-20 lg:pb-0 min-h-screen">
-                    
-                    {/* 石編的話依然錨定在右上角角落 (absolute top-12 right-12) */}
-                    {currentData?.editorNote?.trim() && (
-                        <div className="absolute top-12 right-12 z-40 max-w-[300px] hidden lg:block">
-                            <EditorNote note={currentData.editorNote} />
-                        </div>
-                    )}
+                {/* Main content window */}
+                <div className="lg:col-span-9 relative retro-win" style={{ alignSelf: 'flex-start', minHeight: '600px' }}>
 
-                    <div className="absolute top-0 right-0 lg:right-20 -z-10 select-none opacity-[0.04] pointer-events-none">
-                        <span className="font-playfair text-[20rem] lg:text-[25rem] leading-none text-stone-900">
-                            {String(selectedDate.getDate()).padStart(2, '0')}
+                    {/* Window title bar — desktop only */}
+                    <div className="hidden lg:flex retro-titlebar" style={{ alignItems: 'center', gap: '5px', padding: '4px 8px' }}>
+                        <span className="retro-ctrl">&#215;</span>
+                        <span className="retro-ctrl">&#8722;</span>
+                        <span className="retro-ctrl">&#9633;</span>
+                        <span style={{ flex: 1, textAlign: 'center', fontSize: '10px', letterSpacing: '0.12em', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                            {winTitle}
                         </span>
                     </div>
-                    
-                    <DailyArticle 
-                        currentData={currentData} 
-                        selectedDate={selectedDate} 
-                        tearDirection={tearDirection} 
-                        youtubeId={youtubeId}  
-                        setIsImmersive={setIsImmersive}
-                    />
 
+                    {/* Window body */}
+                    <div className="retro-body relative" style={{ padding: '24px 40px 32px', paddingBottom: '80px' }}>
+
+                        {/* Editor note — desktop top-right */}
+                        {currentData?.editorNote?.trim() && (
+                            <div className="absolute top-8 right-8 z-40 max-w-[280px] hidden lg:block">
+                                <EditorNote note={currentData.editorNote} />
+                            </div>
+                        )}
+
+                        {/* Ghost date watermark */}
+                        <div className="absolute top-0 right-0 lg:right-16 -z-10 select-none pointer-events-none" style={{ opacity: 0.03 }}>
+                            <span className="font-playfair leading-none text-stone-900" style={{ fontSize: 'clamp(10rem, 20vw, 22rem)' }}>
+                                {String(selectedDate.getDate()).padStart(2, '0')}
+                            </span>
+                        </div>
+
+                        <DailyArticle
+                            currentData={currentData}
+                            selectedDate={selectedDate}
+                            tearDirection={tearDirection}
+                            youtubeId={youtubeId}
+                            setIsImmersive={setIsImmersive}
+                        />
+                    </div>
                 </div>
             </div>
-        </div> 
+        </div>
     );
 };
 

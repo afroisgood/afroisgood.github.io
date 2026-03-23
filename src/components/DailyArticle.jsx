@@ -135,7 +135,7 @@ export const DailyArticle = ({
 
                 {/* 左側：專輯封面（純粹視覺焦點） */}
                 <div className="lg:col-span-5 relative z-10">
-                    <div className="aspect-square w-full shadow-[0_20px_40px_rgba(0,0,0,0.12)] relative bg-stone-200 overflow-hidden group rounded-sm border border-stone-200/50">
+                    <div className="aspect-square w-full relative bg-stone-200 overflow-hidden group retro-album-frame">
 
                         {currentData.imageUrl ? (
                             <img
@@ -164,10 +164,11 @@ export const DailyArticle = ({
                         {youtubeId && (
                             <button
                                 onClick={() => setIsImmersive(true)}
-                                className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm text-stone-900 px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 text-[10px] font-black tracking-widest uppercase hover:bg-stone-900 hover:text-white transition-all hover:scale-105"
+                                className="retro-btn absolute bottom-3 right-3"
+                                style={{ width: 'auto', padding: '4px 10px', fontSize: '9px', letterSpacing: '0.12em', gap: '4px' }}
                             >
-                                <IconDisc className="animate-spin-slow" size={16} />
-                                Vinyl Mode
+                                <IconDisc className="animate-spin-slow" size={12} />
+                                VINYL
                             </button>
                         )}
                     </div>
@@ -194,20 +195,35 @@ export const DailyArticle = ({
                         </div>
                     </div>
 
-                    {/* 串流按鈕：固定在右側底部 */}
-                    <div className="mt-10 pt-8 border-t border-stone-300/50">
-                        <div className="grid grid-cols-2 gap-3">
-                            {currentData.youtube && <a href={currentData.youtube} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-3 bg-red-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-red-700 transition-all hover:translate-x-1 rounded-sm shadow-sm">YOUTUBE <IconArrowRight size={14}/></a>}
-                            {currentData.spotify && <a href={currentData.spotify} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-3 bg-green-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-green-700 transition-all hover:translate-x-1 rounded-sm shadow-sm">SPOTIFY <IconArrowRight size={14}/></a>}
-                            {currentData.appleMusic && <a href={currentData.appleMusic} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-3 bg-stone-800 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-stone-700 transition-all hover:translate-x-1 rounded-sm shadow-sm">APPLE MUSIC <IconArrowRight size={14}/></a>}
-                            {currentData.other && <a href={currentData.other} target="_blank" rel="noreferrer" className="flex items-center justify-between px-4 py-3 bg-slate-600 text-white text-[10px] tracking-[0.2em] font-bold hover:bg-slate-500 transition-all hover:translate-x-1 rounded-sm shadow-sm">OTHER <IconArrowRight size={14}/></a>}
-
+                    {/* 串流按鈕 — retro OS style */}
+                    <div className="mt-10" style={{ paddingTop: '20px', borderTop: '2px solid', borderTopColor: '#c8b4a4' }}>
+                        <div className="grid grid-cols-2 gap-2">
+                            {currentData.youtube && (
+                                <a href={currentData.youtube} target="_blank" rel="noreferrer" className="retro-stream retro-stream-yt">
+                                    YOUTUBE <IconArrowRight size={12}/>
+                                </a>
+                            )}
+                            {currentData.spotify && (
+                                <a href={currentData.spotify} target="_blank" rel="noreferrer" className="retro-stream retro-stream-sp">
+                                    SPOTIFY <IconArrowRight size={12}/>
+                                </a>
+                            )}
+                            {currentData.appleMusic && (
+                                <a href={currentData.appleMusic} target="_blank" rel="noreferrer" className="retro-stream retro-stream-am">
+                                    APPLE MUSIC <IconArrowRight size={12}/>
+                                </a>
+                            )}
+                            {currentData.other && (
+                                <a href={currentData.other} target="_blank" rel="noreferrer" className="retro-stream">
+                                    OTHER <IconArrowRight size={12}/>
+                                </a>
+                            )}
                             <button
                                 onClick={handleShare}
-                                className={`flex items-center justify-between px-4 py-3 transition-all hover:translate-x-1 text-[10px] tracking-[0.2em] font-bold rounded-sm shadow-sm ${isCopied ? 'bg-amber-600 text-white' : 'bg-stone-200 text-stone-800 hover:bg-stone-300'} ${(!currentData.youtube && !currentData.spotify && !currentData.appleMusic && !currentData.other) ? 'col-span-2' : ''}`}
+                                className={`retro-stream ${isCopied ? 'retro-stream-copied' : ''} ${(!currentData.youtube && !currentData.spotify && !currentData.appleMusic && !currentData.other) ? 'col-span-2' : ''}`}
                             >
                                 {isCopied ? 'COPIED!' : 'SHARE'}
-                                {isCopied ? <IconCheck size={14}/> : <IconShare size={14}/>}
+                                {isCopied ? <IconCheck size={12}/> : <IconShare size={12}/>}
                             </button>
                         </div>
                     </div>

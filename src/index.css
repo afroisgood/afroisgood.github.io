@@ -48,3 +48,216 @@ body {
 .immersive-bg {
     background: radial-gradient(circle at center, #2a2a2a 0%, #050505 85%);
 }
+
+/* ============================================
+   RETRO 90s OS THEME  (Poolsuite-inspired)
+   ============================================ */
+
+/* Pink dot-grid desktop */
+.retro-desktop {
+    background-color: #eecdc1;
+    background-image: radial-gradient(circle, rgba(150,70,50,0.20) 1px, transparent 1px);
+    background-size: 18px 18px;
+}
+
+/* OS window outer frame — warm 3-D raised border */
+.retro-win {
+    border-style: solid;
+    border-width: 2px;
+    border-top-color: #f5e4dc;
+    border-left-color: #f5e4dc;
+    border-right-color: #6a3018;
+    border-bottom-color: #6a3018;
+    box-shadow: 1px 1px 0 #3a1408;
+}
+
+/* Dark title bar */
+.retro-titlebar {
+    background: #1c0d08;
+    color: #f0d5c8;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px solid #4a1c10;
+}
+
+/* Window control buttons (decorative) */
+.retro-ctrl {
+    width: 13px;
+    height: 11px;
+    background: #3a1810;
+    border-style: solid;
+    border-width: 1px;
+    border-top-color: #7a3820;
+    border-left-color: #7a3820;
+    border-right-color: #100404;
+    border-bottom-color: #100404;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7px;
+    color: #c08870;
+    cursor: default;
+    flex-shrink: 0;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1;
+}
+
+/* Cream window body */
+.retro-body {
+    background-color: #f2ece3;
+}
+
+/* Raised button — Win95 style */
+.retro-btn {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    background: #ddd0c6;
+    color: #1a1208;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color: #f5e8df;
+    border-left-color: #f5e8df;
+    border-right-color: #7a5840;
+    border-bottom-color: #7a5840;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 14px;
+    width: 100%;
+    text-decoration: none;
+}
+.retro-btn:active {
+    border-top-color: #7a5840;
+    border-left-color: #7a5840;
+    border-right-color: #f5e8df;
+    border-bottom-color: #f5e8df;
+    padding-top: 7px;
+    padding-left: 15px;
+    padding-bottom: 5px;
+    padding-right: 13px;
+}
+.retro-btn:disabled { opacity: 0.45; cursor: default; }
+
+/* Small nav button (calendar prev/next) */
+.retro-nav {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    font-weight: bold;
+    background: #ddd0c6;
+    color: #1a1208;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color: #f5e8df;
+    border-left-color: #f5e8df;
+    border-right-color: #7a5840;
+    border-bottom-color: #7a5840;
+    width: 22px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.retro-nav:active {
+    border-top-color: #7a5840;
+    border-left-color: #7a5840;
+    border-right-color: #f5e8df;
+    border-bottom-color: #f5e8df;
+}
+
+/* Streaming link button */
+.retro-stream {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: #ddd0c6;
+    color: #1a1208;
+    border-style: solid;
+    border-width: 2px;
+    border-top-color: #f5e8df;
+    border-left-color: #f5e8df;
+    border-right-color: #7a5840;
+    border-bottom-color: #7a5840;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.05s;
+}
+.retro-stream:hover { background: #ece0d4; }
+.retro-stream:active {
+    border-top-color: #7a5840;  border-left-color: #7a5840;
+    border-right-color: #f5e8df; border-bottom-color: #f5e8df;
+}
+.retro-stream-yt {
+    background: #d4a8a0; color: #380808;
+    border-top-color: #f0c0b4; border-left-color: #f0c0b4;
+    border-right-color: #781808; border-bottom-color: #781808;
+}
+.retro-stream-yt:hover { background: #e0b8b0; }
+.retro-stream-am {
+    background: #b0b8c8; color: #101828;
+    border-top-color: #ccd4e4; border-left-color: #ccd4e4;
+    border-right-color: #2c3c54; border-bottom-color: #2c3c54;
+}
+.retro-stream-am:hover { background: #c0c8d8; }
+.retro-stream-sp {
+    background: #a8c8a0; color: #0c200c;
+    border-top-color: #c4e0bc; border-left-color: #c4e0bc;
+    border-right-color: #204820; border-bottom-color: #204820;
+}
+.retro-stream-sp:hover { background: #b8d8b0; }
+.retro-stream-copied {
+    background: #b0c8a0; color: #0c200c;
+    border-top-color: #c8e0b8; border-left-color: #c8e0b8;
+    border-right-color: #284820; border-bottom-color: #284820;
+}
+
+/* Top menu bar (Mac-style) */
+.retro-menubar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 22px;
+    background: #1c0d08;
+    border-bottom: 1px solid #4a1c10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    color: #f0d5c8;
+    z-index: 200;
+    user-select: none;
+}
+
+/* Album cover inset frame */
+.retro-album-frame {
+    border-style: solid;
+    border-width: 3px;
+    border-top-color: #7a5840;
+    border-left-color: #7a5840;
+    border-right-color: #f5e8df;
+    border-bottom-color: #f5e8df;
+    box-shadow: inset 1px 1px 0 #3a2010;
+}
