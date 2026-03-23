@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import { IconDisc } from './Icons';
-import { JazzFortune } from './JazzFortune'; 
+import { RandomExplore } from './RandomExplore';
 
 export const Sidebar = ({ 
     isPlaying, 
@@ -90,9 +90,9 @@ export const Sidebar = ({
                 </div>
 
                 <div className="mt-8 mb-10 px-1">
-                    <JazzFortune 
-                        jazzData={jazzData} 
-                        onNavigate={handleDateChange} 
+                    <RandomExplore
+                        jazzData={jazzData}
+                        onNavigate={handleDateChange}
                     />
                 </div>
             </div>
