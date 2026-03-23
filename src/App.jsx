@@ -1,6 +1,5 @@
 // src/App.jsx
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import Papa from 'papaparse';
 
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
 import { Sidebar } from './components/Sidebar';
@@ -9,7 +8,6 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { DailyArticle } from './components/DailyArticle';
 import { EditorNote } from './components/EditorNote';
 import { IconDisc } from './components/Icons';
-import { JazzFortune } from './components/JazzFortune';
 import { AdminPanel } from './components/AdminPanel';
 
 const App = () => {
@@ -28,17 +26,18 @@ const App = () => {
     const [selectedDate, setSelectedDate] = useState(today);
     const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
     const [jazzData, setJazzData] = useState({});
-    const [changelogData, setChangelogData] = useState([]);
+    const [changelogData] = useState([
+        { version: "v1.3.0", date: "2026-03-23", content: "後台管理系統上線，支援直接編輯資料。\n加入 Random Explore 隨機探索功能。\n復古爵士海報字型裝飾。" },
+        { version: "v1.2.0", date: "2026-02-01", content: "Open Graph 社群分享預覽圖。\n沉浸模式優化。" },
+        { version: "v1.1.0", date: "2026-01-15", content: "版面重整，新增專輯封面大圖區塊。\n空白頁「本日無資料」設計更新。" },
+        { version: "v1.0.0", date: "2026-01-01", content: "日めくりジャズ365 正式上線。" },
+    ]);
     const [loading, setLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [tearDirection, setTearDirection] = useState(null);
     const [showChangelog, setShowChangelog] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
     
-    const SHEET_BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHKaZyF61C3xBsReTpqR7f4_acrKWq6QIyDadZ3t2P_NkhmBh9hgCJF0tLwjrXqXVmMl14YF3BUC_b/pub?output=csv";
-    const DATA_URL = `${SHEET_BASE_URL}&gid=1417154704`;
-    const LOG_URL = `${SHEET_BASE_URL}&gid=647085179`;
-
     const genreColors = { "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE", "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0" };
     const formatDateString = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
@@ -167,32 +166,16 @@ const App = () => {
 
     useEffect(() => {
         const fetchAllData = async () => {
-            // 1. 先從 Google Sheets 讀取基礎資料
-            const sheetsMap = await new Promise(resolve => {
-                Papa.parse(DATA_URL, {
-                    download: true, header: true, skipEmptyLines: true,
-                    complete: (results) => {
-                        const map = {};
-                        results.data.forEach(row => { if (row.date) map[row.date.trim()] = row; });
-                        resolve(map);
-                    },
-                    error: () => resolve({}),
-                });
-            });
-
-            // 2. 再從 data.json 讀取（後台新增的資料），覆蓋同日期的 Sheets 資料
-            let adminMap = {};
+            // 從 data.json 讀取所有資料（單一資料來源）
             try {
                 const res = await fetch('/data.json');
                 const arr = await res.json();
                 if (Array.isArray(arr)) {
-                    arr.forEach(row => { if (row.date) adminMap[row.date.trim()] = row; });
+                    const map = {};
+                    arr.forEach(row => { if (row.date) map[row.date.trim()] = row; });
+                    setJazzData(map);
                 }
-            } catch (_) { /* data.json 不存在時靜默忽略 */ }
-
-            // 3. 合併：data.json 優先
-            const merged = { ...sheetsMap, ...adminMap };
-            setJazzData(merged);
+            } catch (_) { /* 靜默忽略 */ }
 
             const hash = window.location.hash.replace('#', '');
             if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
@@ -202,10 +185,6 @@ const App = () => {
                 setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
             }
 
-            Papa.parse(LOG_URL, {
-                download: true, header: true, skipEmptyLines: true,
-                complete: (results) => { setChangelogData(results.data); }
-            });
             setTimeout(() => { setLoading(false); setIsPlaying(true); }, 2000);
         };
         fetchAllData();
