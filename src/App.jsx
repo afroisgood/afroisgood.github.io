@@ -28,12 +28,7 @@ const App = () => {
     const [selectedDate, setSelectedDate] = useState(today);
     const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
     const [jazzData, setJazzData] = useState({});
-    const [changelogData] = useState([
-        { version: "v1.3.0", date: "2026-03-23", content: "後台管理系統上線，支援直接編輯資料。\n加入 Random Explore 隨機探索功能。\n復古爵士海報字型裝飾。" },
-        { version: "v1.2.0", date: "2026-02-01", content: "Open Graph 社群分享預覽圖。\n沉浸模式優化。" },
-        { version: "v1.1.0", date: "2026-01-15", content: "版面重整，新增專輯封面大圖區塊。\n空白頁「本日無資料」設計更新。" },
-        { version: "v1.0.0", date: "2026-01-01", content: "日めくりジャズ365 正式上線。" },
-    ]);
+    const [changelogData, setChangelogData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [tearDirection, setTearDirection] = useState(null);
@@ -184,12 +179,14 @@ const App = () => {
             // 從 data.json 讀取所有資料（單一資料來源）
             try {
                 const res = await fetch('/data.json');
-                const arr = await res.json();
-                if (Array.isArray(arr)) {
-                    const map = {};
-                    arr.forEach(row => { if (row.date) map[row.date.trim()] = row; });
-                    setJazzData(map);
-                }
+                const data = await res.json();
+                // 支援新格式 { entries, changelog } 或舊格式（純陣列）
+                const arr = Array.isArray(data) ? data : (data.entries || []);
+                const cl  = Array.isArray(data) ? [] : (data.changelog || []);
+                const map = {};
+                arr.forEach(row => { if (row.date) map[row.date.trim()] = row; });
+                setJazzData(map);
+                setChangelogData(cl.slice().sort((a, b) => b.date.localeCompare(a.date)));
             } catch (_) { /* 靜默忽略 */ }
 
             const hash = window.location.hash.replace('#', '');
