@@ -63,12 +63,12 @@ body {
 /* OS window outer frame — warm 3-D raised border */
 .retro-win {
     border-style: solid;
-    border-width: 2px;
+    border-width: 3px;
     border-top-color: #f5e4dc;
     border-left-color: #f5e4dc;
     border-right-color: #6a3018;
     border-bottom-color: #6a3018;
-    box-shadow: 1px 1px 0 #3a1408;
+    box-shadow: 2px 2px 0 #3a1408;
 }
 
 /* Dark title bar */
@@ -76,22 +76,22 @@ body {
     background: #1c0d08;
     color: #f0d5c8;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: bold;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    padding: 4px 8px;
+    padding: 7px 10px;
     user-select: none;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
     border-bottom: 1px solid #4a1c10;
 }
 
 /* Window control buttons (decorative) */
 .retro-ctrl {
-    width: 13px;
-    height: 11px;
+    width: 16px;
+    height: 14px;
     background: #3a1810;
     border-style: solid;
     border-width: 1px;
@@ -102,7 +102,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 7px;
+    font-size: 8px;
     color: #c08870;
     cursor: default;
     flex-shrink: 0;
@@ -118,7 +118,7 @@ body {
 /* Raised button — Win95 style */
 .retro-btn {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
     letter-spacing: 0.10em;
     text-transform: uppercase;
@@ -135,7 +135,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 6px 14px;
+    padding: 8px 16px;
     width: 100%;
     text-decoration: none;
 }
@@ -184,9 +184,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 7px 12px;
+    padding: 9px 14px;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: bold;
     letter-spacing: 0.14em;
     text-transform: uppercase;

@@ -39,11 +39,11 @@ export const Sidebar = ({
             }}
         >
             {/* ── Window title bar ── */}
-            <div className="retro-titlebar flex-shrink-0" style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 8px' }}>
+            <div className="retro-titlebar flex-shrink-0" style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                 <span className="retro-ctrl">&#215;</span>
                 <span className="retro-ctrl">&#8722;</span>
                 <span className="retro-ctrl">&#9633;</span>
-                <span style={{ flex: 1, textAlign: 'center', fontSize: '11px', letterSpacing: '0.14em', fontWeight: 'bold' }}>
+                <span style={{ flex: 1, textAlign: 'center', fontSize: '13px', letterSpacing: '0.16em', fontWeight: 'bold' }}>
                     JAZZ&nbsp;365
                 </span>
                 <IconDisc
@@ -85,7 +85,7 @@ export const Sidebar = ({
                             <button onClick={handlePrevMonth} className="retro-nav">&lt;</button>
                             <h2 style={{
                                 fontFamily: "'Courier New', Courier, monospace",
-                                fontSize: '11px',
+                                fontSize: '13px',
                                 fontWeight: 'bold',
                                 letterSpacing: '0.18em',
                                 textTransform: 'uppercase',
@@ -123,7 +123,7 @@ export const Sidebar = ({
 
                                 const baseStyle = {
                                     fontFamily: "'Courier New', Courier, monospace",
-                                    fontSize: '10px',
+                                    fontSize: '12px',
                                     padding: '3px 0',
                                     display: 'flex',
                                     alignItems: 'center',

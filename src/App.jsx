@@ -275,17 +275,17 @@ const App = () => {
                 <div className="lg:col-span-9 relative retro-win" style={{ alignSelf: 'flex-start', minHeight: '600px' }}>
 
                     {/* Window title bar — desktop only */}
-                    <div className="hidden lg:flex retro-titlebar" style={{ alignItems: 'center', gap: '5px', padding: '4px 8px' }}>
+                    <div className="hidden lg:flex retro-titlebar" style={{ alignItems: 'center', gap: '7px' }}>
                         <span className="retro-ctrl">&#215;</span>
                         <span className="retro-ctrl">&#8722;</span>
                         <span className="retro-ctrl">&#9633;</span>
-                        <span style={{ flex: 1, textAlign: 'center', fontSize: '10px', letterSpacing: '0.12em', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                        <span style={{ flex: 1, textAlign: 'center', fontSize: '12px', letterSpacing: '0.12em', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                             {winTitle}
                         </span>
                     </div>
 
                     {/* Window body */}
-                    <div className="retro-body relative" style={{ padding: '24px 40px 32px', paddingBottom: '80px' }}>
+                    <div className="retro-body relative" style={{ padding: '36px 56px 40px', paddingBottom: '96px' }}>
 
                         {/* Editor note — desktop top-right */}
                         {currentData?.editorNote?.trim() && (
