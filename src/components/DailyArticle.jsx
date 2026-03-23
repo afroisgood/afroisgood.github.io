@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { EditorNote } from './EditorNote';
 import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
-import { JazzPixelArt } from './JazzPixelArt';
+import { VintageJazzText } from './VintageJazzText';
 
 export const DailyArticle = ({
     currentData,
@@ -104,8 +104,8 @@ export const DailyArticle = ({
     return (
         <div className={`relative w-full max-w-5xl mx-auto transition-all duration-700 ease-out ${tearDirection === 'forward' ? 'opacity-0 -translate-x-10' : tearDirection === 'backward' ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'}`}>
 
-            {/* 像素爵士樂手背景裝飾 */}
-            <JazzPixelArt />
+            {/* 復古爵士海報文字裝飾 */}
+            <VintageJazzText />
 
             {/* 藝廊風獨立大標題 */}
             <header className="mb-10 lg:mb-16">
