@@ -117,15 +117,15 @@ export const DailyArticle = ({
                         {monthName}
                     </span>
                 </div>
-                <h2 className="text-5xl lg:text-7xl font-black tracking-tighter text-stone-900 font-playfair leading-[1.1] uppercase drop-shadow-sm">
+                <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-stone-900 font-playfair leading-[1.1] uppercase drop-shadow-sm">
                     {currentData.song}
                 </h2>
                 <div className="mt-4 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-6">
-                    <p className="text-2xl lg:text-3xl font-bold tracking-widest text-stone-800 uppercase">
+                    <p className="text-xl lg:text-2xl font-bold tracking-widest text-stone-800 uppercase">
                         {currentData.artist}
                     </p>
                     <div className="hidden lg:block w-12 h-[2px] transition-colors duration-1000" style={{ backgroundColor: 'var(--mood-accent)', opacity: 0.5 }}></div>
-                    <p className="text-base font-bold tracking-widest text-stone-500 italic font-serif">
+                    <p className="text-sm font-bold tracking-widest text-stone-500 italic font-serif">
                         From the album "{currentData.album}"
                     </p>
                 </div>
@@ -184,13 +184,13 @@ export const DailyArticle = ({
                         )}
 
                         <div className="relative pl-8 mb-10">
-                            <span className="absolute left-0 -top-2 text-7xl font-serif leading-none transition-colors duration-1000" style={{ color: 'var(--mood-accent)', opacity: 0.35 }}>"</span>
-                            <blockquote className="text-2xl lg:text-3xl font-medium text-stone-900 leading-relaxed font-serif text-justify pt-2">
+                            <span className="absolute left-0 -top-2 text-6xl font-serif leading-none transition-colors duration-1000" style={{ color: 'var(--mood-accent)', opacity: 0.35 }}>"</span>
+                            <blockquote className="text-xl lg:text-2xl font-medium text-stone-900 leading-relaxed font-serif text-justify pt-2">
                                 {currentData.quote}
                             </blockquote>
                         </div>
 
-                        <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-base lg:text-lg">
+                        <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-[15px] lg:text-base">
                             {currentData.content}
                         </div>
                     </div>

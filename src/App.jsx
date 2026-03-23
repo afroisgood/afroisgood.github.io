@@ -207,20 +207,23 @@ const App = () => {
 
     if (loading) return (
         <div className="retro-desktop min-h-screen flex flex-col items-center justify-center p-6 text-center">
-            <div className="retro-win" style={{ width: '300px' }}>
-                <div className="retro-titlebar" style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 8px' }}>
+            <div className="retro-win" style={{ width: '480px', maxWidth: '90vw' }}>
+                <div className="retro-titlebar" style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                     <span className="retro-ctrl">&#215;</span>
                     <span className="retro-ctrl">&#8722;</span>
                     <span className="retro-ctrl">&#9633;</span>
-                    <span style={{ flex: 1, textAlign: 'center', fontSize: '11px', letterSpacing: '0.14em' }}>LOADING…</span>
+                    <span style={{ flex: 1, textAlign: 'center', fontSize: '13px', letterSpacing: '0.18em' }}>DAILY JAZZ ALMANAC</span>
                 </div>
-                <div className="retro-body" style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                    <IconDisc className="animate-spin-fast" size={48} style={{ color: '#7a5840' }} />
-                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#5a3820' }}>
-                        JAZZ，是一種帶著焦臭味、<br />撲面而來的文字
+                <div className="retro-body" style={{ padding: '48px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+                    <IconDisc className="animate-spin-fast" size={64} style={{ color: '#7a5840', opacity: 0.7 }} />
+                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '13px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3a2010', lineHeight: 1.8 }}>
+                        JAZZ，是一種帶著焦臭味<br />撲面而來的文字
                     </p>
-                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '9px', color: '#9a7860', letterSpacing: '0.2em' }}>
+                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '11px', color: '#8a6848', letterSpacing: '0.25em' }}>
                         — 平岡正明
+                    </p>
+                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '10px', color: '#b09878', letterSpacing: '0.2em', marginTop: '4px', opacity: 0.7 }}>
+                        Loading…
                     </p>
                 </div>
             </div>
