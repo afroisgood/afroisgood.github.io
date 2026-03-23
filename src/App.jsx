@@ -9,9 +9,20 @@ import { ChangelogModal } from './components/ChangelogModal';
 import { DailyArticle } from './components/DailyArticle';
 import { EditorNote } from './components/EditorNote';
 import { IconDisc } from './components/Icons';
-import { JazzFortune } from './components/JazzFortune'; 
+import { JazzFortune } from './components/JazzFortune';
+import { AdminPanel } from './components/AdminPanel';
 
 const App = () => {
+    const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
+
+    useEffect(() => {
+        const onHash = () => setIsAdmin(window.location.hash === '#admin');
+        window.addEventListener('hashchange', onHash);
+        return () => window.removeEventListener('hashchange', onHash);
+    }, []);
+
+    if (isAdmin) return <AdminPanel />;
+
     // 【所有資料與播放邏輯保留 1.3.0 穩定版】
     const today = new Date();
     const [selectedDate, setSelectedDate] = useState(today);
@@ -128,21 +139,41 @@ const App = () => {
 
     useEffect(() => {
         const fetchAllData = async () => {
-            Papa.parse(DATA_URL, {
-                download: true, header: true, skipEmptyLines: true,
-                complete: (results) => {
-                    const dataMap = {};
-                    results.data.forEach(row => { if (row.date) dataMap[row.date.trim()] = row; });
-                    setJazzData(dataMap);
-                    const hash = window.location.hash.replace('#', '');
-                    if (hash && dataMap[hash]) {
-                        const [y, m, d] = hash.split('-').map(Number);
-                        const initialDate = new Date(y, m - 1, d);
-                        setSelectedDate(initialDate);
-                        setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
-                    }
-                }
+            // 1. 先從 Google Sheets 讀取基礎資料
+            const sheetsMap = await new Promise(resolve => {
+                Papa.parse(DATA_URL, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: (results) => {
+                        const map = {};
+                        results.data.forEach(row => { if (row.date) map[row.date.trim()] = row; });
+                        resolve(map);
+                    },
+                    error: () => resolve({}),
+                });
             });
+
+            // 2. 再從 data.json 讀取（後台新增的資料），覆蓋同日期的 Sheets 資料
+            let adminMap = {};
+            try {
+                const res = await fetch('/data.json');
+                const arr = await res.json();
+                if (Array.isArray(arr)) {
+                    arr.forEach(row => { if (row.date) adminMap[row.date.trim()] = row; });
+                }
+            } catch (_) { /* data.json 不存在時靜默忽略 */ }
+
+            // 3. 合併：data.json 優先
+            const merged = { ...sheetsMap, ...adminMap };
+            setJazzData(merged);
+
+            const hash = window.location.hash.replace('#', '');
+            if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
+                const [y, m, d] = hash.split('-').map(Number);
+                const initialDate = new Date(y, m - 1, d);
+                setSelectedDate(initialDate);
+                setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+            }
+
             Papa.parse(LOG_URL, {
                 download: true, header: true, skipEmptyLines: true,
                 complete: (results) => { setChangelogData(results.data); }
