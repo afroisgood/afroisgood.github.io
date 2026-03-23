@@ -118,15 +118,14 @@ export const MobileNav = ({
                                     disabled={!hasData}
                                     className={`
                                         relative text-xs py-2 w-full flex items-center justify-center transition-all rounded-sm
-                                        ${isSelected ? 'bg-amber-500 text-zinc-950 font-black shadow-[0_0_12px_rgba(245,158,11,0.5)]' : ''}
                                         ${!isSelected && hasData ? 'hover:bg-zinc-800 text-white font-medium' : ''}
                                         ${!hasData ? 'opacity-30 cursor-not-allowed text-zinc-500' : 'cursor-pointer'}
-                                        ${isToday && !isSelected ? 'text-amber-400 font-bold' : ''}
                                     `}
+                                    style={isSelected ? { backgroundColor: 'var(--mood-glow)', color: '#09090b', fontWeight: 900 } : isToday ? { color: 'var(--mood-glow)', fontWeight: 700 } : {}}
                                 >
                                     {day}
                                     {hasData && !isSelected && (
-                                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-0.5 h-0.5 bg-amber-500 rounded-full"/>
+                                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full" style={{ backgroundColor: 'var(--mood-glow)' }}/>
                                     )}
                                 </button>
                             );
@@ -146,7 +145,9 @@ export const MobileNav = ({
                 {/* 前一天 */}
                 <button
                     onClick={handlePrevDay}
-                    className="text-zinc-400 hover:text-amber-400 transition-colors p-2 font-bold text-lg"
+                    className="text-zinc-400 transition-colors p-2 font-bold text-lg"
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--mood-glow)'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                 >
                     &#8592;
                 </button>
@@ -154,7 +155,9 @@ export const MobileNav = ({
                 {/* 日期 + 日曆開關 */}
                 <button
                     onClick={() => setDrawerOpen(v => !v)}
-                    className="flex items-center gap-2 text-sm font-bold tracking-wider text-white hover:text-amber-400 transition-colors"
+                    className="flex items-center gap-2 text-sm font-bold tracking-wider text-white transition-colors"
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--mood-glow)'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                 >
                     <CalendarIcon />
                     <span>{dateLabel}</span>
@@ -163,7 +166,9 @@ export const MobileNav = ({
                 {/* 後一天 */}
                 <button
                     onClick={handleNextDay}
-                    className="text-zinc-400 hover:text-amber-400 transition-colors p-2 font-bold text-lg"
+                    className="text-zinc-400 transition-colors p-2 font-bold text-lg"
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--mood-glow)'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                 >
                     &#8594;
                 </button>

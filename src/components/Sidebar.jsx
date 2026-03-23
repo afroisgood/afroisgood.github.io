@@ -73,15 +73,14 @@ export const Sidebar = ({
                                     disabled={!hasData}
                                     className={`
                                         relative text-xs py-1.5 w-full flex items-center justify-center transition-all duration-300 rounded-sm
-                                        ${isSelected ? 'bg-amber-500 text-zinc-950 font-black shadow-[0_0_15px_rgba(245,158,11,0.5)]' : ''}
                                         ${!isSelected && hasData ? 'hover:bg-zinc-800 text-white font-medium' : ''}
                                         ${!hasData ? 'opacity-40 cursor-not-allowed text-zinc-500' : 'cursor-pointer'}
-                                        ${isToday && !isSelected ? 'text-amber-400 font-bold' : ''}
                                     `}
+                                    style={isSelected ? { backgroundColor: 'var(--mood-glow)', color: '#09090b', fontWeight: 900 } : isToday ? { color: 'var(--mood-glow)', fontWeight: 700 } : {}}
                                 >
                                     {day}
                                     {hasData && !isSelected && (
-                                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500 rounded-full opacity-60 shadow-[0_0_4px_rgba(245,158,11,1)]"></span>
+                                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full opacity-60" style={{ backgroundColor: 'var(--mood-glow)' }}></span>
                                     )}
                                 </button>
                             );
@@ -100,9 +99,12 @@ export const Sidebar = ({
             <div className="pt-6 border-t border-white/20 flex items-center justify-between">
                 <button 
                     onClick={() => setShowChangelog(true)}
-                    className="text-[10px] tracking-widest text-zinc-300 hover:text-amber-400 transition-colors flex items-center gap-1 uppercase font-bold"
+                    className="text-[10px] tracking-widest text-zinc-300 transition-colors flex items-center gap-1 uppercase font-bold"
+                    style={{ '--tw-text-opacity': 1 }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--mood-glow)'}
+                    onMouseLeave={e => e.currentTarget.style.color = ''}
                 >
-                    Update Log <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(245,158,11,0.8)]"></span>
+                    Update Log <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: 'var(--mood-glow)' }}></span>
                 </button>
                 <span className="text-[10px] text-zinc-500 font-mono font-bold">{latestVersion}</span>
             </div>

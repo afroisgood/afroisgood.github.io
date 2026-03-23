@@ -113,7 +113,7 @@ export const DailyArticle = ({
                     <span className="font-playfair text-6xl lg:text-8xl font-black text-stone-900 tracking-tighter">
                         {String(selectedDate.getDate()).padStart(2, '0')}
                     </span>
-                    <span className="text-2xl lg:text-3xl font-playfair italic text-amber-700">
+                    <span className="text-2xl lg:text-3xl font-playfair italic transition-colors duration-1000" style={{ color: 'var(--mood-accent)' }}>
                         {monthName}
                     </span>
                 </div>
@@ -124,7 +124,7 @@ export const DailyArticle = ({
                     <p className="text-xl lg:text-2xl font-bold tracking-widest text-stone-800 uppercase">
                         {currentData.artist}
                     </p>
-                    <div className="hidden lg:block w-12 h-[2px] bg-amber-700/50"></div>
+                    <div className="hidden lg:block w-12 h-[2px] transition-colors duration-1000" style={{ backgroundColor: 'var(--mood-accent)', opacity: 0.5 }}></div>
                     <p className="text-sm font-bold tracking-widest text-stone-500 italic font-serif">
                         From the album "{currentData.album}"
                     </p>
@@ -183,7 +183,7 @@ export const DailyArticle = ({
                         )}
 
                         <div className="relative pl-8 mb-10">
-                            <span className="absolute left-0 -top-2 text-6xl text-amber-700/30 font-serif leading-none">"</span>
+                            <span className="absolute left-0 -top-2 text-6xl font-serif leading-none transition-colors duration-1000" style={{ color: 'var(--mood-accent)', opacity: 0.35 }}>"</span>
                             <blockquote className="text-xl lg:text-2xl font-medium text-stone-900 leading-relaxed font-serif text-justify pt-2">
                                 {currentData.quote}
                             </blockquote>
