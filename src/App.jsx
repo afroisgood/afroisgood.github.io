@@ -285,7 +285,7 @@ const App = () => {
                     </div>
 
                     {/* Window body */}
-                    <div className="retro-body relative" style={{ padding: '36px 56px 40px', paddingBottom: '96px' }}>
+                    <div className="retro-body relative" style={{ padding: '36px 56px 40px', paddingBottom: '96px', backgroundColor: moodHex, transition: 'background-color 0.8s ease' }}>
 
                         {/* Editor note — desktop top-right */}
                         {currentData?.editorNote?.trim() && (
