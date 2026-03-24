@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
 import { Sidebar } from './components/Sidebar';
