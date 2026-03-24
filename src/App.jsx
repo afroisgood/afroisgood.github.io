@@ -104,6 +104,15 @@ const App = () => {
     const { player, playerState } = useYouTubePlayer((isImmersive || isMinimized) ? youtubeId : null);
     const isVinylSpinning = playerState === 1 || playerState === 3;
 
+    // Refs：讓事件監聽器永遠讀到最新值，避免 stale closure 造成切換第三個日期失敗
+    const selectedDateRef = useRef(selectedDate);
+    selectedDateRef.current = selectedDate;
+    const playerRef2 = useRef(player);
+    playerRef2.current = player;
+    const playerStateRef2 = useRef(playerState);
+    playerStateRef2.current = playerState;
+    const triggerTransitionRef = useRef(null);
+
     const togglePlay = useCallback((e) => {
         if (e) e.stopPropagation();
         if (player && typeof player.playVideo === 'function') {
@@ -115,20 +124,21 @@ const App = () => {
         }
     }, [player, playerState]);
 
+    // 空 deps：只註冊一次，透過 ref 永遠讀到最新狀態
     useEffect(() => {
         const handleHashChange = () => {
             const hash = window.location.hash.replace('#', '');
             if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
                 const [y, m, d] = hash.split('-').map(Number);
                 const hashDate = new Date(y, m - 1, d);
-                if (!isNaN(hashDate) && formatDateString(hashDate) !== formatDateString(selectedDate)) {
-                    triggerTransition(hashDate);
+                if (!isNaN(hashDate) && formatDateString(hashDate) !== formatDateString(selectedDateRef.current)) {
+                    triggerTransitionRef.current(hashDate);
                 }
             }
         };
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
-    }, [selectedDate]);
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -159,8 +169,12 @@ const App = () => {
     };
 
     const triggerTransition = (newDate) => {
-        if (player && playerState === 1 && typeof player.pauseVideo === 'function') player.pauseVideo();
-        const direction = newDate > selectedDate ? 'forward' : 'backward';
+        // 用 ref 取得最新 player，避免使用已銷毀的舊 player 實例拋出例外
+        try {
+            const p = playerRef2.current;
+            if (p && playerStateRef2.current === 1 && typeof p.pauseVideo === 'function') p.pauseVideo();
+        } catch (_) {}
+        const direction = newDate > selectedDateRef.current ? 'forward' : 'backward';
         setTearDirection(direction);
         setIsPlaying(false);
         setTimeout(() => {
@@ -170,6 +184,7 @@ const App = () => {
             setTimeout(() => setIsPlaying(true), 400);
         }, 850);
     };
+    triggerTransitionRef.current = triggerTransition;
 
     const handleDateChange = (newDate) => {
         if (tearDirection) return;
