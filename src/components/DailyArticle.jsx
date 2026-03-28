@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { EditorNote } from './EditorNote';
 import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
 import { VintageJazzText } from './VintageJazzText';
-import { ShareCard } from './ShareCard';
 
 export const DailyArticle = ({
     currentData,
@@ -11,11 +10,8 @@ export const DailyArticle = ({
     tearDirection,
     youtubeId,
     setIsImmersive,
-    moodHex,
-    moodAccent,
 }) => {
     const [isCopied, setIsCopied] = useState(false);
-    const [showShareCard, setShowShareCard] = useState(false);
 
     const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
@@ -106,7 +102,6 @@ export const DailyArticle = ({
     }
 
     return (
-        <>
         <div className={`relative w-full max-w-5xl mx-auto ${tearDirection === 'forward' ? 'flip-page-out-forward' : tearDirection === 'backward' ? 'flip-page-out-backward' : 'flip-page-in'}`}>
 
             {/* 復古爵士海報文字裝飾 */}
@@ -238,16 +233,10 @@ export const DailyArticle = ({
                             )}
                             <button
                                 onClick={handleShare}
-                                className={`retro-stream ${isCopied ? 'retro-stream-copied' : ''}`}
+                                className={`retro-stream ${isCopied ? 'retro-stream-copied' : ''} ${(!currentData.youtube && !currentData.spotify && !currentData.appleMusic && !currentData.other) ? 'col-span-2' : ''}`}
                             >
                                 {isCopied ? 'COPIED!' : 'SHARE'}
                                 {isCopied ? <IconCheck size={12}/> : <IconShare size={12}/>}
-                            </button>
-                            <button
-                                onClick={() => setShowShareCard(true)}
-                                className="retro-stream"
-                            >
-                                CARD ✦
                             </button>
                         </div>
                     </div>
@@ -255,15 +244,5 @@ export const DailyArticle = ({
             </div>
         </div>
 
-        {showShareCard && (
-            <ShareCard
-                currentData={currentData}
-                selectedDate={selectedDate}
-                moodHex={moodHex}
-                moodAccent={moodAccent}
-                onClose={() => setShowShareCard(false)}
-            />
-        )}
-        </>
     );
 };

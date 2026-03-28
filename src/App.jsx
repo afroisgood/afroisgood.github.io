@@ -424,8 +424,6 @@ const App = () => {
                                 tearDirection={tearDirection}
                                 youtubeId={youtubeId}
                                 setIsImmersive={setIsImmersive}
-                                moodHex={moodHex}
-                                moodAccent={moodAccent}
                             />
                         </div>
                     </div>
