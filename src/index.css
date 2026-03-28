@@ -251,6 +251,15 @@ body {
     user-select: none;
 }
 
+/* 動態封面背景 — 模糊專輯封面氛圍光 */
+.album-ambient-bg {
+    animation: ambientFadeIn 1s ease forwards;
+}
+@keyframes ambientFadeIn {
+    from { opacity: 0; }
+    to { opacity: 0.3; }
+}
+
 /* Album cover — inset gold frame */
 .retro-album-frame {
     border-style: solid;

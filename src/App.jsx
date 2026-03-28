@@ -380,29 +380,50 @@ const App = () => {
                     </div>
 
                     {/* Window body */}
-                    <div className="retro-body relative" style={{ padding: '36px 56px 40px', paddingBottom: '96px', backgroundColor: moodHex, transition: 'background-color 0.8s ease' }}>
+                    <div className="retro-body relative overflow-hidden" style={{ padding: '36px 56px 40px', paddingBottom: '96px', backgroundColor: moodHex, transition: 'background-color 0.8s ease' }}>
 
-                        {/* Editor note — desktop top-right */}
-                        {currentData?.editorNote?.trim() && (
-                            <div className="absolute top-8 right-8 z-40 max-w-[280px] hidden lg:block">
-                                <EditorNote note={currentData.editorNote} />
-                            </div>
+                        {/* Dynamic ambient background — blurred album art */}
+                        {currentData?.imageUrl && (
+                            <div
+                                key={currentData.imageUrl}
+                                aria-hidden="true"
+                                className="absolute inset-0 pointer-events-none album-ambient-bg"
+                                style={{
+                                    backgroundImage: `url(${currentData.imageUrl})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    filter: 'blur(60px) saturate(1.8) brightness(0.6)',
+                                    transform: 'scale(1.4)',
+                                    zIndex: 0,
+                                }}
+                            />
                         )}
 
-                        {/* Ghost date watermark */}
-                        <div className="absolute top-0 right-0 lg:right-16 -z-10 select-none pointer-events-none" style={{ opacity: 0.03 }}>
-                            <span className="font-playfair leading-none text-stone-900" style={{ fontSize: 'clamp(10rem, 20vw, 22rem)' }}>
-                                {String(selectedDate.getDate()).padStart(2, '0')}
-                            </span>
-                        </div>
+                        {/* Content layer */}
+                        <div className="relative" style={{ zIndex: 1 }}>
 
-                        <DailyArticle
-                            currentData={currentData}
-                            selectedDate={selectedDate}
-                            tearDirection={tearDirection}
-                            youtubeId={youtubeId}
-                            setIsImmersive={setIsImmersive}
-                        />
+                            {/* Editor note — desktop top-right */}
+                            {currentData?.editorNote?.trim() && (
+                                <div className="absolute top-8 right-8 z-40 max-w-[280px] hidden lg:block">
+                                    <EditorNote note={currentData.editorNote} />
+                                </div>
+                            )}
+
+                            {/* Ghost date watermark */}
+                            <div className="absolute top-0 right-0 lg:right-16 -z-10 select-none pointer-events-none" style={{ opacity: 0.03 }}>
+                                <span className="font-playfair leading-none text-stone-900" style={{ fontSize: 'clamp(10rem, 20vw, 22rem)' }}>
+                                    {String(selectedDate.getDate()).padStart(2, '0')}
+                                </span>
+                            </div>
+
+                            <DailyArticle
+                                currentData={currentData}
+                                selectedDate={selectedDate}
+                                tearDirection={tearDirection}
+                                youtubeId={youtubeId}
+                                setIsImmersive={setIsImmersive}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
