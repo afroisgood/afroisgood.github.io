@@ -84,7 +84,7 @@ export const MobileNav = ({
                             className={`text-amber-500 ${isPlaying ? 'animate-spin-slow' : ''}`}
                             size={22}
                         />
-                        <span className="text-base font-bold tracking-widest text-white font-playfair">JAZZ 365</span>
+                        <span className="text-base font-bold tracking-widest text-white font-playfair">日めくりジャズ365</span>
                     </div>
 
                     {/* 月份切換 */}

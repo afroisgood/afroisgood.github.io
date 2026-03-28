@@ -23,7 +23,7 @@ export const RetroMenuBar = () => {
         <div className="retro-menubar">
             {/* Left: brand + fake menus */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{ fontWeight: 'bold', opacity: 0.95 }}>&#9835; JAZZ 365</span>
+                <span style={{ fontWeight: 'bold', opacity: 0.95 }}>&#9835; 日めくりジャズ365</span>
                 <span style={{ opacity: 0.2 }}>|</span>
                 <span style={{ opacity: 0.5, cursor: 'default' }}>File</span>
                 <span style={{ opacity: 0.5, cursor: 'default' }}>View</span>
