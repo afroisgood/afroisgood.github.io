@@ -155,12 +155,36 @@ export const MobileNav = ({
                 {/* 日期 + 日曆開關 */}
                 <button
                     onClick={() => setDrawerOpen(v => !v)}
-                    className="flex items-center gap-2 text-sm font-bold tracking-wider text-white transition-colors"
-                    onMouseEnter={e => e.currentTarget.style.color = 'var(--mood-glow)'}
-                    onMouseLeave={e => e.currentTarget.style.color = ''}
+                    className="flex flex-col items-center gap-0.5 transition-all"
                 >
-                    <CalendarIcon />
-                    <span>{dateLabel}</span>
+                    <div
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all"
+                        style={{
+                            background: drawerOpen ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.05)',
+                            borderColor: drawerOpen ? 'var(--mood-glow)' : 'rgba(255,255,255,0.18)',
+                            color: drawerOpen ? 'var(--mood-glow)' : '#ffffff',
+                        }}
+                    >
+                        <CalendarIcon />
+                        <span className="text-sm font-bold tracking-wider">{dateLabel}</span>
+                        <svg
+                            width="10" height="10" viewBox="0 0 10 10" fill="none"
+                            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            style={{ transition: 'transform 0.25s ease', transform: drawerOpen ? 'rotate(180deg)' : 'rotate(0deg)', opacity: 0.7 }}
+                        >
+                            <polyline points="1,7 5,3 9,7" />
+                        </svg>
+                    </div>
+                    <span style={{
+                        fontFamily: "'Courier New', monospace",
+                        fontSize: '8px',
+                        letterSpacing: '0.18em',
+                        color: 'rgba(255,255,255,0.28)',
+                        textTransform: 'uppercase',
+                        lineHeight: 1,
+                    }}>
+                        tap to browse
+                    </span>
                 </button>
 
                 {/* 後一天 */}
