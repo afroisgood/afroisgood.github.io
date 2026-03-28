@@ -23,16 +23,16 @@ export const RetroMenuBar = () => {
         <div className="retro-menubar">
             {/* Left: brand + fake menus */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <span style={{ fontWeight: 'bold', opacity: 0.95 }}>&#9835; 日めくりジャズ365</span>
-                <span style={{ opacity: 0.2 }}>|</span>
-                <span style={{ opacity: 0.5, cursor: 'default' }}>File</span>
-                <span style={{ opacity: 0.5, cursor: 'default' }}>View</span>
-                <span style={{ opacity: 0.5, cursor: 'default' }}>Help</span>
+                <span style={{ fontWeight: 'bold', opacity: 0.95, whiteSpace: 'nowrap' }}>&#9835; 日めくりジャズ365</span>
+                <span className="hidden sm:inline" style={{ opacity: 0.2 }}>|</span>
+                <span className="hidden sm:inline" style={{ opacity: 0.5, cursor: 'default' }}>File</span>
+                <span className="hidden sm:inline" style={{ opacity: 0.5, cursor: 'default' }}>View</span>
+                <span className="hidden sm:inline" style={{ opacity: 0.5, cursor: 'default' }}>Help</span>
             </div>
             {/* Right: live date + time */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', opacity: 0.72 }}>
-                <span>{day} {date} {mon} {year}</span>
-                <span style={{ opacity: 0.35 }}>|</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', opacity: 0.72, whiteSpace: 'nowrap' }}>
+                <span className="hidden sm:inline">{day} {date} {mon} {year}</span>
+                <span className="hidden sm:inline" style={{ opacity: 0.35 }}>|</span>
                 <span>{hh}:{mm}</span>
             </div>
         </div>

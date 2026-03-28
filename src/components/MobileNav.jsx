@@ -81,10 +81,10 @@ export const MobileNav = ({
                         onClick={() => { handleDateChange(new Date()); setDrawerOpen(false); }}
                     >
                         <IconDisc
-                            className={`text-amber-500 ${isPlaying ? 'animate-spin-slow' : ''}`}
-                            size={22}
+                            className={`text-amber-500 flex-shrink-0 ${isPlaying ? 'animate-spin-slow' : ''}`}
+                            size={18}
                         />
-                        <span className="text-base font-bold tracking-widest text-white font-playfair">日めくりジャズ365</span>
+                        <span className="font-bold text-white font-playfair whitespace-nowrap" style={{ fontSize: '13px', letterSpacing: '0.05em' }}>日めくりジャズ365</span>
                     </div>
 
                     {/* 月份切換 */}

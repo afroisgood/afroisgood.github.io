@@ -44,7 +44,7 @@ export const Sidebar = ({
                 <span className="retro-ctrl">&#8722;</span>
                 <span className="retro-ctrl">&#9633;</span>
                 <span style={{ flex: 1, textAlign: 'center', fontSize: '13px', letterSpacing: '0.16em', fontWeight: 'bold' }}>
-                    JAZZ&nbsp;365
+                    DAILY JAZZ ALMANAC
                 </span>
                 <IconDisc
                     className={`transition-transform duration-1000 ${isPlaying ? 'animate-spin-slow' : ''}`}
