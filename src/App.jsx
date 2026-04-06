@@ -458,11 +458,11 @@ const App = () => {
             {/* Footer */}
             <footer style={{
                 textAlign: 'center',
-                padding: '32px 24px 48px',
+                padding: '24px 24px 40px',
                 fontFamily: "'Courier New', Courier, monospace",
                 fontSize: '11px',
                 lineHeight: 2,
-                color: 'rgba(58, 32, 16, 0.45)',
+                color: 'rgba(255, 245, 230, 0.45)',
                 letterSpacing: '0.04em',
             }}>
                 <p>© 2026 ジャズ録音日調査委員会</p>
@@ -475,7 +475,7 @@ const App = () => {
                     和煦人 —&nbsp;
                     <a
                         href="mailto:monkeyboy2766@gmail.com"
-                        style={{ color: 'rgba(58, 32, 16, 0.6)', textDecoration: 'underline' }}
+                        style={{ color: 'rgba(255, 245, 230, 0.65)', textDecoration: 'underline' }}
                     >
                         monkeyboy2766@gmail.com
                     </a>
