@@ -455,32 +455,6 @@ const App = () => {
                 </div>
             </div>
 
-            {/* Footer */}
-            <footer style={{
-                textAlign: 'center',
-                padding: '24px 24px 40px',
-                fontFamily: "'Courier New', Courier, monospace",
-                fontSize: '11px',
-                lineHeight: 2,
-                color: 'rgba(255, 245, 230, 0.45)',
-                letterSpacing: '0.04em',
-            }}>
-                <p>© 2026 ジャズ録音日調査委員会</p>
-                <p>Text, curation &amp; translations by the site author.</p>
-                <p>Music rights belong to their respective copyright holders.</p>
-                <p style={{ marginTop: '12px' }}>
-                    For corrections or feedback, please contact ／ 如有任何指正或回饋，歡迎來信：
-                </p>
-                <p>
-                    和煦人 —&nbsp;
-                    <a
-                        href="mailto:monkeyboy2766@gmail.com"
-                        style={{ color: 'rgba(255, 245, 230, 0.65)', textDecoration: 'underline' }}
-                    >
-                        monkeyboy2766@gmail.com
-                    </a>
-                </p>
-            </footer>
         </div>
     );
 };

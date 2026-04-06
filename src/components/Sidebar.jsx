@@ -242,51 +242,64 @@ export const Sidebar = ({
                 </div>
 
                 {/* Footer */}
-                <div style={{
-                    paddingTop: '12px',
-                    borderTop: '1px solid #c8b4a4',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}>
-                    <button
-                        onClick={() => setShowChangelog(true)}
-                        style={{
+                <div style={{ paddingTop: '12px', borderTop: '1px solid #c8b4a4' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <button
+                            onClick={() => setShowChangelog(true)}
+                            style={{
+                                fontFamily: "'Courier New', Courier, monospace",
+                                fontSize: '9px',
+                                letterSpacing: '0.2em',
+                                textTransform: 'uppercase',
+                                fontWeight: 'bold',
+                                color: '#7a5840',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 0,
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#2a1808'}
+                            onMouseLeave={e => e.currentTarget.style.color = '#7a5840'}
+                        >
+                            Update Log
+                            <span style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--mood-glow)',
+                                animation: 'pulse 2s infinite',
+                                display: 'inline-block',
+                            }} />
+                        </button>
+                        <span style={{
                             fontFamily: "'Courier New', Courier, monospace",
                             fontSize: '9px',
-                            letterSpacing: '0.2em',
-                            textTransform: 'uppercase',
+                            color: '#9a8070',
                             fontWeight: 'bold',
-                            color: '#7a5840',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 0,
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#2a1808'}
-                        onMouseLeave={e => e.currentTarget.style.color = '#7a5840'}
-                    >
-                        Update Log
-                        <span style={{
-                            width: '6px',
-                            height: '6px',
-                            borderRadius: '50%',
-                            backgroundColor: 'var(--mood-glow)',
-                            animation: 'pulse 2s infinite',
-                            display: 'inline-block',
-                        }} />
-                    </button>
-                    <span style={{
+                        }}>
+                            {latestVersion}
+                        </span>
+                    </div>
+                    <div style={{
                         fontFamily: "'Courier New', Courier, monospace",
-                        fontSize: '9px',
-                        color: '#9a8070',
-                        fontWeight: 'bold',
+                        fontSize: '8px',
+                        lineHeight: 1.8,
+                        color: '#9a7860',
+                        letterSpacing: '0.03em',
                     }}>
-                        {latestVersion}
-                    </span>
+                        <p>© 2026 ジャズ録音日調査委員会</p>
+                        <p>Text, curation &amp; translations by the site author.</p>
+                        <p>Music rights belong to their respective holders.</p>
+                        <p style={{ marginTop: '6px' }}>
+                            Corrections &amp; feedback：和煦人 —{' '}
+                            <a href="mailto:monkeyboy2766@gmail.com" style={{ color: '#7a5840', textDecoration: 'underline' }}>
+                                monkeyboy2766@gmail.com
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </aside>
