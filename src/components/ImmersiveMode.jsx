@@ -29,7 +29,7 @@ export const ImmersiveMode = ({
                 <span className="sr-only">Close</span>
             </button>
 
-            <div className="w-full max-w-4xl flex flex-col items-center relative">
+            <div className="w-full max-w-4xl flex flex-col items-center relative immersive-content">
                 <div className="text-stone-500 font-zen tracking-widest mb-12 text-sm uppercase">
                     {selectedDate.getFullYear()} . {selectedDate.toLocaleString('en-US', { month: 'long' })} . {selectedDate.getDate()}
                 </div>

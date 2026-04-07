@@ -10,7 +10,7 @@ body {
 /* 背景紙張材質 */
 .bg-image-paper {
     background-color: #f2f0e9;
-    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.09'/%3E%3C/svg%3E");
     transition: background-color 1.2s ease-in-out;
 }
 
@@ -62,6 +62,12 @@ body {
 /* 沉浸模式特效 */
 .immersive-overlay { animation: fadeIn 0.8s ease-in-out forwards; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.immersive-content { animation: immersiveContentIn 0.9s cubic-bezier(0.19, 1, 0.22, 1) 0.15s both; }
+@keyframes immersiveContentIn {
+    from { opacity: 0; transform: scale(0.75) translateY(48px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
 
 .immersive-bg {
     background: radial-gradient(circle at center, #2a2a2a 0%, #050505 85%);
@@ -220,7 +226,7 @@ body {
     text-decoration: none;
     transition: background 0.05s;
 }
-.retro-stream:hover { background: #ece0d4; }
+.retro-stream:hover { background: #ece0d4; border-top-color: var(--mood-glow, #f5e8df); border-left-color: var(--mood-glow, #f5e8df); }
 .retro-stream:active {
     border-top-color: #7a5840;  border-left-color: #7a5840;
     border-right-color: #f5e8df; border-bottom-color: #f5e8df;

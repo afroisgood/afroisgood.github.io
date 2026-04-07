@@ -136,7 +136,7 @@ export const DailyArticle = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
 
                 {/* 左側：專輯封面（純粹視覺焦點） */}
-                <div className="lg:col-span-5 relative z-10">
+                <div className="lg:col-span-5 relative z-10 max-w-sm mx-auto lg:max-w-none">
                     <div className="aspect-square w-full relative bg-stone-200 overflow-hidden group retro-album-frame">
 
                         {currentData.imageUrl ? (
@@ -201,7 +201,7 @@ export const DailyArticle = ({
                         {currentData.quote?.trim() && (
                             <div className="relative pl-8 mb-10">
                                 <span className="absolute left-0 -top-2 text-6xl font-serif leading-none transition-colors duration-1000" style={{ color: 'var(--mood-accent)', opacity: 0.35 }}>"</span>
-                                <blockquote className="text-xl lg:text-2xl font-medium text-stone-900 leading-relaxed font-serif text-justify pt-2">
+                                <blockquote className="text-xl lg:text-2xl font-medium leading-relaxed font-serif text-justify pt-2 transition-colors duration-1000" style={{ color: 'var(--mood-accent)' }}>
                                     {currentData.quote}
                                 </blockquote>
                             </div>
