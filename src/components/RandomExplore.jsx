@@ -1,5 +1,6 @@
 // src/components/RandomExplore.jsx
 import { useState } from 'react';
+import { RetroTitleBar } from './RetroTitleBar';
 
 export const RandomExplore = ({ jazzData, onNavigate }) => {
     const [flipping, setFlipping]   = useState(false);
@@ -27,11 +28,7 @@ export const RandomExplore = ({ jazzData, onNavigate }) => {
     return (
         <div className="retro-win" style={{ overflow: 'hidden' }}>
             {/* Mini title bar */}
-            <div className="retro-titlebar" style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 7px', fontSize: '10px' }}>
-                <span className="retro-ctrl" style={{ width: '11px', height: '9px', fontSize: '6px' }}>&#215;</span>
-                <span className="retro-ctrl" style={{ width: '11px', height: '9px', fontSize: '6px' }}>&#8722;</span>
-                <span style={{ flex: 1, textAlign: 'center', letterSpacing: '0.15em' }}>RANDOM EXPLORE</span>
-            </div>
+            <RetroTitleBar title="RANDOM EXPLORE" mini />
 
             {/* Body */}
             <div className="retro-body" style={{ padding: '12px' }}>

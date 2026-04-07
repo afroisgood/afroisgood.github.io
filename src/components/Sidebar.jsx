@@ -1,8 +1,8 @@
 // src/components/Sidebar.jsx
-import { IconDisc } from './Icons';
 import { RandomExplore } from './RandomExplore';
 import { CalendarGrid } from './CalendarGrid';
-import { formatDateString } from '../utils/dateUtils';
+import { RetroTitleBar } from './RetroTitleBar';
+import { formatDateString, isAtMinMonth } from '../utils/dateUtils';
 
 export const Sidebar = ({
     isPlaying,
@@ -18,8 +18,8 @@ export const Sidebar = ({
     const year  = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
 
-    const isAtMinMonth = year === 2026 && month === 0;
-    const handlePrevMonth = () => { if (!isAtMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
+    const atMinMonth = isAtMinMonth(currentMonth);
+    const handlePrevMonth = () => { if (!atMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
     const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
 
     return (
@@ -33,19 +33,12 @@ export const Sidebar = ({
             }}
         >
             {/* ── Window title bar ── */}
-            <div className="retro-titlebar flex-shrink-0" style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                <span className="retro-ctrl">&#215;</span>
-                <span className="retro-ctrl">&#8722;</span>
-                <span className="retro-ctrl">&#9633;</span>
-                <span style={{ flex: 1, textAlign: 'center', fontSize: '13px', letterSpacing: '0.16em', fontWeight: 'bold' }}>
-                    DAILY JAZZ ALMANAC
-                </span>
-                <IconDisc
-                    className={`transition-transform duration-1000 ${isPlaying ? 'animate-spin-slow' : ''}`}
-                    size={11}
-                    style={{ color: '#e0a870', flexShrink: 0 }}
-                />
-            </div>
+            <RetroTitleBar
+                title="DAILY JAZZ ALMANAC"
+                className="flex-shrink-0"
+                showDisc
+                isPlaying={isPlaying}
+            />
 
             {/* ── Window body ── */}
             <div
@@ -79,8 +72,8 @@ export const Sidebar = ({
                             <button
                                 onClick={handlePrevMonth}
                                 className="retro-nav"
-                                disabled={isAtMinMonth}
-                                style={{ opacity: isAtMinMonth ? 0.2 : 1, cursor: isAtMinMonth ? 'default' : 'pointer' }}
+                                disabled={atMinMonth}
+                                style={{ opacity: atMinMonth ? 0.2 : 1, cursor: atMinMonth ? 'default' : 'pointer' }}
                             >&lt;</button>
                             <h2 style={{
                                 fontFamily: "'Courier New', Courier, monospace",

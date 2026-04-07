@@ -12,6 +12,7 @@ import { IconDisc, IconPlay, IconPause, IconX, IconMaximize } from './components
 import { AdminPanel } from './components/AdminPanel';
 import { MobileNav } from './components/MobileNav';
 import { RetroMenuBar } from './components/RetroMenuBar';
+import { RetroTitleBar } from './components/RetroTitleBar';
 
 const App = () => {
     const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
@@ -267,12 +268,7 @@ const App = () => {
     if (loading) return (
         <div className="retro-desktop min-h-screen flex flex-col items-center justify-center p-6 text-center">
             <div className="retro-win" style={{ width: '480px', maxWidth: '90vw' }}>
-                <div className="retro-titlebar" style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                    <span className="retro-ctrl">&#215;</span>
-                    <span className="retro-ctrl">&#8722;</span>
-                    <span className="retro-ctrl">&#9633;</span>
-                    <span style={{ flex: 1, textAlign: 'center', fontSize: '13px', letterSpacing: '0.18em' }}>DAILY JAZZ ALMANAC</span>
-                </div>
+                <RetroTitleBar title="DAILY JAZZ ALMANAC" />
                 <div className="retro-body" style={{ padding: '48px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
                     <IconDisc className="animate-spin-fast" size={64} style={{ color: '#7a5840', opacity: 0.7 }} />
                     <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '13px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3a2010', lineHeight: 1.8 }}>
@@ -403,14 +399,11 @@ const App = () => {
                 <div className="lg:col-span-9 relative retro-win" style={{ alignSelf: 'flex-start', minHeight: '600px' }}>
 
                     {/* Window title bar — desktop only */}
-                    <div className="hidden lg:flex retro-titlebar" style={{ alignItems: 'center', gap: '7px' }}>
-                        <span className="retro-ctrl">&#215;</span>
-                        <span className="retro-ctrl">&#8722;</span>
-                        <span className="retro-ctrl">&#9633;</span>
-                        <span style={{ flex: 1, textAlign: 'center', fontSize: '12px', letterSpacing: '0.12em', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                            {winTitle}
-                        </span>
-                    </div>
+                    <RetroTitleBar
+                        title={winTitle}
+                        className="hidden lg:flex"
+                        style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
+                    />
 
                     {/* Window body */}
                     <div className="retro-body relative overflow-hidden" style={{ padding: '36px 56px 40px', paddingBottom: '96px', backgroundColor: moodHex, transition: 'background-color 0.8s ease' }}>

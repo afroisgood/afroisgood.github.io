@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "daily-jazz",
-      "runtimeExecutable": "/usr/local/bin/node",
-      "runtimeArgs": ["/Users/teylunghuwa/Documents/Claude/Projects/日めくりジャズ365｜2026年版/daily-jazz/node_modules/.bin/vite", "--port", "5173"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "port": 5173
     }
   ]

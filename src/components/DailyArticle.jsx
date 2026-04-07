@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { EditorNote } from './EditorNote';
 import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
 import { VintageJazzText } from './VintageJazzText';
-import { formatDateString } from '../utils/dateUtils';
+import { formatDateString, isToday } from '../utils/dateUtils';
 
 export const DailyArticle = ({
     currentData,
@@ -17,12 +17,7 @@ export const DailyArticle = ({
     const dateKey = formatDateString(selectedDate);
 
     const handleShare = async () => {
-        const now = new Date();
-        const isToday = selectedDate.getFullYear() === now.getFullYear() &&
-                        selectedDate.getMonth() === now.getMonth() &&
-                        selectedDate.getDate() === now.getDate();
-        
-        const dateText = isToday ? '今天' : `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
+        const dateText = isToday(selectedDate) ? '今天' : `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
 
         const shareData = {
             title: `日めくりジャズ365 | ${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`,

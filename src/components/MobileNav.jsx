@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { IconDisc, IconCalendar, IconClose } from './Icons';
 import { RandomExplore } from './RandomExplore';
 import { CalendarGrid } from './CalendarGrid';
-import { formatDateString } from '../utils/dateUtils';
+import { formatDateString, isAtMinMonth } from '../utils/dateUtils';
 
 export const MobileNav = ({
     selectedDate,
@@ -21,8 +21,8 @@ export const MobileNav = ({
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
 
-    const isAtMinMonth = year === 2026 && month === 0;
-    const handlePrevMonth = () => { if (!isAtMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
+    const atMinMonth = isAtMinMonth(currentMonth);
+    const handlePrevMonth = () => { if (!atMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
     const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
 
     const handleDayClick = (date) => {
@@ -70,9 +70,9 @@ export const MobileNav = ({
                     <div className="flex items-center justify-between mb-4">
                         <button
                             onClick={handlePrevMonth}
-                            disabled={isAtMinMonth}
+                            disabled={atMinMonth}
                             className="p-2 font-bold text-lg transition-colors"
-                            style={{ color: isAtMinMonth ? 'rgba(113,113,122,0.3)' : '', cursor: isAtMinMonth ? 'default' : 'pointer' }}
+                            style={{ color: atMinMonth ? 'rgba(113,113,122,0.3)' : '', cursor: atMinMonth ? 'default' : 'pointer' }}
                         >&lt;</button>
                         <h2 className="text-sm font-bold tracking-widest uppercase font-playfair text-white">
                             {monthLabel} {year}

@@ -1,7 +1,7 @@
 // src/components/CalendarGrid.jsx
 // 共用月曆 Grid 元件 — Sidebar（light）與 MobileNav（dark）共用
 
-import { formatDateString } from '../utils/dateUtils';
+import { formatDateString, isToday as checkIsToday } from '../utils/dateUtils';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -10,7 +10,6 @@ export const CalendarGrid = ({ year, month, selectedDate, jazzData, onDayClick, 
     const firstDay    = new Date(year, month, 1).getDay();
     const days        = Array.from({ length: daysInMonth }, (_, i) => i + 1);
     const blanks      = Array.from({ length: firstDay }, (_, i) => i);
-    const today       = new Date();
 
     const isDark = theme === 'dark';
 
@@ -18,7 +17,7 @@ export const CalendarGrid = ({ year, month, selectedDate, jazzData, onDayClick, 
         <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: isDark ? '2px 1px' : '2px 1px',
+            gap: '2px 1px',
             textAlign: 'center',
         }}>
             {/* 星期標題列 */}
@@ -46,9 +45,7 @@ export const CalendarGrid = ({ year, month, selectedDate, jazzData, onDayClick, 
                 const isSelected = selectedDate.getDate() === day &&
                                    selectedDate.getMonth() === month &&
                                    selectedDate.getFullYear() === year;
-                const isToday    = today.getDate() === day &&
-                                   today.getMonth() === month &&
-                                   today.getFullYear() === year;
+                const isToday    = checkIsToday(new Date(year, month, day));
 
                 // 依主題設定樣式
                 const baseStyle = {
