@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
-import { formatDateString } from './utils/dateUtils';
+import { formatDateString, isDateVisible } from './utils/dateUtils';
 import { Sidebar } from './components/Sidebar';
 import { ImmersiveMode } from './components/ImmersiveMode';
 import { ChangelogModal } from './components/ChangelogModal';
@@ -41,7 +41,17 @@ const App = () => {
     const genreColors = { "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE", "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0" };
 
     const dateKey = formatDateString(selectedDate);
-    const currentData = jazzData[dateKey];
+
+    // 僅對外開放「今天臺灣時間 10:00 後」或「過去」的日期
+    const visibleJazzData = useMemo(() => {
+        const result = {};
+        Object.keys(jazzData).forEach(k => {
+            if (isDateVisible(k)) result[k] = jazzData[k];
+        });
+        return result;
+    }, [jazzData]);
+
+    const currentData = visibleJazzData[dateKey];
 
     // Mood 衍生色（必須在 currentData 之後計算）
     const hexToMoodVars = (hex) => {
@@ -381,7 +391,7 @@ const App = () => {
                 handleDateChange={handleDateChange}
                 handlePrevDay={handlePrevDay}
                 handleNextDay={handleNextDay}
-                jazzData={jazzData}
+                jazzData={visibleJazzData}
                 isPlaying={isPlaying}
             />
 
@@ -391,7 +401,7 @@ const App = () => {
 
                 <Sidebar
                     isPlaying={isPlaying} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth}
-                    selectedDate={selectedDate} handleDateChange={handleDateChange} jazzData={jazzData}
+                    selectedDate={selectedDate} handleDateChange={handleDateChange} jazzData={visibleJazzData}
                     setShowChangelog={setShowChangelog} latestVersion={latestVersion}
                 />
 

@@ -22,3 +22,23 @@ export const isToday = (date) => {
  */
 export const isAtMinMonth = (currentMonth) =>
     currentMonth.getFullYear() === 2026 && currentMonth.getMonth() === 0;
+
+/**
+ * 判斷某個日期的內容是否可以對外顯示。
+ * 規則：
+ *   - 過去日期 → 直接顯示
+ *   - 未來日期 → 隱藏
+ *   - 今天     → 需等到臺灣時間（UTC+8）上午 10:00 後才顯示
+ *
+ * @param {string} dateStr - "YYYY-MM-DD" 格式
+ * @returns {boolean}
+ */
+export const isDateVisible = (dateStr) => {
+    const todayStr = formatDateString(new Date());
+    if (dateStr < todayStr) return true;   // 過去：永遠顯示
+    if (dateStr > todayStr) return false;  // 未來：永遠隱藏
+
+    // 今天：判斷臺灣時間是否已過上午 10 點
+    const taiwanNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    return taiwanNow.getUTCHours() >= 10;
+};
