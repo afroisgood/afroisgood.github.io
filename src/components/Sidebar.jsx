@@ -18,7 +18,8 @@ export const Sidebar = ({
     const year  = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
 
-    const handlePrevMonth = () => setCurrentMonth(new Date(year, month - 1, 1));
+    const isAtMinMonth = year === 2026 && month === 0;
+    const handlePrevMonth = () => { if (!isAtMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
     const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
 
     return (
@@ -75,7 +76,12 @@ export const Sidebar = ({
                     <div style={{ marginBottom: '16px' }}>
                         {/* Month nav */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                            <button onClick={handlePrevMonth} className="retro-nav">&lt;</button>
+                            <button
+                                onClick={handlePrevMonth}
+                                className="retro-nav"
+                                disabled={isAtMinMonth}
+                                style={{ opacity: isAtMinMonth ? 0.2 : 1, cursor: isAtMinMonth ? 'default' : 'pointer' }}
+                            >&lt;</button>
                             <h2 style={{
                                 fontFamily: "'Courier New', Courier, monospace",
                                 fontSize: '13px',

@@ -1,26 +1,10 @@
 // src/components/MobileNav.jsx
 // 手機專用底部導航欄 + 日曆抽屜（lg 以上隱藏）
 import { useState } from 'react';
-import { IconDisc } from './Icons';
+import { IconDisc, IconCalendar, IconClose } from './Icons';
 import { RandomExplore } from './RandomExplore';
 import { CalendarGrid } from './CalendarGrid';
 import { formatDateString } from '../utils/dateUtils';
-
-const CalendarIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-        <line x1="16" y1="2" x2="16" y2="6"/>
-        <line x1="8" y1="2" x2="8" y2="6"/>
-        <line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-);
-
-const CloseIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-);
 
 export const MobileNav = ({
     selectedDate,
@@ -37,7 +21,8 @@ export const MobileNav = ({
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
 
-    const handlePrevMonth = () => setCurrentMonth(new Date(year, month - 1, 1));
+    const isAtMinMonth = year === 2026 && month === 0;
+    const handlePrevMonth = () => { if (!isAtMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
     const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
 
     const handleDayClick = (date) => {
@@ -83,7 +68,12 @@ export const MobileNav = ({
 
                     {/* 月份切換 */}
                     <div className="flex items-center justify-between mb-4">
-                        <button onClick={handlePrevMonth} className="text-zinc-400 hover:text-amber-400 transition-colors p-2 font-bold text-lg">&lt;</button>
+                        <button
+                            onClick={handlePrevMonth}
+                            disabled={isAtMinMonth}
+                            className="p-2 font-bold text-lg transition-colors"
+                            style={{ color: isAtMinMonth ? 'rgba(113,113,122,0.3)' : '', cursor: isAtMinMonth ? 'default' : 'pointer' }}
+                        >&lt;</button>
                         <h2 className="text-sm font-bold tracking-widest uppercase font-playfair text-white">
                             {monthLabel} {year}
                         </h2>
@@ -163,7 +153,7 @@ export const MobileNav = ({
                             color: drawerOpen ? 'var(--mood-glow)' : '#ffffff',
                         }}
                     >
-                        <CalendarIcon />
+                        <IconCalendar />
                         <span className="text-sm font-bold tracking-wider">{dateLabel}</span>
                         <svg
                             width="10" height="10" viewBox="0 0 10 10" fill="none"
