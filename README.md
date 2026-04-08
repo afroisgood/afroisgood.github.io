@@ -56,6 +56,9 @@ bash deploy.sh
 ## 專案結構
 
 ```
+scripts/
+└── getSpotifyInfo.js        # 依據 public/data.json 的 artist、album 補齊 Spotify 連結，輸出為 public/replaced-spotify.json
+
 src/
 ├── App.jsx                 # 主程式、狀態管理、鍵盤快捷鍵
 ├── components/
@@ -72,6 +75,50 @@ src/
 public/
 └── data.json               # 所有音樂資料與更新日誌
 ```
+
+## 更新 Spotify 資料
+
+先在 [`.env`](.env) 設定 Spotify API 憑證：
+
+```env
+Client_ID=你的 Spotify Client ID
+CLIENT_SECRET=你的 Spotify Client Secret
+```
+
+`Client_ID` 與 `CLIENT_SECRET` 可參考 Spotify 官方文件申請：
+
+- <https://developer.spotify.com/documentation/web-api/concepts/apps>
+- <https://developer.spotify.com/documentation/web-api/reference/search>
+
+執行以下指令即可更新 Spotify 連結資料：
+
+```bash
+node script/getSpotifyInfo.js
+```
+
+或是在 [`package.json`](package.json) 加入腳本後使用：
+
+```json
+{
+  "scripts": {
+    "update-spotify": "node script/getSpotifyInfo.js"
+  }
+}
+```
+
+接著即可透過以下指令執行：
+
+```bash
+npm run update-spotify
+```
+
+執行結果說明：
+
+- 讀取 [`public/data.json`](public/data.json)
+- 若某筆資料已有 `spotify` 欄位，則略過查詢，避免重複請求
+- 若缺少 `spotify`，則以 `artist` 與 `album` 向 Spotify Search API 查詢
+- 每筆請求之間固定等待 2 秒
+- 最終輸出為 [`public/replaced-spotify.json`](public/replaced-spotify.json)，不會直接覆寫 [`public/data.json`](public/data.json)
 
 ---
 
