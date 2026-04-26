@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
 import { formatDateString, isDateVisible } from './utils/dateUtils';
+import { GENRE_COLORS } from './utils/moodColors';
 import { Sidebar } from './components/Sidebar';
 import { ImmersiveMode } from './components/ImmersiveMode';
 import { ChangelogModal } from './components/ChangelogModal';
@@ -24,35 +25,27 @@ const hexToMoodVars = (hex) => {
     return { accent: `rgb(${ac(0.38)})`, glow: `rgb(${ac(0.78)})` };
 };
 
-const App = () => {
-    const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
+const getYouTubeVideoId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+};
 
-    useEffect(() => {
-        const onHash = () => setIsAdmin(window.location.hash === '#admin');
-        window.addEventListener('hashchange', onHash);
-        return () => window.removeEventListener('hashchange', onHash);
-    }, []);
-
-    if (isAdmin) return <AdminPanel />;
-
-    // 【所有資料與播放邏輯保留 1.3.0 穩定版】
-    const today = new Date();
-    const [selectedDate, setSelectedDate] = useState(today);
-    const [currentMonth, setCurrentMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+// ── 主應用（所有 hooks 都在此，無條件式 early return）──
+const MainApp = () => {
+    const [selectedDate, setSelectedDate] = useState(() => new Date());
+    const [currentMonth, setCurrentMonth] = useState(() => { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), 1); });
     const [jazzData, setJazzData] = useState({});
     const [changelogData, setChangelogData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isPlaying, setIsPlaying] = useState(false);
     const [tearDirection, setTearDirection] = useState(null);
     const [showChangelog, setShowChangelog] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
-    
-    const genreColors = { "Bebop": "#FDE68A", "Cool Jazz": "#BFDBFE", "Fusion": "#DDD6FE", "Swing": "#FECACA", "Hard Bop": "#FED7AA", "Free Jazz": "#E2E8F0" };
 
     const dateKey = formatDateString(selectedDate);
 
-    // 僅對外開放「今天臺灣時間 07:00 後」或「過去」的日期
     const visibleJazzData = useMemo(() => {
         const result = {};
         Object.keys(jazzData).forEach(k => {
@@ -63,9 +56,9 @@ const App = () => {
 
     const currentData = visibleJazzData[dateKey];
 
-    const moodHex = genreColors[currentData?.mood?.trim()] || (currentData?.mood?.startsWith('#') ? currentData.mood : null) || '#f2f0e9';
+    const moodHex = GENRE_COLORS[currentData?.mood?.trim()] || (currentData?.mood?.startsWith('#') ? currentData.mood : null) || '#f2f0e9';
     const { accent: moodAccent, glow: moodGlow } = hexToMoodVars(moodHex);
-    
+
     useEffect(() => {
         const siteBase = 'https://afroisgood.github.io';
         const defaultTitle = '日めくりジャズ365 | 2026年版';
@@ -104,13 +97,6 @@ const App = () => {
         }
     }, [selectedDate, currentData]);
 
-    const getYouTubeVideoId = (url) => {
-        if (!url) return null;
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    };
-    
     const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
     const { player, playerState } = useYouTubePlayer((isImmersive || isMinimized) ? youtubeId : null);
     const isVinylSpinning = playerState === 1 || playerState === 3;
@@ -155,7 +141,6 @@ const App = () => {
 
     useEffect(() => {
         const handleKeyDown = (e) => {
-            // 輸入框內不觸發快捷鍵
             const tag = document.activeElement?.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
 
@@ -212,19 +197,16 @@ const App = () => {
     };
 
     const triggerTransition = (newDate) => {
-        // 用 ref 取得最新 player，避免使用已銷毀的舊 player 實例拋出例外
         try {
             const p = playerRef2.current;
             if (p && playerStateRef2.current === 1 && typeof p.pauseVideo === 'function') p.pauseVideo();
         } catch (_) {}
         const direction = newDate > selectedDateRef.current ? 'forward' : 'backward';
         setTearDirection(direction);
-        setIsPlaying(false);
         setTimeout(() => {
             setSelectedDate(newDate);
             setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
             setTearDirection(null);
-            setTimeout(() => setIsPlaying(true), 400);
         }, 850);
     };
     triggerTransitionRef.current = triggerTransition;
@@ -248,19 +230,16 @@ const App = () => {
 
     useEffect(() => {
         const fetchAllData = async () => {
-            // 從 data.json 讀取所有資料（單一資料來源）
-            // Promise.all 確保 skeleton 至少顯示 800ms，避免快速網路下一閃即逝
             try {
                 const res = await fetch('/data.json');
                 const data = await res.json();
-                // 支援新格式 { entries, changelog } 或舊格式（純陣列）
                 const arr = Array.isArray(data) ? data : (data.entries || []);
                 const cl  = Array.isArray(data) ? [] : (data.changelog || []);
                 const map = {};
                 arr.forEach(row => { if (row.date) map[row.date.trim()] = row; });
                 setJazzData(map);
                 setChangelogData(cl.slice().sort((a, b) => b.date.localeCompare(a.date)));
-            } catch (_) { /* 靜默忽略 */ }
+            } catch (_) {}
 
             const hash = window.location.hash.replace('#', '');
             if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
@@ -270,7 +249,7 @@ const App = () => {
                 setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
             }
 
-            setTimeout(() => { setLoading(false); setIsPlaying(true); }, 2000);
+            setTimeout(() => setLoading(false), 2000);
         };
         fetchAllData();
     }, []);
@@ -294,21 +273,19 @@ const App = () => {
             </div>
         </div>
     );
-    
+
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
     const winTitle = currentData
-        ? `${String(selectedDate.getDate()).padStart(2,'0')} ${selectedDate.toLocaleDateString('en-US',{month:'short'}).toUpperCase()} \u2014 ${(currentData.song||'').toUpperCase().slice(0,38)}${(currentData.song||'').length>38?'...':''}`
+        ? `${String(selectedDate.getDate()).padStart(2,'0')} ${selectedDate.toLocaleDateString('en-US',{month:'short'}).toUpperCase()} — ${(currentData.song||'').toUpperCase().slice(0,38)}${(currentData.song||'').length>38?'...':''}`
         : 'DAILY JAZZ ALMANAC';
 
     return (
         <div className="retro-desktop min-h-screen font-sans text-stone-800 relative overflow-x-hidden"
              style={{ '--mood-accent': moodAccent, '--mood-glow': moodGlow }}>
 
-            {/* Fixed top menu bar */}
             <RetroMenuBar />
 
-            {/* YouTube player 掛載點 — 最小化時保持在 DOM 以維持播放 */}
             {(isImmersive || isMinimized) && youtubeId && (
                 <div style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', bottom: 0, left: 0, overflow: 'hidden' }}>
                     <div id="yt-player-mount" style={{ width: '100%', height: '100%' }}></div>
@@ -323,13 +300,11 @@ const App = () => {
                 currentData={currentData} isVinylSpinning={isVinylSpinning}
             />
 
-            {/* 迷你播放器 — 最小化時顯示 */}
             {isImmersive && isMinimized && (
                 <div
                     className="fixed left-0 right-0 z-[300] flex items-center gap-3 px-4 py-2 bottom-14 lg:bottom-0"
                     style={{ background: 'rgba(18,13,10,0.96)', borderTop: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(8px)' }}
                 >
-                    {/* 封面 / 黑膠碟 */}
                     <div className={`w-10 h-10 rounded-full overflow-hidden border border-stone-700 flex-shrink-0 ${isVinylSpinning ? 'animate-spin-vinyl' : ''}`}>
                         {currentData?.imageUrl ? (
                             <img src={currentData.imageUrl} className="w-full h-full object-cover" alt="" />
@@ -340,7 +315,6 @@ const App = () => {
                         )}
                     </div>
 
-                    {/* 曲目資訊 */}
                     <div className="flex-1 min-w-0">
                         <p className="text-stone-100 truncate" style={{ fontSize: '11px', fontFamily: "'Courier New', monospace", fontWeight: 'bold', letterSpacing: '0.06em' }}>
                             {currentData?.song || currentData?.album || '—'}
@@ -350,7 +324,6 @@ const App = () => {
                         </p>
                     </div>
 
-                    {/* 控制按鈕 */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <button
                             onClick={togglePlay}
@@ -379,11 +352,11 @@ const App = () => {
                     </div>
                 </div>
             )}
+
             <ChangelogModal
                 showChangelog={showChangelog} setShowChangelog={setShowChangelog} changelogData={changelogData}
             />
 
-            {/* Mobile bottom nav */}
             <MobileNav
                 selectedDate={selectedDate}
                 currentMonth={currentMonth}
@@ -392,33 +365,29 @@ const App = () => {
                 handlePrevDay={handlePrevDay}
                 handleNextDay={handleNextDay}
                 jazzData={visibleJazzData}
-                isPlaying={isPlaying}
+                isVinylSpinning={isVinylSpinning}
             />
 
-            {/* Desktop layout: two floating windows on the pink desktop */}
             <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 relative"
                  style={{ padding: '4px 12px 12px', paddingTop: '28px', paddingBottom: isMinimized ? '120px' : undefined }}>
 
                 <Sidebar
-                    isPlaying={isPlaying} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth}
+                    isVinylSpinning={isVinylSpinning}
+                    currentMonth={currentMonth} setCurrentMonth={setCurrentMonth}
                     selectedDate={selectedDate} handleDateChange={handleDateChange} jazzData={visibleJazzData}
                     setShowChangelog={setShowChangelog} latestVersion={latestVersion}
                 />
 
-                {/* Main content window */}
                 <div className="lg:col-span-9 relative retro-win" style={{ alignSelf: 'flex-start', minHeight: '600px' }}>
 
-                    {/* Window title bar — desktop only */}
                     <RetroTitleBar
                         title={winTitle}
                         className="hidden lg:flex"
                         style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
                     />
 
-                    {/* Window body */}
                     <div className="retro-body relative overflow-hidden" style={{ padding: '36px 56px 40px', paddingBottom: '96px', backgroundColor: moodHex, transition: 'background-color 0.8s ease' }}>
 
-                        {/* Dynamic ambient background — blurred album art */}
                         {currentData?.imageUrl && (
                             <div
                                 key={currentData.imageUrl}
@@ -435,10 +404,8 @@ const App = () => {
                             />
                         )}
 
-                        {/* Content layer */}
                         <div className="relative" style={{ zIndex: 1 }}>
 
-                            {/* Ghost date watermark */}
                             <div className="absolute top-0 right-0 lg:right-16 -z-10 select-none pointer-events-none" style={{ opacity: 0.03 }}>
                                 <span className="font-playfair leading-none text-stone-900" style={{ fontSize: 'clamp(10rem, 20vw, 22rem)' }}>
                                     {String(selectedDate.getDate()).padStart(2, '0')}
@@ -460,6 +427,19 @@ const App = () => {
 
         </div>
     );
+};
+
+// ── App：只負責 admin 路由，不含任何 hooks 在 early return 之後 ──
+const App = () => {
+    const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
+
+    useEffect(() => {
+        const onHash = () => setIsAdmin(window.location.hash === '#admin');
+        window.addEventListener('hashchange', onHash);
+        return () => window.removeEventListener('hashchange', onHash);
+    }, []);
+
+    return isAdmin ? <AdminPanel /> : <MainApp />;
 };
 
 export default App;

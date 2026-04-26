@@ -6,7 +6,7 @@ import { CopyrightFooter } from './CopyrightFooter';
 import { formatDateString, isAtMinMonth } from '../utils/dateUtils';
 
 export const Sidebar = ({
-    isPlaying,
+    isVinylSpinning,
     currentMonth,
     setCurrentMonth,
     selectedDate,
@@ -38,7 +38,7 @@ export const Sidebar = ({
                 title="DAILY JAZZ ALMANAC"
                 className="flex-shrink-0"
                 showDisc
-                isPlaying={isPlaying}
+                isPlaying={isVinylSpinning}
             />
 
             {/* ── Window body ── */}

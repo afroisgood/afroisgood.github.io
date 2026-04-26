@@ -1,24 +1,11 @@
 // src/components/AdminPanel.jsx
 import { useState } from 'react';
 import { IconDisc } from './Icons';
+import { MOOD_OPTIONS } from '../utils/moodColors';
 
 const OWNER    = 'afroisgood';
 const REPO     = 'afroisgood.github.io';
 const FILE_PATH = 'public/data.json';
-
-const MOOD_OPTIONS = [
-    { value: '',        label: '— 預設米白',       color: '#f2f0e9' },
-    { value: '#FECACA', label: '珊瑚粉  Swing',     color: '#FECACA' },
-    { value: '#FED7AA', label: '暖橘色  Hard Bop',  color: '#FED7AA' },
-    { value: '#FDE68A', label: '琥珀金  Bebop',     color: '#FDE68A' },
-    { value: '#D1FAE5', label: '薄荷綠  Soul Jazz', color: '#D1FAE5' },
-    { value: '#BFDBFE', label: '天空藍  Cool Jazz', color: '#BFDBFE' },
-    { value: '#C7D2FE', label: '深夜藍  Modal',     color: '#C7D2FE' },
-    { value: '#DDD6FE', label: '薰衣草  Fusion',    color: '#DDD6FE' },
-    { value: '#FCE7F3', label: '玫瑰粉  Latin',     color: '#FCE7F3' },
-    { value: '#E2E8F0', label: '霧灰色  Free Jazz', color: '#E2E8F0' },
-    { value: '#F5F5DC', label: '奶油白  Bossa Nova', color: '#F5F5DC' },
-];
 
 const EMPTY_ENTRY = {
     date: '', song: '', artist: '', album: '', youtube: '',
