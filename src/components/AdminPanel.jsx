@@ -32,7 +32,12 @@ export const AdminPanel = () => {
     const [entries, setEntries]           = useState([]);
     const [changelog, setChangelog]       = useState([]);
     const [fileSha, setFileSha]           = useState('');
-    const [activeTab, setActiveTab]       = useState('entries');   // 'entries' | 'changelog'
+    const [activeTab, setActiveTab]       = useState('entries');   // 'entries' | 'changelog' | 'traffic'
+
+    // Traffic state
+    const [traffic, setTraffic]           = useState(null);
+    const [trafficLoading, setTrafficLoading] = useState(false);
+    const [trafficError, setTrafficError] = useState('');
 
     // Jazz entry state
     const [selectedEntry, setSelectedEntry] = useState(null);
@@ -180,6 +185,29 @@ export const AdminPanel = () => {
         setMessage('');
     };
 
+    // ── 讀取流量資料 ─────────────────────────────────────
+    const loadTraffic = async () => {
+        setTrafficLoading(true);
+        setTrafficError('');
+        try {
+            const res = await fetch(
+                'https://api.github.com/repos/' + OWNER + '/' + REPO + '/traffic/views',
+                { headers: apiHeaders }
+            );
+            if (!res.ok) throw new Error(res.status === 403 ? '權限不足，Token 需有 repo 範圍' : '讀取流量失敗');
+            const data = await res.json();
+            setTraffic(data);
+        } catch (e) {
+            setTrafficError(e.message);
+        }
+        setTrafficLoading(false);
+    };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        if (tab === 'traffic' && !traffic && !trafficLoading) loadTraffic();
+    };
+
     const handleLogout = () => {
         sessionStorage.removeItem('gh_admin_token');
         setIsLoggedIn(false);
@@ -197,7 +225,7 @@ export const AdminPanel = () => {
                         <IconDisc className="text-amber-500" size={24} />
                         <h1 className="text-white font-playfair font-bold text-xl tracking-widest">JAZZ 365</h1>
                     </div>
-                    <p className="text-zinc-500 text-[10px] tracking-[0.3em] uppercase text-center mb-10">Admin Panel</p>
+                    <p className="text-zinc-500 text-[10px] tracking-[0.3em] uppercase text-center mb-10">後台管理</p>
 
                     <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-8">
                         <h2 className="text-white font-bold text-sm tracking-widest uppercase mb-1">登入後台</h2>
@@ -256,28 +284,40 @@ export const AdminPanel = () => {
                     {/* Tab 切換 */}
                     <div className="flex border-b border-zinc-800 flex-shrink-0">
                         <button
-                            onClick={() => setActiveTab('entries')}
+                            onClick={() => handleTabChange('entries')}
                             className={'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors ' + (activeTab === 'entries' ? 'text-amber-500 border-b-2 border-amber-500 bg-zinc-800/50' : 'text-zinc-500 hover:text-zinc-300')}
                         >
                             日期推薦
                         </button>
                         <button
-                            onClick={() => setActiveTab('changelog')}
+                            onClick={() => handleTabChange('changelog')}
                             className={'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors ' + (activeTab === 'changelog' ? 'text-amber-500 border-b-2 border-amber-500 bg-zinc-800/50' : 'text-zinc-500 hover:text-zinc-300')}
                         >
                             更新紀錄
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('traffic')}
+                            className={'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors ' + (activeTab === 'traffic' ? 'text-amber-500 border-b-2 border-amber-500 bg-zinc-800/50' : 'text-zinc-500 hover:text-zinc-300')}
+                        >
+                            流量
                         </button>
                     </div>
 
                     {/* 新增按鈕 */}
                     <div className="p-4 border-b border-zinc-800 flex-shrink-0">
-                        {activeTab === 'entries' ? (
+                        {activeTab === 'entries' && (
                             <button onClick={handleNew} className="w-full bg-amber-500 text-zinc-950 font-black text-[10px] tracking-[0.2em] uppercase py-2.5 rounded-sm hover:bg-amber-400 transition-colors">
                                 + 新增推薦
                             </button>
-                        ) : (
+                        )}
+                        {activeTab === 'changelog' && (
                             <button onClick={handleClNew} className="w-full bg-amber-500 text-zinc-950 font-black text-[10px] tracking-[0.2em] uppercase py-2.5 rounded-sm hover:bg-amber-400 transition-colors">
                                 + 新增版本紀錄
+                            </button>
+                        )}
+                        {activeTab === 'traffic' && (
+                            <button onClick={loadTraffic} disabled={trafficLoading} className="w-full bg-zinc-700 text-zinc-300 font-black text-[10px] tracking-[0.2em] uppercase py-2.5 rounded-sm hover:bg-zinc-600 transition-colors disabled:opacity-50">
+                                {trafficLoading ? '讀取中...' : '↻ 重新整理'}
                             </button>
                         )}
                     </div>
@@ -460,6 +500,73 @@ export const AdminPanel = () => {
                             </button>
                             <p className="text-zinc-600 text-[10px] text-center mt-3">儲存後約 2 分鐘自動更新至網站前台</p>
                         </form>
+                    )}
+                    {/* ── 流量統計 ── */}
+                    {activeTab === 'traffic' && (
+                        <div className="max-w-2xl">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-white font-playfair font-bold text-lg tracking-widest">每日瀏覽人次</h2>
+                                <span className="text-zinc-600 text-[10px] font-mono">近 14 天・由 GitHub 提供</span>
+                            </div>
+
+                            {trafficError && (
+                                <div className="mb-6 bg-red-900/30 border border-red-700/50 text-red-400 text-xs px-4 py-3 rounded-sm">{trafficError}</div>
+                            )}
+
+                            {trafficLoading && (
+                                <div className="text-zinc-500 text-sm text-center py-20">讀取中...</div>
+                            )}
+
+                            {traffic && !trafficLoading && (() => {
+                                const views = [...(traffic.views || [])].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+                                const maxCount = Math.max(...views.map(v => v.count), 1);
+                                return (
+                                    <>
+                                        {/* 總計卡片 */}
+                                        <div className="grid grid-cols-2 gap-4 mb-8">
+                                            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-5">
+                                                <p className="text-zinc-500 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">14 天總瀏覽</p>
+                                                <p className="text-amber-400 font-playfair font-bold text-3xl">{traffic.count?.toLocaleString() ?? '—'}</p>
+                                                <p className="text-zinc-600 text-[10px] mt-1">次瀏覽</p>
+                                            </div>
+                                            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-5">
+                                                <p className="text-zinc-500 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">不重複訪客</p>
+                                                <p className="text-white font-playfair font-bold text-3xl">{traffic.uniques?.toLocaleString() ?? '—'}</p>
+                                                <p className="text-zinc-600 text-[10px] mt-1">不重複訪客</p>
+                                            </div>
+                                        </div>
+
+                                        {/* 每日長條圖 */}
+                                        {views.length === 0 ? (
+                                            <p className="text-zinc-600 text-xs text-center py-10">近期尚無瀏覽紀錄</p>
+                                        ) : (
+                                            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6">
+                                                <p className="text-zinc-500 text-[10px] tracking-[0.2em] uppercase font-bold mb-5">每日明細</p>
+                                                <div className="space-y-3">
+                                                    {views.slice().reverse().map(v => {
+                                                        const date = v.timestamp.slice(0, 10);
+                                                        const barPct = Math.round((v.count / maxCount) * 100);
+                                                        return (
+                                                            <div key={date} className="flex items-center gap-3">
+                                                                <span className="text-zinc-500 text-[10px] font-mono w-20 flex-shrink-0">{date}</span>
+                                                                <div className="flex-1 h-5 bg-zinc-800 rounded-sm overflow-hidden">
+                                                                    <div
+                                                                        className="h-full bg-amber-500/70 rounded-sm transition-all"
+                                                                        style={{ width: barPct + '%' }}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-amber-400 text-[10px] font-mono w-8 text-right flex-shrink-0">{v.count}</span>
+                                                                <span className="text-zinc-600 text-[10px] font-mono w-16 flex-shrink-0">({v.uniques} 人)</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
                     )}
                 </main>
             </div>
