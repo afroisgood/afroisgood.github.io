@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 export const useYouTubePlayer = (videoId) => {
     const [player, setPlayer] = useState(null);
     const [playerState, setPlayerState] = useState(-1);
+    const [playerError, setPlayerError] = useState(null);
     const playerRef = useRef(null);
     const videoIdRef = useRef(videoId);
     videoIdRef.current = videoId;
@@ -27,6 +28,7 @@ export const useYouTubePlayer = (videoId) => {
                 playerRef.current = null;
                 setPlayer(null);
                 setPlayerState(-1);
+                setPlayerError(null);
             }
             return;
         }
@@ -37,6 +39,7 @@ export const useYouTubePlayer = (videoId) => {
         // 播放器已存在 → 直接切換影片，避免重建造成卡頓
         if (playerRef.current && typeof playerRef.current.loadVideoById === 'function') {
             try {
+                setPlayerError(null);
                 playerRef.current.loadVideoById(videoId);
             } catch (_) {}
             return;
@@ -66,7 +69,8 @@ export const useYouTubePlayer = (videoId) => {
                         setPlayerState(event.data);
                     },
                     'onError': (e) => {
-                        console.error("YouTube Player Error:", e.data);
+                        // 101 / 150 = 版權方禁止嵌入；2 = 無效 ID；5 = HTML5 不支援
+                        setPlayerError(e.data);
                     },
                 },
             });
@@ -87,5 +91,5 @@ export const useYouTubePlayer = (videoId) => {
         }
     }, [videoId]);
 
-    return { player, playerState };
+    return { player, playerState, playerError };
 };

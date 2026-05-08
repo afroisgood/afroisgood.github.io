@@ -11,7 +11,8 @@ export const ImmersiveMode = ({
     handlePrevDay,
     handleNextDay,
     currentData,
-    isVinylSpinning
+    isVinylSpinning,
+    playerError,
 }) => {
     if (!isImmersive || isMinimized) return null;
 
@@ -69,9 +70,29 @@ export const ImmersiveMode = ({
                     </p>
                 </div>
 
-                <div className="mt-8 text-stone-600 text-xs tracking-[0.2em] uppercase font-bold opacity-60">
-                    {isVinylSpinning ? "Now Spinning" : "Click Vinyl to Play"}
-                </div>
+                {playerError ? (
+                    <div className="mt-8 flex flex-col items-center gap-3">
+                        <p className="text-red-400/80 text-xs tracking-[0.15em] text-center leading-relaxed">
+                            {(playerError === 101 || playerError === 150)
+                                ? '此影片已被版權方限制，無法在此嵌入播放'
+                                : '影片無法播放（錯誤 ' + playerError + '）'}
+                        </p>
+                        {currentData?.youtube && (
+                            <a
+                                href={currentData.youtube}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-5 py-2 text-[10px] tracking-[0.2em] uppercase font-bold border border-amber-500/60 text-amber-400 hover:bg-amber-500/10 transition-colors rounded-sm"
+                            >
+                                前往 YouTube 收聽
+                            </a>
+                        )}
+                    </div>
+                ) : (
+                    <div className="mt-8 text-stone-600 text-xs tracking-[0.2em] uppercase font-bold opacity-60">
+                        {isVinylSpinning ? "Now Spinning" : "Click Vinyl to Play"}
+                    </div>
+                )}
 
                 {/* 最小化提示 */}
                 <div className="mt-4 text-stone-700 text-[10px] tracking-[0.15em] uppercase opacity-40">

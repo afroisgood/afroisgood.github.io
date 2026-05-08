@@ -98,7 +98,7 @@ const MainApp = () => {
     }, [selectedDate, currentData]);
 
     const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
-    const { player, playerState } = useYouTubePlayer((isImmersive || isMinimized) ? youtubeId : null);
+    const { player, playerState, playerError } = useYouTubePlayer((isImmersive || isMinimized) ? youtubeId : null);
     const isVinylSpinning = playerState === 1 || playerState === 3;
 
     // Refs：讓事件監聽器永遠讀到最新值，避免 stale closure 造成切換第三個日期失敗
@@ -298,6 +298,7 @@ const MainApp = () => {
                 selectedDate={selectedDate} togglePlay={togglePlay}
                 handlePrevDay={handlePrevDay} handleNextDay={handleNextDay}
                 currentData={currentData} isVinylSpinning={isVinylSpinning}
+                playerError={playerError}
             />
 
             {isImmersive && isMinimized && (
