@@ -43,23 +43,28 @@ export const Sidebar = ({
             >
                 <div style={{ flex: 1 }}>
 
-                    {/* Brand subtitle */}
-                    <div
-                        className="cursor-pointer group"
-                        style={{ marginBottom: '24px' }}
+                    {/* 回到今天（品牌名已在標題列，這裡不再重複） */}
+                    <button
+                        type="button"
                         onClick={() => handleDateChange(new Date())}
-                    >
-                        <p style={{
+                        style={{
+                            marginBottom: '24px',
                             fontFamily: "'Courier New', Courier, monospace",
                             fontSize: '11px',
                             letterSpacing: '0.24em',
                             color: '#7a5840',
                             fontWeight: 'bold',
                             textTransform: 'uppercase',
-                        }}>
-                            Daily Jazz Almanac
-                        </p>
-                    </div>
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#2a1808'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#7a5840'}
+                    >
+                        ↩ Today
+                    </button>
 
                     {/* Calendar */}
                     <div style={{ marginBottom: '16px' }}>

@@ -234,6 +234,8 @@ const MainApp = () => {
             setLeavingSheets(prev => [...prev.filter(s => s.direction === direction), sheet]);
             setTimeout(() => setLeavingSheets(prev => prev.filter(s => s.id !== id)), SHEET_TEAR_MS + 80);
         }
+        // 讀到文章下方再換日期時捲回頂部，新的一天從標題開始讀
+        if (window.scrollY > 0) window.scrollTo(0, 0);
         setEnterDirection(direction);
         setSelectedDate(newDate);
         setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
@@ -288,7 +290,8 @@ const MainApp = () => {
         : 'DAILY JAZZ ALMANAC';
 
     return (
-        <div className="retro-desktop min-h-screen font-sans text-stone-800 relative overflow-x-hidden"
+        // overflow-x 用 clip 而不是 hidden：hidden 會讓這層變成捲動容器，側欄的 position: sticky 就失效、跟著頁面捲走
+        <div className="retro-desktop min-h-screen font-sans text-stone-800 relative overflow-x-clip"
              style={{ '--mood-accent': moodAccent, '--mood-glow': moodGlow }}>
 
             {showIntro && (
@@ -383,7 +386,7 @@ const MainApp = () => {
             />
 
             <div className={`max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 relative ${introMode === 'skeleton' ? 'shell-enter' : ''}`}
-                 style={{ padding: '4px 12px 12px', paddingTop: '28px', paddingBottom: isMinimized ? '120px' : undefined }}>
+                 style={{ padding: '4px 12px 12px', paddingTop: '28px', paddingBottom: isMinimized ? '120px' : '12px' }}>
 
                 <Sidebar
                     isVinylSpinning={isVinylSpinning}
