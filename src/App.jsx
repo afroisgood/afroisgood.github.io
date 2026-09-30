@@ -139,7 +139,8 @@ const MainApp = () => {
     const togglePlay = useCallback((e) => {
         if (e) e.stopPropagation();
         if (player && typeof player.playVideo === 'function') {
-            if (playerState === 1) {
+            // 緩衝中（3）按鈕顯示的也是「暫停」，所以兩種狀態都要當成播放中處理
+            if (playerState === 1 || playerState === 3) {
                 player.pauseVideo();
             } else {
                 player.playVideo();
@@ -307,7 +308,9 @@ const MainApp = () => {
                 handleCloseImmersive={handleCloseImmersive} handleMinimizeImmersive={handleMinimizeImmersive}
                 selectedDate={selectedDate} togglePlay={togglePlay}
                 handlePrevDay={handlePrevDay} handleNextDay={handleNextDay}
-                currentData={currentData} isVinylSpinning={isVinylSpinning}
+                currentData={currentData} youtubeId={youtubeId}
+                player={player} playerState={playerState}
+                isVinylSpinning={isVinylSpinning}
                 playerError={playerError}
             />
 
