@@ -8,9 +8,9 @@ import { formatDateString, isToday } from '../utils/dateUtils';
 export const DailyArticle = ({
     currentData,
     selectedDate,
-    tearDirection,
     youtubeId,
     setIsImmersive,
+    className = '',
 }) => {
     const [isCopied, setIsCopied] = useState(false);
     const copyTimerRef = useRef(null);
@@ -46,7 +46,7 @@ export const DailyArticle = ({
 
     if (!currentData) {
         return (
-            <div className={`relative w-full max-w-5xl mx-auto ${tearDirection === 'forward' ? 'flip-page-out-forward' : tearDirection === 'backward' ? 'flip-page-out-backward' : 'flip-page-in'}`}>
+            <div className={`relative w-full max-w-5xl mx-auto ${className}`}>
                 <div className="relative flex flex-col items-center justify-center min-h-[65vh] text-center overflow-hidden px-6">
 
                     {/* 大日期水印背景 */}
@@ -104,7 +104,7 @@ export const DailyArticle = ({
     }
 
     return (
-        <div className={`relative w-full max-w-5xl mx-auto ${tearDirection === 'forward' ? 'flip-page-out-forward' : tearDirection === 'backward' ? 'flip-page-out-backward' : 'flip-page-in'}`}>
+        <div className={`relative w-full max-w-5xl mx-auto ${className}`}>
 
             {/* 復古爵士海報文字裝飾 */}
             <VintageJazzText />

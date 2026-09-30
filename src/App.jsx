@@ -7,7 +7,7 @@ import { resolveMoodHex } from './utils/moodColors';
 import { Sidebar } from './components/Sidebar';
 import { ImmersiveMode } from './components/ImmersiveMode';
 import { ChangelogModal } from './components/ChangelogModal';
-import { DailyArticle } from './components/DailyArticle';
+import { PageSheet } from './components/PageSheet';
 import { EditorNote } from './components/EditorNote';
 import { IconDisc, IconPlay, IconPause, IconX, IconMaximize } from './components/Icons';
 import { AdminPanel } from './components/AdminPanel';
@@ -15,7 +15,9 @@ import { MobileNav } from './components/MobileNav';
 import { RetroMenuBar } from './components/RetroMenuBar';
 import { RetroTitleBar } from './components/RetroTitleBar';
 import { IntroCalendar } from './components/IntroCalendar';
-import { ArticleSkeleton } from './components/ArticleSkeleton';
+
+const SHEET_TEAR_MS = 520; // 與 index.css 的 .page-sheet--tear / --drop 動畫時長一致
+const SHEET_PADDING = { padding: '36px 56px 40px', paddingBottom: '96px' };
 
 const hexToMoodVars = (hex) => {
     const def = { accent: 'rgb(180,83,9)', glow: 'rgb(245,158,11)' };
@@ -62,7 +64,9 @@ const MainApp = () => {
     const [introMode] = useState(getIntroMode);
     const [introTargetDate] = useState(selectedDate);
     const [showIntro, setShowIntro] = useState(introMode === 'calendar');
-    const [tearDirection, setTearDirection] = useState(null);
+    const [leavingSheets, setLeavingSheets] = useState([]); // 正在撕走（或被蓋住）的舊頁
+    const [enterDirection, setEnterDirection] = useState(null); // 帶入目前這頁的方向；null = 尚未換過日期
+    const sheetSeqRef = useRef(0);
     const [showChangelog, setShowChangelog] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
@@ -169,22 +173,20 @@ const MainApp = () => {
                         isMinimized ? handleCloseImmersive() : handleMinimizeImmersive();
                     }
                     break;
-                case 'ArrowLeft':
-                    if (!tearDirection) {
-                        e.preventDefault();
-                        const prev = new Date(selectedDateRef.current);
-                        prev.setDate(prev.getDate() - 1);
-                        window.location.hash = formatDateString(prev);
-                    }
+                case 'ArrowLeft': {
+                    e.preventDefault();
+                    const prev = new Date(selectedDateRef.current);
+                    prev.setDate(prev.getDate() - 1);
+                    window.location.hash = formatDateString(prev);
                     break;
-                case 'ArrowRight':
-                    if (!tearDirection) {
-                        e.preventDefault();
-                        const next = new Date(selectedDateRef.current);
-                        next.setDate(next.getDate() + 1);
-                        window.location.hash = formatDateString(next);
-                    }
+                }
+                case 'ArrowRight': {
+                    e.preventDefault();
+                    const next = new Date(selectedDateRef.current);
+                    next.setDate(next.getDate() + 1);
+                    window.location.hash = formatDateString(next);
                     break;
+                }
                 case 'i':
                 case 'I':
                     if (!isImmersive && youtubeId) setIsImmersive(true);
@@ -199,7 +201,7 @@ const MainApp = () => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isImmersive, isMinimized, tearDirection, youtubeId]);
+    }, [isImmersive, isMinimized, youtubeId]);
 
     const handleCloseImmersive = () => {
         const p = playerRef2.current;
@@ -221,18 +223,24 @@ const MainApp = () => {
             const p = playerRef2.current;
             if (p && playerStateRef2.current === 1 && typeof p.pauseVideo === 'function') p.pauseVideo();
         } catch (_) {}
-        const direction = newDate > selectedDateRef.current ? 'forward' : 'backward';
-        setTearDirection(direction);
-        setTimeout(() => {
-            setSelectedDate(newDate);
-            setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
-            setTearDirection(null);
-        }, 850);
+        const prevDate = selectedDateRef.current;
+        const direction = newDate > prevDate ? 'forward' : 'backward';
+
+        // 新頁立刻換上；舊頁留一張快照做動畫：往後翻時蓋在上面撕走，往前翻時墊在下面讓新頁落下來蓋住。
+        // 連按時同方向的舊頁會一張張疊上去，換方向就直接清掉，避免同一天同時在撕走又在落下。
+        if (dataReady) {
+            const id = ++sheetSeqRef.current;
+            const sheet = { id, direction, date: prevDate, data: visibleJazzData[formatDateString(prevDate)] };
+            setLeavingSheets(prev => [...prev.filter(s => s.direction === direction), sheet]);
+            setTimeout(() => setLeavingSheets(prev => prev.filter(s => s.id !== id)), SHEET_TEAR_MS + 80);
+        }
+        setEnterDirection(direction);
+        setSelectedDate(newDate);
+        setCurrentMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
     };
     triggerTransitionRef.current = triggerTransition;
 
     const handleDateChange = (newDate) => {
-        if (tearDirection) return;
         window.location.hash = formatDateString(newDate);
     };
 
@@ -389,45 +397,41 @@ const MainApp = () => {
                         style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
                     />
 
-                    <div className="retro-body relative overflow-hidden" style={{ padding: '36px 56px 40px', paddingBottom: '96px', backgroundColor: moodHex, transition: 'background-color 0.8s ease' }}>
+                    <div className="retro-body relative overflow-hidden" style={{ backgroundColor: moodHex }}>
 
-                        {currentData?.imageUrl && (
-                            <div
-                                key={currentData.imageUrl}
-                                aria-hidden="true"
-                                className="absolute inset-0 pointer-events-none album-ambient-bg"
-                                style={{
-                                    backgroundImage: `url(${currentData.imageUrl})`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
-                                    filter: 'blur(60px) saturate(1.8) brightness(0.6)',
-                                    transform: 'scale(1.4)',
-                                    zIndex: 0,
-                                }}
-                            />
+                        <PageSheet
+                            key={dateKey}
+                            className={enterDirection === 'backward' ? 'page-sheet--drop' : ''}
+                            style={{ ...SHEET_PADDING, backgroundColor: moodHex }}
+                            date={selectedDate}
+                            data={currentData}
+                            ready={dataReady}
+                            youtubeId={youtubeId}
+                            setIsImmersive={setIsImmersive}
+                            revealContent={enterDirection === null}
+                        />
+
+                        {leavingSheets[0]?.direction === 'forward' && (
+                            <div key={`shade-${leavingSheets.at(-1).id}`} className="page-sheet-shade" aria-hidden="true" />
                         )}
 
-                        <div className="relative" style={{ zIndex: 1 }}>
-
-                            <div className="absolute top-0 right-0 lg:right-16 -z-10 select-none pointer-events-none" style={{ opacity: 0.03 }}>
-                                <span className="font-playfair leading-none text-stone-900" style={{ fontSize: 'clamp(10rem, 20vw, 22rem)' }}>
-                                    {String(selectedDate.getDate()).padStart(2, '0')}
-                                </span>
-                            </div>
-
-                            {dataReady ? (
-                                <DailyArticle
-                                    key={dateKey}
-                                    currentData={currentData}
-                                    selectedDate={selectedDate}
-                                    tearDirection={tearDirection}
-                                    youtubeId={youtubeId}
-                                    setIsImmersive={setIsImmersive}
+                        {/* 往後翻：越早撕的越在上面；往前翻：越晚被蓋住的越在上面 */}
+                        {(leavingSheets[0]?.direction === 'forward' ? [...leavingSheets].reverse() : leavingSheets).map(sheet => {
+                            const sheetMood = resolveMoodHex(sheet.data?.mood);
+                            const { accent, glow } = hexToMoodVars(sheetMood);
+                            return (
+                                <PageSheet
+                                    key={sheet.id}
+                                    inert
+                                    className={`page-sheet--leaving ${sheet.direction === 'forward' ? 'page-sheet--tear' : 'page-sheet--under'}`}
+                                    style={{ ...SHEET_PADDING, backgroundColor: sheetMood, '--mood-accent': accent, '--mood-glow': glow }}
+                                    date={sheet.date}
+                                    data={sheet.data}
+                                    ready
+                                    youtubeId={getYouTubeVideoId(sheet.data?.youtube)}
                                 />
-                            ) : (
-                                <ArticleSkeleton />
-                            )}
-                        </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

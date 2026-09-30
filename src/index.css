@@ -28,23 +28,35 @@ body {
 .tear-backward { animation: tearToRight 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards; pointer-events: none; }
 @keyframes tearToRight { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 20% { transform: translate(15px, -10px) rotate(2deg); } 100% { transform: translate(120vw, 80vh) rotate(35deg); opacity: 0; } }
 
-/* 3D 日めくり翻頁動畫 — 頁面從頂端裝訂處翻起 */
-@keyframes flipCalPageOut {
-    0%   { transform: perspective(900px) rotateX(0deg)   translateY(0px);   opacity: 1;   }
-    100% { transform: perspective(900px) rotateX(-80deg) translateY(-24px); opacity: 0;   }
+/* 換日期：撕頁堆疊 — 往後翻時舊頁從裝訂處撕走、新頁一直墊在下面；往前翻時前一天從上方落下蓋住 */
+.page-sheet { position: relative; box-sizing: border-box; transform-origin: top center; }
+.page-sheet--leaving { position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; pointer-events: none; }
+.page-sheet--tear  { z-index: 2; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25); animation: sheetTearOff 0.52s forwards; }
+.page-sheet--under { z-index: 1; }
+.page-sheet--drop  { z-index: 3; box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2); animation: sheetDropIn 0.52s backwards; }
+.page-sheet-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #1c1410;
+    pointer-events: none;
+    animation: sheetShade 0.52s ease-out forwards;
 }
-@keyframes flipCalPageOutBack {
-    0%   { transform: perspective(900px) rotateX(0deg)  translateY(0px);  opacity: 1; }
-    100% { transform: perspective(900px) rotateX(80deg) translateY(24px); opacity: 0; }
-}
-@keyframes flipCalPageIn {
-    0%   { transform: perspective(900px) rotateX(22deg) translateY(10px); opacity: 0; }
-    100% { transform: perspective(900px) rotateX(0deg)  translateY(0px);  opacity: 1; }
-}
+.article-reveal { animation: fadeIn 0.35s ease both; }
 
-.flip-page-out-forward  { animation: flipCalPageOut     0.85s cubic-bezier(0.55, 0, 0.45, 1) forwards; transform-origin: top center; pointer-events: none; }
-.flip-page-out-backward { animation: flipCalPageOutBack 0.85s cubic-bezier(0.55, 0, 0.45, 1) forwards; transform-origin: top center; pointer-events: none; }
-.flip-page-in           { animation: flipCalPageIn      0.65s cubic-bezier(0.19, 1, 0.22, 1) forwards; transform-origin: top center; }
+@keyframes sheetTearOff {
+    0%   { transform: perspective(1800px) rotateX(0deg) rotateZ(0deg); opacity: 1; animation-timing-function: ease-out; }
+    23%  { transform: perspective(1800px) rotateX(-8deg) rotateZ(-0.6deg); opacity: 1; animation-timing-function: cubic-bezier(0.55, 0, 0.45, 1); }
+    100% { transform: perspective(1800px) rotateX(-100deg) rotateZ(-2deg) translateY(-12px); opacity: 0; }
+}
+@keyframes sheetDropIn {
+    0%   { transform: perspective(1800px) rotateX(-100deg) rotateZ(-2deg) translateY(-12px); opacity: 0; animation-timing-function: cubic-bezier(0.3, 0.9, 0.4, 1); }
+    25%  { opacity: 1; }
+    70%  { transform: perspective(1800px) rotateX(5deg) rotateZ(0deg); opacity: 1; animation-timing-function: ease-out; }
+    100% { transform: perspective(1800px) rotateX(0deg) rotateZ(0deg); opacity: 1; }
+}
+@keyframes sheetShade { from { opacity: 0.3; } to { opacity: 0; } }
+@keyframes fadeOut { to { opacity: 0; } }
 
 /* 介面進場特效 */
 .page-reveal { animation: revealPage 1s cubic-bezier(0.19, 1, 0.22, 1) forwards; }
@@ -416,9 +428,11 @@ body {
 }
 @keyframes skeletonShimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
-/* ── 減少動態效果：開場只保留淡入 ── */
+/* ── 減少動態效果：開場與換日期都只保留淡入淡出 ── */
 @media (prefers-reduced-motion: reduce) {
     .shell-enter > *,
     .skeleton-block { animation: none; }
-    .flip-page-in { animation: fadeIn 0.3s ease both; }
+    .page-sheet--tear { animation: fadeOut 0.2s ease forwards; box-shadow: none; }
+    .page-sheet--drop { animation: fadeIn 0.2s ease backwards; box-shadow: none; }
+    .page-sheet-shade { display: none; }
 }
