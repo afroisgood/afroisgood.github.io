@@ -3,6 +3,18 @@
 
 const buildQuery = (artist, songOrAlbum) => [artist, songOrAlbum].filter(Boolean).join(' ').trim();
 
+// Cloudflare Worker 的對外 IP 是跟其他用戶共用的，容易被目標服務誤判成流量過高（429）。
+// 遇到 429 就短暫等待後重試，通常一兩次就能過。
+const fetchWithRetry = async (url, options, { retries = 2, delayMs = 600 } = {}) => {
+    let res;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        res = await fetch(url, options);
+        if (res.status !== 429 || attempt === retries) return res;
+        await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)));
+    }
+    return res;
+};
+
 export const searchYouTube = async (env, { artist, song, album }) => {
     const query = buildQuery(artist, song || album);
     if (!query || !env.YOUTUBE_API_KEY) return '';
@@ -14,7 +26,7 @@ export const searchYouTube = async (env, { artist, song, album }) => {
     url.searchParams.set('q', query);
     url.searchParams.set('key', env.YOUTUBE_API_KEY);
 
-    const res = await fetch(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) throw new Error(`YouTube 搜尋失敗（${res.status}）`);
     const data = await res.json();
     const videoId = data.items?.[0]?.id?.videoId;
@@ -30,7 +42,7 @@ export const searchAppleMusic = async (_env, { artist, album }) => {
     url.searchParams.set('entity', 'album');
     url.searchParams.set('limit', '1');
 
-    const res = await fetch(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) throw new Error(`Apple Music 搜尋失敗（${res.status}）`);
     const data = await res.json();
     const result = data.results?.[0];
@@ -73,7 +85,7 @@ export const searchSpotify = async (env, { artist, album }) => {
     url.searchParams.set('type', 'album');
     url.searchParams.set('limit', '1');
 
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetchWithRetry(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`Spotify 搜尋失敗（${res.status}）`);
     const data = await res.json();
     return data.albums?.items?.[0]?.external_urls?.spotify || '';
