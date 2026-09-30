@@ -17,6 +17,29 @@ const fileToBase64 = (file) => new Promise((resolve, reject) => {
     reader.readAsDataURL(file);
 });
 
+// Apple Music／專輯封面查詢：直接從瀏覽器呼叫 iTunes Search API（免金鑰、支援 CORS）。
+// 特意不透過 admin-worker 代理 —— Cloudflare Worker 的對外 IP 是跟其他用戶共用的資料中心 IP，
+// 常被 Apple 判定為異常流量而擋掉；瀏覽器端的一般使用者 IP 沒有這個問題。
+const searchAppleMusic = async (artist, album) => {
+    const query = [artist, album].filter(Boolean).join(' ').trim();
+    if (!query) return { appleMusic: '', imageUrl: '' };
+
+    const url = new URL('https://itunes.apple.com/search');
+    url.searchParams.set('term', query);
+    url.searchParams.set('entity', 'album');
+    url.searchParams.set('limit', '1');
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Apple Music 搜尋失敗（${res.status}）`);
+    const data = await res.json();
+    const result = data.results?.[0];
+    if (!result) return { appleMusic: '', imageUrl: '' };
+
+    // artworkUrl100 是 100x100 縮圖，換成較大尺寸當作專輯封面
+    const imageUrl = result.artworkUrl100 ? result.artworkUrl100.replace('100x100', '600x600') : '';
+    return { appleMusic: result.collectionViewUrl || '', imageUrl };
+};
+
 const EMPTY_ENTRY = {
     date: '', song: '', artist: '', album: '', youtube: '',
     spotify: '', appleMusic: '', other: '', imageUrl: '',
@@ -207,10 +230,19 @@ export const AdminPanel = () => {
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || '辨識失敗，請再試一次');
 
-            const { warnings, ...recognized } = result;
+            const { warnings = [], ...recognized } = result;
+
+            // Apple Music／封面圖從瀏覽器端另外查，不透過 Worker（見上方 searchAppleMusic 註解）
+            try {
+                const appleResult = await searchAppleMusic(recognized.artist, recognized.album);
+                Object.assign(recognized, appleResult);
+            } catch (err) {
+                warnings.push(err.message);
+            }
+
             setForm(prev => ({ ...prev, ...recognized }));
             setRecognizedFields(Object.keys(recognized).filter(k => recognized[k]));
-            if (warnings?.length) setRecognizeError(warnings.join('；'));
+            if (warnings.length) setRecognizeError(warnings.join('；'));
         } catch (err) {
             setRecognizeError(err.message);
         }

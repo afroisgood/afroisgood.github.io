@@ -33,26 +33,6 @@ export const searchYouTube = async (env, { artist, song, album }) => {
     return videoId ? `https://www.youtube.com/watch?v=${videoId}` : '';
 };
 
-export const searchAppleMusic = async (_env, { artist, album }) => {
-    const query = buildQuery(artist, album);
-    if (!query) return { appleMusic: '', imageUrl: '' };
-
-    const url = new URL('https://itunes.apple.com/search');
-    url.searchParams.set('term', query);
-    url.searchParams.set('entity', 'album');
-    url.searchParams.set('limit', '1');
-
-    const res = await fetchWithRetry(url);
-    if (!res.ok) throw new Error(`Apple Music 搜尋失敗（${res.status}）`);
-    const data = await res.json();
-    const result = data.results?.[0];
-    if (!result) return { appleMusic: '', imageUrl: '' };
-
-    // artworkUrl100 是 100x100 縮圖，換成較大尺寸當作專輯封面
-    const imageUrl = result.artworkUrl100 ? result.artworkUrl100.replace('100x100', '600x600') : '';
-    return { appleMusic: result.collectionViewUrl || '', imageUrl };
-};
-
 let cachedSpotifyToken = null; // { token, expiresAt } — 同一個 Worker 實例內重複使用，減少 token 請求次數
 
 const getSpotifyToken = async (env) => {

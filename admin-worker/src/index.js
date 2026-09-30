@@ -1,5 +1,5 @@
 import { recognizeCalendarPhoto } from './claudeVision.js';
-import { searchYouTube, searchAppleMusic, searchSpotify } from './streamingSearch.js';
+import { searchYouTube, searchSpotify } from './streamingSearch.js';
 
 const corsHeaders = (env, origin) => {
     const allowed = (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim());
@@ -53,9 +53,11 @@ export default {
 
             const recognized = await recognizeCalendarPhoto(env, { base64, mimeType });
 
-            const [youtube, appleMusic, spotify] = await Promise.allSettled([
+            // Apple Music／iTunes 搜尋改由前端瀏覽器直接呼叫（見 AdminPanel.jsx）—
+            // Cloudflare Worker 的對外 IP 是跟其他用戶共用的資料中心 IP，常被 Apple 判定為異常流量擋掉，
+            // 瀏覽器端的一般使用者 IP 反而不會有這個問題，而且 iTunes Search API 本身就不需要金鑰、也支援 CORS。
+            const [youtube, spotify] = await Promise.allSettled([
                 searchYouTube(env, recognized),
-                searchAppleMusic(env, recognized),
                 searchSpotify(env, recognized),
             ]);
 
@@ -67,15 +69,12 @@ export default {
             };
 
             const youtubeUrl = pick(youtube, 'YouTube') || '';
-            const appleResult = pick(appleMusic, 'Apple Music') || { appleMusic: '', imageUrl: '' };
             const spotifyUrl = pick(spotify, 'Spotify') || '';
 
             return json({
                 ...recognized,
                 youtube: youtubeUrl,
                 spotify: spotifyUrl,
-                appleMusic: appleResult.appleMusic,
-                imageUrl: appleResult.imageUrl,
                 warnings,
             }, 200, headers);
         } catch (err) {
