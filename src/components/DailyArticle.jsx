@@ -45,6 +45,15 @@ export const DailyArticle = ({
 
     const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
 
+    // 專輯名長短差很多（多數 ≤18 字，少數超過 30 字），大標字級跟著長度往下調，避免長標題變成好幾行巨字
+    const headline = currentData?.album || currentData?.song || '';
+    const isLongHeadline = headline.length > 30;
+    const headlineSize = isLongHeadline
+        ? 'text-xl lg:text-3xl'
+        : headline.length > 18
+            ? 'text-2xl lg:text-4xl'
+            : 'text-3xl lg:text-5xl';
+
     if (!currentData) {
         return (
             <div className={`relative w-full max-w-5xl mx-auto ${className}`}>
@@ -109,10 +118,13 @@ export const DailyArticle = ({
 
             {/* 藝廊風獨立大標題 — 內容以專輯為單位，專輯名當主標、藝人當副標 */}
             <header className="relative mb-10 lg:mb-16">
-                {/* 復古爵士海報文字裝飾：只鋪在標題區，不壓在內文後面影響閱讀；手機標題會佔滿寬度，所以只在桌機顯示 */}
-                <div className="hidden lg:block">
-                    <VintageJazzText />
-                </div>
+                {/* 復古爵士海報文字裝飾：只鋪在標題區，不壓在內文後面影響閱讀；
+                    手機和長標題時標題會佔滿寬度、跟裝飾字疊在一起，所以只在桌機＋短標題時顯示 */}
+                {!isLongHeadline && (
+                    <div className="hidden lg:block">
+                        <VintageJazzText />
+                    </div>
+                )}
 
                 <div className="relative flex items-baseline gap-4 mb-4">
                     <span className="font-playfair text-6xl lg:text-8xl font-black text-stone-900 tracking-tighter">
@@ -122,11 +134,11 @@ export const DailyArticle = ({
                         {monthName}
                     </span>
                 </div>
-                <h2 className="relative text-3xl lg:text-5xl font-black tracking-tight text-stone-900 font-playfair leading-[1.1] uppercase drop-shadow-sm [overflow-wrap:anywhere]">
-                    {currentData.album || currentData.song}
+                <h2 className={`relative ${headlineSize} font-black tracking-tight text-stone-900 font-playfair leading-[1.15] uppercase drop-shadow-sm [overflow-wrap:anywhere] [text-wrap:balance] lg:max-w-[85%]`}>
+                    {headline}
                 </h2>
                 <div className="relative mt-4 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-6">
-                    <p className="text-lg lg:text-xl font-bold tracking-widest text-stone-800 uppercase">
+                    <p className="text-base lg:text-xl font-bold tracking-widest text-stone-800 uppercase">
                         {currentData.artist}
                     </p>
                     {currentData.song && currentData.album && (
