@@ -3,7 +3,7 @@ import { RandomExplore } from './RandomExplore';
 import { CalendarGrid } from './CalendarGrid';
 import { RetroTitleBar } from './RetroTitleBar';
 import { CopyrightFooter } from './CopyrightFooter';
-import { formatDateString, isAtMinMonth } from '../utils/dateUtils';
+import { useMonthNav } from '../hooks/useMonthNav';
 
 export const Sidebar = ({
     isVinylSpinning,
@@ -16,12 +16,7 @@ export const Sidebar = ({
     latestVersion
 }) => {
 
-    const year  = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-
-    const atMinMonth = isAtMinMonth(currentMonth);
-    const handlePrevMonth = () => { if (!atMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
-    const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
+    const { year, month, atMinMonth, handlePrevMonth, handleNextMonth } = useMonthNav(currentMonth, setCurrentMonth);
 
     return (
         <aside

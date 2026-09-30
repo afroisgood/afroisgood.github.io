@@ -1,6 +1,7 @@
 // src/components/CalendarGrid.jsx
 // 共用月曆 Grid 元件 — Sidebar（light）與 MobileNav（dark）共用
 
+import { useMemo } from 'react';
 import { formatDateString, isToday as checkIsToday } from '../utils/dateUtils';
 
 const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -8,8 +9,8 @@ const WEEK_DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 export const CalendarGrid = ({ year, month, selectedDate, jazzData, onDayClick, theme = 'light' }) => {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay    = new Date(year, month, 1).getDay();
-    const days        = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    const blanks      = Array.from({ length: firstDay }, (_, i) => i);
+    const days        = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth]);
+    const blanks      = useMemo(() => Array.from({ length: firstDay }, (_, i) => i), [firstDay]);
 
     const isDark = theme === 'dark';
 

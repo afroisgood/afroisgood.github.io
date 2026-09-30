@@ -1,11 +1,21 @@
 // src/components/AdminPanel.jsx
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { IconDisc } from './Icons';
-import { MOOD_OPTIONS } from '../utils/moodColors';
+import { MOOD_OPTIONS, DEFAULT_MOOD_COLOR } from '../utils/moodColors';
 
 const OWNER    = 'afroisgood';
 const REPO     = 'afroisgood.github.io';
 const FILE_PATH = 'public/data.json';
+
+// 拍照辨識代理服務網址（部署 admin-worker 後填進 .env.local 的 VITE_ADMIN_WORKER_URL）
+const RECOGNIZE_WORKER_URL = import.meta.env.VITE_ADMIN_WORKER_URL || '';
+
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+});
 
 const EMPTY_ENTRY = {
     date: '', song: '', artist: '', album: '', youtube: '',
@@ -17,10 +27,15 @@ const EMPTY_CL = { version: '', date: '', content: '' };
 
 const inputCls = 'w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2.5 rounded-sm font-zen focus:outline-none focus:border-amber-500 placeholder:text-zinc-600';
 
-const Field = ({ label, children, cls }) => (
+const Field = ({ label, children, cls, flagged }) => (
     <div className={cls}>
-        <label className="block text-zinc-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-2">
+        <label className="flex items-center gap-2 text-zinc-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-2">
             {label}
+            {flagged && (
+                <span className="text-amber-500 normal-case tracking-normal font-bold">
+                    ✦ AI 辨識，請確認
+                </span>
+            )}
         </label>
         {children}
     </div>
@@ -42,6 +57,12 @@ export const AdminPanel = () => {
     // Jazz entry state
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [form, setForm]                   = useState(EMPTY_ENTRY);
+
+    // 拍照辨識狀態
+    const [recognizing, setRecognizing]         = useState(false);
+    const [recognizeError, setRecognizeError]   = useState('');
+    const [recognizedFields, setRecognizedFields] = useState([]);
+    const photoInputRef = useRef(null);
 
     // Changelog state
     const [selectedCl, setSelectedCl] = useState(null);
@@ -115,6 +136,7 @@ export const AdminPanel = () => {
             setMessage('儲存成功！網站約 2 分鐘後自動更新。');
             setSelectedEntry(null);
             setForm(EMPTY_ENTRY);
+            setRecognizedFields([]);
             setSelectedCl(null);
             setClForm(EMPTY_CL);
         } catch (e) {
@@ -142,6 +164,8 @@ export const AdminPanel = () => {
     const handleEdit = (entry) => {
         setSelectedEntry(entry);
         setForm({ ...EMPTY_ENTRY, ...entry });
+        setRecognizedFields([]);
+        setRecognizeError('');
         setError('');
         setMessage('');
     };
@@ -149,11 +173,49 @@ export const AdminPanel = () => {
     const handleNew = () => {
         setSelectedEntry(null);
         setForm(EMPTY_ENTRY);
+        setRecognizedFields([]);
+        setRecognizeError('');
         setError('');
         setMessage('');
     };
 
     const setField = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }));
+
+    // ── 拍照辨識 ───────────────────────────────────────────
+    const handlePhotoSelected = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = ''; // 允許重複選同一張照片
+        if (!file) return;
+
+        if (!RECOGNIZE_WORKER_URL) {
+            setRecognizeError('尚未設定辨識服務網址（請部署 admin-worker 並設定 VITE_ADMIN_WORKER_URL）');
+            return;
+        }
+
+        setRecognizing(true);
+        setRecognizeError('');
+        try {
+            const dataUrl = await fileToBase64(file);
+            const res = await fetch(RECOGNIZE_WORKER_URL + '/recognize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'token ' + token,
+                },
+                body: JSON.stringify({ image: dataUrl, mimeType: file.type }),
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || '辨識失敗，請再試一次');
+
+            const { warnings, ...recognized } = result;
+            setForm(prev => ({ ...prev, ...recognized }));
+            setRecognizedFields(Object.keys(recognized).filter(k => recognized[k]));
+            if (warnings?.length) setRecognizeError(warnings.join('；'));
+        } catch (err) {
+            setRecognizeError(err.message);
+        }
+        setRecognizing(false);
+    };
 
     // ── Changelog handlers ────────────────────────────────
     const handleClSubmit = (e) => {
@@ -383,13 +445,35 @@ export const AdminPanel = () => {
                                 )}
                             </div>
 
+                            <div className="mb-6">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    ref={photoInputRef}
+                                    onChange={handlePhotoSelected}
+                                    className="hidden"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => photoInputRef.current?.click()}
+                                    disabled={recognizing}
+                                    className="w-full bg-zinc-800 border border-dashed border-zinc-600 text-zinc-300 font-bold text-[11px] tracking-[0.2em] uppercase py-3 rounded-sm hover:border-amber-500 hover:text-amber-400 transition-colors disabled:opacity-50"
+                                >
+                                    {recognizing ? '辨識中...' : '📷 拍照辨識並自動填表'}
+                                </button>
+                                {recognizeError && (
+                                    <p className="text-amber-500 text-[10px] mt-2 leading-relaxed">{recognizeError}</p>
+                                )}
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4 mb-5">
-                                <Field label="日期 *">
+                                <Field label="日期 *" flagged={recognizedFields.includes('date')}>
                                     <input type="date" value={form.date} onChange={setField('date')} required className={inputCls} />
                                 </Field>
                                 <Field label="情境背景色 Mood">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-9 rounded-sm border border-zinc-600 flex-shrink-0" style={{ backgroundColor: MOOD_OPTIONS.find(o => o.value === form.mood)?.color || '#f2f0e9' }} />
+                                        <div className="w-8 h-9 rounded-sm border border-zinc-600 flex-shrink-0" style={{ backgroundColor: MOOD_OPTIONS.find(o => o.value === form.mood)?.color || DEFAULT_MOOD_COLOR }} />
                                         <select value={form.mood} onChange={setField('mood')} className={inputCls}>
                                             {MOOD_OPTIONS.map(opt => (
                                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -400,40 +484,40 @@ export const AdminPanel = () => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 mb-5">
-                                <Field label="藝人名稱 *">
+                                <Field label="藝人名稱 *" flagged={recognizedFields.includes('artist')}>
                                     <input type="text" value={form.artist} onChange={setField('artist')} placeholder="Miles Davis" required className={inputCls} />
                                 </Field>
-                                <Field label="曲名">
+                                <Field label="曲名" flagged={recognizedFields.includes('song')}>
                                     <input type="text" value={form.song} onChange={setField('song')} placeholder="So What" className={inputCls} />
                                 </Field>
                             </div>
 
-                            <Field label="專輯名稱" cls="mb-5">
+                            <Field label="專輯名稱" cls="mb-5" flagged={recognizedFields.includes('album')}>
                                 <input type="text" value={form.album} onChange={setField('album')} placeholder="Kind of Blue" className={inputCls} />
                             </Field>
-                            <Field label="引言 Quote" cls="mb-5">
+                            <Field label="引言 Quote" cls="mb-5" flagged={recognizedFields.includes('quote')}>
                                 <input type="text" value={form.quote} onChange={setField('quote')} placeholder="一句讓人印象深刻的句子..." className={inputCls} />
                             </Field>
-                            <Field label="內容介紹" cls="mb-5">
+                            <Field label="內容介紹" cls="mb-5" flagged={recognizedFields.includes('content')}>
                                 <textarea value={form.content} onChange={setField('content')} rows={6} placeholder="關於這張專輯的介紹文字..." className={inputCls + ' resize-none'} />
                             </Field>
                             <Field label="編輯備注 Editor Note" cls="mb-5">
                                 <input type="text" value={form.editorNote} onChange={setField('editorNote')} placeholder="選填：編輯補充說明" className={inputCls} />
                             </Field>
-                            <Field label="專輯封面圖片 URL" cls="mb-5">
+                            <Field label="專輯封面圖片 URL" cls="mb-5" flagged={recognizedFields.includes('imageUrl')}>
                                 <input type="url" value={form.imageUrl} onChange={setField('imageUrl')} placeholder="https://i.imgur.com/..." className={inputCls} />
                             </Field>
 
                             <div className="border-t border-zinc-800 pt-6 mb-6">
                                 <p className="text-zinc-500 text-[10px] tracking-[0.3em] uppercase font-bold mb-4">串流連結</p>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Field label="YouTube">
+                                    <Field label="YouTube" flagged={recognizedFields.includes('youtube')}>
                                         <input type="url" value={form.youtube} onChange={setField('youtube')} placeholder="https://youtube.com/watch?v=..." className={inputCls} />
                                     </Field>
-                                    <Field label="Spotify">
+                                    <Field label="Spotify" flagged={recognizedFields.includes('spotify')}>
                                         <input type="url" value={form.spotify} onChange={setField('spotify')} placeholder="https://open.spotify.com/..." className={inputCls} />
                                     </Field>
-                                    <Field label="Apple Music">
+                                    <Field label="Apple Music" flagged={recognizedFields.includes('appleMusic')}>
                                         <input type="url" value={form.appleMusic} onChange={setField('appleMusic')} placeholder="https://music.apple.com/..." className={inputCls} />
                                     </Field>
                                     <Field label="其他連結">

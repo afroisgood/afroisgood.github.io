@@ -9,8 +9,8 @@ export const IconX = ({ size=24, className }) => <svg width={size} height={size}
 export const IconPlay = ({ size=16, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
 export const IconPause = ({ size=16, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>;
 
-export const IconDisc = ({ className, size=24, isPureBlack=false }) => (
-    <svg width={size} height={size} viewBox="0 0 100 100" className={className}>
+export const IconDisc = ({ className, size=24, isPureBlack=false, style }) => (
+    <svg width={size} height={size} viewBox="0 0 100 100" className={className} style={style}>
         <circle cx="50" cy="50" r="48" fill={isPureBlack ? "#111" : "none"} stroke="currentColor" strokeWidth="1" />
         <circle cx="50" cy="50" r="45" fill="currentColor" fillOpacity={isPureBlack ? "1" : "0.15"} />
         <circle cx="50" cy="50" r="38" fill="none" stroke="white" strokeWidth="0.5" strokeOpacity="0.15" />

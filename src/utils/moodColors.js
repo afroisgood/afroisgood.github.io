@@ -28,3 +28,17 @@ export const GENRE_COLORS = {
     'Free Jazz': '#E2E8F0',
     'Bossa Nova':'#F5F5DC',
 };
+
+export const DEFAULT_MOOD_COLOR = MOOD_OPTIONS[0].color;
+
+/**
+ * 將 entry 的 mood 欄位解析成一個 hex 色碼。
+ * mood 可能是：舊格式的 genre 名稱（如 "Bebop"）、新格式的原始 hex，或空字串。
+ */
+export const resolveMoodHex = (mood) => {
+    const trimmed = mood?.trim();
+    if (!trimmed) return DEFAULT_MOOD_COLOR;
+    if (GENRE_COLORS[trimmed]) return GENRE_COLORS[trimmed];
+    if (trimmed.startsWith('#')) return trimmed;
+    return DEFAULT_MOOD_COLOR;
+};

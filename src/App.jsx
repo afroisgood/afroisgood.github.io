@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
 import { formatDateString, isDateVisible } from './utils/dateUtils';
-import { GENRE_COLORS } from './utils/moodColors';
+import { resolveMoodHex } from './utils/moodColors';
 import { Sidebar } from './components/Sidebar';
 import { ImmersiveMode } from './components/ImmersiveMode';
 import { ChangelogModal } from './components/ChangelogModal';
@@ -56,8 +56,10 @@ const MainApp = () => {
 
     const currentData = visibleJazzData[dateKey];
 
-    const moodHex = GENRE_COLORS[currentData?.mood?.trim()] || (currentData?.mood?.startsWith('#') ? currentData.mood : null) || '#f2f0e9';
+    const moodHex = resolveMoodHex(currentData?.mood);
     const { accent: moodAccent, glow: moodGlow } = hexToMoodVars(moodHex);
+
+    const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
 
     useEffect(() => {
         const siteBase = 'https://afroisgood.github.io';
@@ -86,18 +88,16 @@ const MainApp = () => {
             const desc = currentData.content
                 ? currentData.content.slice(0, 80) + '...'
                 : currentData.artist + ' - ' + currentData.album;
-            const yId = getYouTubeVideoId(currentData.youtube);
             const image = currentData.imageUrl
                 ? currentData.imageUrl
-                : yId ? 'https://img.youtube.com/vi/' + yId + '/maxresdefault.jpg'
+                : youtubeId ? 'https://img.youtube.com/vi/' + youtubeId + '/maxresdefault.jpg'
                 : defaultImage;
             setMeta(title, desc, image, siteBase + '/#' + dateKey);
         } else {
             setMeta(defaultTitle, defaultDesc, defaultImage, siteBase + '/');
         }
-    }, [selectedDate, currentData]);
+    }, [selectedDate, currentData, youtubeId]);
 
-    const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
     const { player, playerState, playerError } = useYouTubePlayer((isImmersive || isMinimized) ? youtubeId : null);
     const isVinylSpinning = playerState === 1 || playerState === 3;
 
@@ -183,7 +183,8 @@ const MainApp = () => {
     }, [isImmersive, isMinimized, tearDirection, youtubeId]);
 
     const handleCloseImmersive = () => {
-        if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
+        const p = playerRef2.current;
+        if (p && typeof p.pauseVideo === 'function') p.pauseVideo();
         setIsImmersive(false);
         setIsMinimized(false);
     };

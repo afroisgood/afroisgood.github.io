@@ -8,7 +8,7 @@ export const RandomExplore = ({ jazzData, onNavigate }) => {
 
     const handleSpin = () => {
         if (flipping) return;
-        const available = Object.keys(jazzData || {}).filter(k => jazzData[k] && jazzData[k].album);
+        const available = Object.keys(jazzData || {}).filter(k => jazzData[k]);
         if (available.length === 0) return;
 
         setFlipping(true);

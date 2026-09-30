@@ -5,7 +5,7 @@ import { IconDisc, IconCalendar, IconClose } from './Icons';
 import { RandomExplore } from './RandomExplore';
 import { CalendarGrid } from './CalendarGrid';
 import { CopyrightFooter } from './CopyrightFooter';
-import { formatDateString, isAtMinMonth } from '../utils/dateUtils';
+import { useMonthNav } from '../hooks/useMonthNav';
 
 export const MobileNav = ({
     selectedDate,
@@ -24,12 +24,7 @@ export const MobileNav = ({
         return () => { document.body.style.overflow = ''; };
     }, [drawerOpen]);
 
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-
-    const atMinMonth = isAtMinMonth(currentMonth);
-    const handlePrevMonth = () => { if (!atMinMonth) setCurrentMonth(new Date(year, month - 1, 1)); };
-    const handleNextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
+    const { year, month, atMinMonth, handlePrevMonth, handleNextMonth } = useMonthNav(currentMonth, setCurrentMonth);
 
     const handleDayClick = (date) => {
         handleDateChange(date);
