@@ -51,8 +51,8 @@ export const Sidebar = ({
                     >
                         <p style={{
                             fontFamily: "'Courier New', Courier, monospace",
-                            fontSize: '9px',
-                            letterSpacing: '0.28em',
+                            fontSize: '11px',
+                            letterSpacing: '0.24em',
                             color: '#7a5840',
                             fontWeight: 'bold',
                             textTransform: 'uppercase',
@@ -108,9 +108,9 @@ export const Sidebar = ({
                     }}>
                         <p style={{
                             fontFamily: "'Courier New', Courier, monospace",
-                            fontSize: '8px',
-                            letterSpacing: '0.22em',
-                            color: '#9a7860',
+                            fontSize: '11px',
+                            letterSpacing: '0.2em',
+                            color: '#7a5840',
                             fontWeight: 'bold',
                             textTransform: 'uppercase',
                             marginBottom: '8px',
@@ -131,15 +131,15 @@ export const Sidebar = ({
                             }}>
                                 <span style={{
                                     fontFamily: "'Courier New', Courier, monospace",
-                                    fontSize: '9px',
+                                    fontSize: '11px',
                                     fontWeight: 'bold',
                                     color: '#f2ece3',
                                     background: '#3a2808',
                                     border: '1px solid #c8a048',
                                     borderRadius: '2px',
-                                    padding: '1px 5px',
+                                    padding: '1px 6px',
                                     letterSpacing: '0.05em',
-                                    minWidth: '36px',
+                                    minWidth: '50px',
                                     textAlign: 'center',
                                     flexShrink: 0,
                                 }}>
@@ -147,7 +147,7 @@ export const Sidebar = ({
                                 </span>
                                 <span style={{
                                     fontFamily: "'Courier New', Courier, monospace",
-                                    fontSize: '9px',
+                                    fontSize: '12px',
                                     color: '#7a5840',
                                     letterSpacing: '0.08em',
                                 }}>
@@ -165,7 +165,7 @@ export const Sidebar = ({
                             onClick={() => setShowChangelog(true)}
                             style={{
                                 fontFamily: "'Courier New', Courier, monospace",
-                                fontSize: '9px',
+                                fontSize: '11px',
                                 letterSpacing: '0.2em',
                                 textTransform: 'uppercase',
                                 fontWeight: 'bold',
@@ -193,8 +193,8 @@ export const Sidebar = ({
                         </button>
                         <span style={{
                             fontFamily: "'Courier New', Courier, monospace",
-                            fontSize: '9px',
-                            color: '#9a8070',
+                            fontSize: '11px',
+                            color: '#7a5840',
                             fontWeight: 'bold',
                         }}>
                             {latestVersion}

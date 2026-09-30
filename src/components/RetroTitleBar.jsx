@@ -21,7 +21,7 @@ export const RetroTitleBar = ({
 }) => (
     <div
         className={`retro-titlebar ${className}`}
-        style={{ display: 'flex', alignItems: 'center', gap: mini ? '5px' : '7px', ...(mini ? { padding: '3px 7px', fontSize: '10px' } : {}), ...style }}
+        style={{ display: 'flex', alignItems: 'center', gap: mini ? '5px' : '7px', ...(mini ? { padding: '3px 7px', fontSize: '11px' } : {}), ...style }}
     >
         <span className="retro-ctrl" style={mini ? { width: '11px', height: '9px', fontSize: '6px' } : {}}>&#215;</span>
         <span className="retro-ctrl" style={mini ? { width: '11px', height: '9px', fontSize: '6px' } : {}}>&#8722;</span>

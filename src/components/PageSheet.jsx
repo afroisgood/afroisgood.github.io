@@ -17,7 +17,7 @@ export const PageSheet = ({
     style,
     inert = false,
 }) => (
-    <div className={`page-sheet ${className}`} style={style} inert={inert} aria-hidden={inert || undefined}>
+    <div className={`page-sheet px-5 pt-7 pb-24 lg:px-14 lg:pt-9 ${className}`} style={style} inert={inert} aria-hidden={inert || undefined}>
         {data?.imageUrl && (
             <div
                 aria-hidden="true"

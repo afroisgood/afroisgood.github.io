@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { EditorNote } from './EditorNote';
 import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
 import { VintageJazzText } from './VintageJazzText';
+import { ArticleBody } from './ArticleBody';
 import { formatDateString, isToday } from '../utils/dateUtils';
 
 export const DailyArticle = ({
@@ -106,12 +107,14 @@ export const DailyArticle = ({
     return (
         <div className={`relative w-full max-w-5xl mx-auto ${className}`}>
 
-            {/* 復古爵士海報文字裝飾 */}
-            <VintageJazzText />
+            {/* 藝廊風獨立大標題 — 內容以專輯為單位，專輯名當主標、藝人當副標 */}
+            <header className="relative mb-10 lg:mb-16">
+                {/* 復古爵士海報文字裝飾：只鋪在標題區，不壓在內文後面影響閱讀；手機標題會佔滿寬度，所以只在桌機顯示 */}
+                <div className="hidden lg:block">
+                    <VintageJazzText />
+                </div>
 
-            {/* 藝廊風獨立大標題 */}
-            <header className="mb-10 lg:mb-16">
-                <div className="flex items-baseline gap-4 mb-4">
+                <div className="relative flex items-baseline gap-4 mb-4">
                     <span className="font-playfair text-6xl lg:text-8xl font-black text-stone-900 tracking-tighter">
                         {String(selectedDate.getDate()).padStart(2, '0')}
                     </span>
@@ -119,17 +122,21 @@ export const DailyArticle = ({
                         {monthName}
                     </span>
                 </div>
-                <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-stone-900 font-playfair leading-[1.1] uppercase drop-shadow-sm">
-                    {currentData.song}
+                <h2 className="relative text-3xl lg:text-5xl font-black tracking-tight text-stone-900 font-playfair leading-[1.1] uppercase drop-shadow-sm [overflow-wrap:anywhere]">
+                    {currentData.album || currentData.song}
                 </h2>
-                <div className="mt-4 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-6">
-                    <p className="text-xl lg:text-2xl font-bold tracking-widest text-stone-800 uppercase">
+                <div className="relative mt-4 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-6">
+                    <p className="text-lg lg:text-xl font-bold tracking-widest text-stone-800 uppercase">
                         {currentData.artist}
                     </p>
-                    <div className="hidden lg:block w-12 h-[2px] transition-colors duration-1000" style={{ backgroundColor: 'var(--mood-accent)', opacity: 0.5 }}></div>
-                    <p className="text-sm font-bold tracking-widest text-stone-500 italic font-serif">
-                        From the album "{currentData.album}"
-                    </p>
+                    {currentData.song && currentData.album && (
+                        <>
+                            <div className="hidden lg:block w-12 h-[2px] transition-colors duration-1000" style={{ backgroundColor: 'var(--mood-accent)', opacity: 0.5 }}></div>
+                            <p className="text-sm font-bold tracking-widest text-stone-600 italic font-serif">
+                                ♪ “{currentData.song}”
+                            </p>
+                        </>
+                    )}
                 </div>
             </header>
 
@@ -207,9 +214,7 @@ export const DailyArticle = ({
                             </div>
                         )}
 
-                        <div className="prose prose-stone font-zen leading-relaxed text-stone-700 whitespace-pre-line text-[15px] lg:text-base">
-                            {currentData.content}
-                        </div>
+                        <ArticleBody content={currentData.content} noteIdPrefix={dateKey} />
                     </div>
 
                     {/* 串流按鈕 — retro OS style */}

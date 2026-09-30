@@ -17,7 +17,6 @@ import { RetroTitleBar } from './components/RetroTitleBar';
 import { IntroCalendar } from './components/IntroCalendar';
 
 const SHEET_TEAR_MS = 520; // 與 index.css 的 .page-sheet--tear / --drop 動畫時長一致
-const SHEET_PADDING = { padding: '36px 56px 40px', paddingBottom: '96px' };
 
 const hexToMoodVars = (hex) => {
     const def = { accent: 'rgb(180,83,9)', glow: 'rgb(245,158,11)' };
@@ -282,8 +281,9 @@ const MainApp = () => {
 
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
+    const headline = (currentData?.album || currentData?.song || '').toUpperCase();
     const winTitle = currentData
-        ? `${String(selectedDate.getDate()).padStart(2,'0')} ${selectedDate.toLocaleDateString('en-US',{month:'short'}).toUpperCase()} — ${(currentData.song||'').toUpperCase().slice(0,38)}${(currentData.song||'').length>38?'...':''}`
+        ? `${String(selectedDate.getDate()).padStart(2,'0')} ${selectedDate.toLocaleDateString('en-US',{month:'short'}).toUpperCase()} — ${headline.slice(0,38)}${headline.length>38?'...':''}`
         : 'DAILY JAZZ ALMANAC';
 
     return (
@@ -402,7 +402,7 @@ const MainApp = () => {
                         <PageSheet
                             key={dateKey}
                             className={enterDirection === 'backward' ? 'page-sheet--drop' : ''}
-                            style={{ ...SHEET_PADDING, backgroundColor: moodHex }}
+                            style={{ backgroundColor: moodHex }}
                             date={selectedDate}
                             data={currentData}
                             ready={dataReady}
@@ -424,7 +424,7 @@ const MainApp = () => {
                                     key={sheet.id}
                                     inert
                                     className={`page-sheet--leaving ${sheet.direction === 'forward' ? 'page-sheet--tear' : 'page-sheet--under'}`}
-                                    style={{ ...SHEET_PADDING, backgroundColor: sheetMood, '--mood-accent': accent, '--mood-glow': glow }}
+                                    style={{ backgroundColor: sheetMood, '--mood-accent': accent, '--mood-glow': glow }}
                                     date={sheet.date}
                                     data={sheet.data}
                                     ready

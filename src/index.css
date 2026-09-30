@@ -7,6 +7,10 @@ body {
     padding: 0;
 }
 
+/* 可捲動但不顯示捲軸（側欄用） */
+.hidden-scrollbar { scrollbar-width: none; }
+.hidden-scrollbar::-webkit-scrollbar { display: none; }
+
 /* 背景紙張材質 */
 .bg-image-paper {
     background-color: #f2f0e9;

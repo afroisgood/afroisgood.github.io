@@ -25,8 +25,8 @@ export const CalendarGrid = ({ year, month, selectedDate, jazzData, onDayClick, 
             {WEEK_DAYS.map((d, i) => (
                 <div key={i} style={{
                     fontFamily: "'Courier New', Courier, monospace",
-                    fontSize: isDark ? '10px' : '8px',
-                    color: isDark ? 'rgba(161,161,170,1)' : '#9a7860',
+                    fontSize: '11px',
+                    color: isDark ? 'rgba(161,161,170,1)' : '#7a5840',
                     fontWeight: 'bold',
                     letterSpacing: '0.05em',
                     textTransform: 'uppercase',

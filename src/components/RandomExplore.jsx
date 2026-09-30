@@ -34,7 +34,7 @@ export const RandomExplore = ({ jazzData, onNavigate }) => {
             <div className="retro-body" style={{ padding: '12px' }}>
                 <p style={{
                     fontFamily: "'Courier New', Courier, monospace",
-                    fontSize: '10px',
+                    fontSize: '12px',
                     color: '#5a3820',
                     lineHeight: 1.7,
                     marginBottom: '10px',
@@ -59,16 +59,16 @@ export const RandomExplore = ({ jazzData, onNavigate }) => {
 
                 {lastLabel && (
                     <div className="page-reveal" style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #c8b4a4' }}>
-                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '8px', color: '#9a7860', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '11px', color: '#7a5840', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '4px' }}>
                             已跳往
                         </p>
-                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '10px', fontWeight: 'bold', color: 'var(--mood-accent)', letterSpacing: '0.05em' }}>
+                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '12px', fontWeight: 'bold', color: 'var(--mood-accent)', letterSpacing: '0.05em' }}>
                             {lastLabel.date}
                         </p>
-                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '10px', color: '#2a1808', fontWeight: 'bold', marginTop: '2px', lineHeight: 1.4 }}>
+                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '12px', color: '#2a1808', fontWeight: 'bold', marginTop: '2px', lineHeight: 1.4 }}>
                             {lastLabel.artist}
                         </p>
-                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '9px', color: '#7a5840', fontStyle: 'italic', lineHeight: 1.4 }}>
+                        <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '11px', color: '#7a5840', fontStyle: 'italic', lineHeight: 1.4 }}>
                             {lastLabel.album}
                         </p>
                     </div>

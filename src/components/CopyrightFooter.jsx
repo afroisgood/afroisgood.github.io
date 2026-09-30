@@ -8,16 +8,16 @@ export const CopyrightFooter = ({ theme = 'light' }) => {
         marginTop: '24px',
         paddingTop: '16px',
         borderTop: '1px solid rgba(255,255,255,0.08)',
-        fontSize: '9px',
-        lineHeight: 1.9,
-        color: 'rgba(255,255,255,0.3)',
-    } : {
-        fontSize: '8px',
+        fontSize: '11px',
         lineHeight: 1.8,
-        color: '#9a7860',
+        color: 'rgba(255,255,255,0.55)',
+    } : {
+        fontSize: '11px',
+        lineHeight: 1.7,
+        color: '#7a5840',
     };
 
-    const linkColor = isDark ? 'rgba(255,255,255,0.5)' : '#7a5840';
+    const linkColor = isDark ? 'rgba(255,255,255,0.75)' : '#5a3820';
 
     return (
         <div style={{ fontFamily: "'Courier New', Courier, monospace", letterSpacing: '0.03em', ...containerStyle }}>
