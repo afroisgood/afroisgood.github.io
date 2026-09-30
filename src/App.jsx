@@ -14,6 +14,8 @@ import { AdminPanel } from './components/AdminPanel';
 import { MobileNav } from './components/MobileNav';
 import { RetroMenuBar } from './components/RetroMenuBar';
 import { RetroTitleBar } from './components/RetroTitleBar';
+import { IntroCalendar } from './components/IntroCalendar';
+import { ArticleSkeleton } from './components/ArticleSkeleton';
 
 const hexToMoodVars = (hex) => {
     const def = { accent: 'rgb(180,83,9)', glow: 'rgb(245,158,11)' };
@@ -32,13 +34,34 @@ const getYouTubeVideoId = (url) => {
     return (match && match[2].length === 11) ? match[2] : null;
 };
 
+const parseHashDate = () => {
+    const hash = window.location.hash.replace('#', '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(hash)) return null;
+    const [y, m, d] = hash.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return isNaN(date) ? null : date;
+};
+
+// 開場動畫：每個分頁第一次進站播日曆翻頁，之後改用骨架直入；減少動態效果者一律略過
+const INTRO_SEEN_KEY = 'jazz365_intro_seen';
+const getIntroMode = () => {
+    try {
+        if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return 'reduced';
+        if (sessionStorage.getItem(INTRO_SEEN_KEY)) return 'skeleton';
+    } catch { /* 無痕模式等無法存取 sessionStorage 時，照常播開場 */ }
+    return 'calendar';
+};
+
 // ── 主應用（所有 hooks 都在此，無條件式 early return）──
 const MainApp = () => {
-    const [selectedDate, setSelectedDate] = useState(() => new Date());
-    const [currentMonth, setCurrentMonth] = useState(() => { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), 1); });
+    const [selectedDate, setSelectedDate] = useState(() => parseHashDate() || new Date());
+    const [currentMonth, setCurrentMonth] = useState(() => { const t = parseHashDate() || new Date(); return new Date(t.getFullYear(), t.getMonth(), 1); });
     const [jazzData, setJazzData] = useState({});
     const [changelogData, setChangelogData] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [dataReady, setDataReady] = useState(false);
+    const [introMode] = useState(getIntroMode);
+    const [introTargetDate] = useState(selectedDate);
+    const [showIntro, setShowIntro] = useState(introMode === 'calendar');
     const [tearDirection, setTearDirection] = useState(null);
     const [showChangelog, setShowChangelog] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
@@ -126,13 +149,9 @@ const MainApp = () => {
     // 空 deps：只註冊一次，透過 ref 永遠讀到最新狀態
     useEffect(() => {
         const handleHashChange = () => {
-            const hash = window.location.hash.replace('#', '');
-            if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
-                const [y, m, d] = hash.split('-').map(Number);
-                const hashDate = new Date(y, m - 1, d);
-                if (!isNaN(hashDate) && formatDateString(hashDate) !== formatDateString(selectedDateRef.current)) {
-                    triggerTransitionRef.current(hashDate);
-                }
+            const hashDate = parseHashDate();
+            if (hashDate && formatDateString(hashDate) !== formatDateString(selectedDateRef.current)) {
+                triggerTransitionRef.current(hashDate);
             }
         };
         window.addEventListener('hashchange', handleHashChange);
@@ -241,39 +260,17 @@ const MainApp = () => {
                 setJazzData(map);
                 setChangelogData(cl.slice().sort((a, b) => b.date.localeCompare(a.date)));
             } catch (_) {}
-
-            const hash = window.location.hash.replace('#', '');
-            if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
-                const [y, m, d] = hash.split('-').map(Number);
-                const initialDate = new Date(y, m - 1, d);
-                setSelectedDate(initialDate);
-                setCurrentMonth(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
-            }
-
-            setTimeout(() => setLoading(false), 2000);
+            setDataReady(true);
         };
         fetchAllData();
     }, []);
 
-    if (loading) return (
-        <div className="retro-desktop min-h-screen flex flex-col items-center justify-center p-6 text-center">
-            <div className="retro-win" style={{ width: '480px', maxWidth: '90vw' }}>
-                <RetroTitleBar title="DAILY JAZZ ALMANAC" />
-                <div className="retro-body" style={{ padding: '48px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                    <IconDisc className="animate-spin-fast" size={64} style={{ color: '#7a5840', opacity: 0.7 }} />
-                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '13px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3a2010', lineHeight: 1.8 }}>
-                        JAZZ，是一種帶著焦臭味<br />撲面而來的文字
-                    </p>
-                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '11px', color: '#8a6848', letterSpacing: '0.25em' }}>
-                        — 平岡正明
-                    </p>
-                    <p style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '10px', color: '#b09878', letterSpacing: '0.2em', marginTop: '4px', opacity: 0.7 }}>
-                        Loading…
-                    </p>
-                </div>
-            </div>
-        </div>
-    );
+    useEffect(() => {
+        if (introMode !== 'calendar') return;
+        try { sessionStorage.setItem(INTRO_SEEN_KEY, '1'); } catch { /* 寫不進去就下次再播一次，無妨 */ }
+    }, [introMode]);
+
+    const handleIntroDone = useCallback(() => setShowIntro(false), []);
 
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
@@ -284,6 +281,10 @@ const MainApp = () => {
     return (
         <div className="retro-desktop min-h-screen font-sans text-stone-800 relative overflow-x-hidden"
              style={{ '--mood-accent': moodAccent, '--mood-glow': moodGlow }}>
+
+            {showIntro && (
+                <IntroCalendar targetDate={introTargetDate} ready={dataReady} onDone={handleIntroDone} />
+            )}
 
             <RetroMenuBar />
 
@@ -370,7 +371,7 @@ const MainApp = () => {
                 isVinylSpinning={isVinylSpinning}
             />
 
-            <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 relative"
+            <div className={`max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 relative ${introMode === 'skeleton' ? 'shell-enter' : ''}`}
                  style={{ padding: '4px 12px 12px', paddingTop: '28px', paddingBottom: isMinimized ? '120px' : undefined }}>
 
                 <Sidebar
@@ -414,14 +415,18 @@ const MainApp = () => {
                                 </span>
                             </div>
 
-                            <DailyArticle
-                                key={dateKey}
-                                currentData={currentData}
-                                selectedDate={selectedDate}
-                                tearDirection={tearDirection}
-                                youtubeId={youtubeId}
-                                setIsImmersive={setIsImmersive}
-                            />
+                            {dataReady ? (
+                                <DailyArticle
+                                    key={dateKey}
+                                    currentData={currentData}
+                                    selectedDate={selectedDate}
+                                    tearDirection={tearDirection}
+                                    youtubeId={youtubeId}
+                                    setIsImmersive={setIsImmersive}
+                                />
+                            ) : (
+                                <ArticleSkeleton />
+                            )}
                         </div>
                     </div>
                 </div>

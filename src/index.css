@@ -294,3 +294,131 @@ body {
     border-bottom-color: #c8a048;
     box-shadow: inset 1px 1px 0 #1a0c00;
 }
+
+/* ============================================
+   開場動畫
+   ============================================ */
+
+/* ── 首次造訪：日めくり翻頁 ── */
+.intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    transition: opacity 0.6s ease;
+}
+.intro-overlay--out { opacity: 0; pointer-events: none; }
+
+.intro-cal-pad {
+    width: 260px;
+    height: 324px;
+    display: flex;
+    flex-direction: column;
+    filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.5));
+    animation: introPadIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.intro-cal-binding {
+    height: 30px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    background: #3a2808;
+    border-bottom: 2px solid #1f1408;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 50px;
+}
+.intro-cal-ring {
+    width: 12px;
+    height: 12px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: #0a0c18;
+    border: 2px solid #c8a048;
+}
+.intro-cal-stack { position: relative; flex: 1; perspective: 900px; }
+
+.intro-cal-page {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    background: #f2ece3;
+    border: 1px solid #d8c8b4;
+    color: #2a1808;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 16px 16px;
+    transform-origin: top center;
+}
+.intro-cal-page--out  { animation: introPageOut 0.32s cubic-bezier(0.55, 0, 0.45, 1) forwards; }
+.intro-cal-page--tear { animation: introPageOut 0.55s cubic-bezier(0.55, 0, 0.45, 1) forwards; }
+.intro-cal-page__top {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: #7a5840;
+}
+.intro-cal-page__day { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 112px; line-height: 1; }
+.intro-cal-page__month { font-family: 'Playfair Display', serif; font-size: 18px; letter-spacing: 0.3em; }
+.intro-cal-page__rule { height: 2px; width: 0; background: #c8a048; transition: width 0.4s ease-out; }
+.intro-cal-page__rule--on { width: 120px; }
+.intro-cal-page__brand { font-family: 'Zen Old Mincho', serif; font-size: 10px; letter-spacing: 0.3em; color: #7a5840; }
+
+.intro-quote {
+    margin: 0;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    line-height: 1.8;
+    text-align: center;
+    color: #a8a0c8;
+    animation: fadeIn 0.8s ease 0.3s both;
+}
+.intro-skip {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    min-height: 44px;
+    padding: 0 16px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: #8a86a8;
+    background: none;
+    border: 1px solid #2a2d48;
+    cursor: pointer;
+}
+.intro-skip:hover { color: #d0c8e8; border-color: #c8a048; }
+
+@keyframes introPadIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes introPageOut { from { transform: rotateX(0deg); opacity: 1; } to { transform: rotateX(-95deg); opacity: 0; } }
+
+/* ── 同一分頁再次造訪：視窗框架依序滑入，內容先以骨架佔位 ── */
+/* fill-mode 用 backwards：動畫結束後不留 transform，避免影響 sticky 側欄與 fixed 子元素 */
+.shell-enter > :nth-child(1) { animation: shellFromLeft 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.shell-enter > :nth-child(2) { animation: shellRise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.08s backwards; }
+@keyframes shellFromLeft { from { opacity: 0; transform: translateX(-24px); } }
+@keyframes shellRise { from { opacity: 0; transform: translateY(16px); } }
+
+.skeleton-block {
+    background: linear-gradient(90deg, #e3d9cc 0%, #f3ebe0 50%, #e3d9cc 100%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.4s linear infinite;
+}
+@keyframes skeletonShimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* ── 減少動態效果：開場只保留淡入 ── */
+@media (prefers-reduced-motion: reduce) {
+    .shell-enter > *,
+    .skeleton-block { animation: none; }
+    .flip-page-in { animation: fadeIn 0.3s ease both; }
+}
