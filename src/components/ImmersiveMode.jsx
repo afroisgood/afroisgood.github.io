@@ -1,5 +1,5 @@
 // src/components/ImmersiveMode.jsx
-// 沉浸模式：唱盤。唱片以封面當中心圓標旋轉，唱臂在開始播放後落下、無法播放時抬起；
+// 沉浸模式：唱盤。唱片以封面當中心圓標旋轉，唱臂在開始播放後落下並隨進度往內圈移、播完或無法播放時抬起；
 // 側欄放完整正方形封面、播放狀態、進度條與前一天／播放／下一天。
 import { useEffect, useState } from 'react';
 import { IconX, IconMinimize, IconDisc, IconPause, IconPlay, IconSkipBack, IconSkipForward, IconArrowRight } from './Icons';
@@ -13,12 +13,17 @@ const formatTime = (seconds) => {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 };
 
-// 獨立成元件：只有沉浸模式畫面在時才輪詢 YouTube 播放時間
-const PlaybackProgress = ({ player, disabled }) => {
+// 唱臂角度：架上、唱片最外圈、最內圈（標籤外緣）。依轉盤幾何換算，播放進度 0→1 對應外圈→內圈
+const ARM_REST_DEG = -6;
+const ARM_OUTER_DEG = 9;
+const ARM_INNER_DEG = 29;
+
+// 只有沉浸模式畫面在時才輪詢 YouTube 播放時間（唱臂與進度條共用）
+const usePlaybackTime = (player, enabled) => {
     const [time, setTime] = useState({ current: 0, duration: 0 });
 
     useEffect(() => {
-        if (!player) return;
+        if (!player || !enabled) return;
         const id = setInterval(() => {
             // YT.Player 物件一建立就拿得到，但 getCurrentTime 等方法要等播放器 ready 才會掛上
             if (typeof player.getCurrentTime !== 'function') return;
@@ -27,8 +32,12 @@ const PlaybackProgress = ({ player, disabled }) => {
             } catch { /* 播放器切換影片中，下一輪再讀 */ }
         }, 500);
         return () => clearInterval(id);
-    }, [player]);
+    }, [player, enabled]);
 
+    return [time, setTime];
+};
+
+const PlaybackProgress = ({ player, time, setTime, disabled }) => {
     const { current, duration } = time;
     const canSeek = !disabled && duration > 0;
     const pct = canSeek ? Math.min(100, (current / duration) * 100) : 0;
@@ -85,13 +94,17 @@ export const ImmersiveMode = ({
     isVinylSpinning,
     playerError,
 }) => {
-    if (!isImmersive || isMinimized) return null;
+    const isOpen = isImmersive && !isMinimized;
+    const [time, setTime] = usePlaybackTime(player, isOpen);
+    if (!isOpen) return null;
 
     const hasVideo = Boolean(currentData && youtubeId);
     const unavailable = Boolean(playerError) || !hasVideo;
     const canPlay = hasVideo && !playerError && Boolean(player);
-    // 唱臂只在真的開始播過（播放中／暫停／緩衝）時落在唱片上
+    // 唱臂只在真的開始播過（播放中／暫停／緩衝）時落在唱片上，並隨播放進度由外圈往內圈移；播完（狀態 0）回到架上
     const armOnRecord = !unavailable && [1, 2, 3].includes(playerState);
+    const progress = time.duration > 0 ? Math.min(1, Math.max(0, time.current / time.duration)) : 0;
+    const armAngle = armOnRecord ? ARM_OUTER_DEG + (ARM_INNER_DEG - ARM_OUTER_DEG) * progress : ARM_REST_DEG;
 
     const coverUrl = currentData?.imageUrl || (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : '');
     const dateLabel = `${selectedDate.getFullYear()}.${String(selectedDate.getMonth() + 1).padStart(2, '0')}.${String(selectedDate.getDate()).padStart(2, '0')} ${WEEKDAYS[selectedDate.getDay()]}`;
@@ -170,7 +183,7 @@ export const ImmersiveMode = ({
                         </div>
                         <div
                             className="tonearm absolute w-2 bg-[#b8bccc]"
-                            style={{ left: 'calc(96.15% - 4px)', top: '7.7%', height: '61.9%', transform: `rotate(${armOnRecord ? 25.8 : -6}deg)` }}
+                            style={{ left: 'calc(96.15% - 4px)', top: '7.7%', height: '61.9%', transform: `rotate(${armAngle}deg)` }}
                         >
                             <div className="absolute -left-2 -bottom-[18px] w-6 h-8 bg-[#c8a048] border border-[#3a2808]"></div>
                         </div>
@@ -217,7 +230,7 @@ export const ImmersiveMode = ({
                                 )}
                             </div>
                         ) : (
-                            <PlaybackProgress player={player} disabled={!canPlay} />
+                            <PlaybackProgress player={player} time={time} setTime={setTime} disabled={!canPlay} />
                         )}
 
                         <div className="flex items-center justify-center lg:justify-start gap-[18px] mt-1">
