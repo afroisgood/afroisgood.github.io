@@ -28,7 +28,7 @@ export const DailyArticle = ({
 
         const shareData = {
             title: `日めくりジャズ365 | ${dateText}`,
-            text: `${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》，來聽看看吧`,
+            text: `${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》，來聽看看吧\n（原文出處：《日めくりジャズ365》ジャズ録音日調査委員会）`,
             url: `${window.location.origin}${window.location.pathname}#${dateKey}`,
         };
 
@@ -228,6 +228,15 @@ export const DailyArticle = ({
                         )}
 
                         <ArticleBody content={currentData.content} noteIdPrefix={dateKey} />
+
+                        {/* 出處標示：分享連結點進來的人多半只看文章，看不到側欄底部的版權聲明 */}
+                        {currentData.content?.trim() && (
+                            <div className="mt-8 pt-4 border-t border-stone-900/10 text-xs leading-relaxed text-stone-600 space-y-0.5">
+                                <p>日文原文出自《日めくりジャズ365》© ジャズ録音日調査委員会</p>
+                                <p>中文翻譯：和煦人（非官方翻譯）</p>
+                                <p>唱片與音樂版權屬各權利人所有</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* 串流按鈕 — retro OS style */}
