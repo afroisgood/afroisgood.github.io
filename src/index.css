@@ -416,8 +416,9 @@ body {
 
 .intro-quote {
     margin: 0;
+    padding: 0 16px;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
+    font-size: clamp(14px, 4vw, 16px);
     letter-spacing: 0.12em;
     line-height: 1.8;
     text-align: center;
