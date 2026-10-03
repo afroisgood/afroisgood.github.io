@@ -4,7 +4,7 @@ import { EditorNote } from './EditorNote';
 import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
 import { VintageJazzText } from './VintageJazzText';
 import { ArticleBody } from './ArticleBody';
-import { formatDateString, isToday } from '../utils/dateUtils';
+import { formatDateString } from '../utils/dateUtils';
 
 export const DailyArticle = ({
     currentData,
@@ -23,19 +23,20 @@ export const DailyArticle = ({
     const dateKey = formatDateString(selectedDate);
 
     const handleShare = async () => {
-        const dateText = isToday(selectedDate) ? '今天' : `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
+        // 分享出去的訊息常在隔天以後才被點開，日期一律寫明、網址帶上日期，對方才會看到同一張專輯
+        const dateText = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
 
         const shareData = {
-            title: `日めくりジャズ365 | ${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`,
-            text: `🎵 ${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》！快來聽聽看：`,
-            url: window.location.href, 
+            title: `日めくりジャズ365 | ${dateText}`,
+            text: `${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》，來聽看看吧`,
+            url: `${window.location.origin}${window.location.pathname}#${dateKey}`,
         };
 
         if (navigator.share) {
             try { await navigator.share(shareData); } catch (err) { console.log('分享取消', err); }
         } else {
             try {
-                await navigator.clipboard.writeText(`${shareData.text} \n${shareData.url}`);
+                await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
                 setIsCopied(true);
                 if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
                 copyTimerRef.current = setTimeout(() => setIsCopied(false), 2000);
