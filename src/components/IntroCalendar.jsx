@@ -1,5 +1,5 @@
 // src/components/IntroCalendar.jsx
-// 首次造訪的開場動畫：日めくり日曆從元旦快速翻到目標日期，資料到齊後撕下當日頁露出網站
+// 首次造訪的開場動畫：撕頁日曆從元旦快速翻到目標日期，資料到齊後撕下當日頁露出網站
 import { useEffect, useMemo, useState } from 'react';
 
 const WEEKDAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
@@ -33,7 +33,7 @@ const CalendarPage = ({ date, className = '', children }) => (
         <span className="intro-cal-page__day">{String(date.getDate()).padStart(2, '0')}</span>
         <span className="intro-cal-page__month">{MONTHS[date.getMonth()]}</span>
         {children}
-        <span className="intro-cal-page__brand">日めくりジャズ365</span>
+        <span className="intro-cal-page__brand">JAZZ 365</span>
     </div>
 );
 

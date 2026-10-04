@@ -26,7 +26,7 @@ export const DailyArticle = ({
         const dateText = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
 
         const shareData = {
-            title: `日めくりジャズ365 | ${dateText}`,
+            title: `JAZZ 365 | ${dateText}`,
             text: `${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》，來聽看看吧`,
             url: `${window.location.origin}${window.location.pathname}#${dateKey}`,
         };

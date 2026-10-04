@@ -89,7 +89,7 @@ const MainApp = () => {
 
     useEffect(() => {
         const siteBase = 'https://afroisgood.github.io';
-        const defaultTitle = '日めくりジャズ365 | 2026年版';
+        const defaultTitle = 'JAZZ 365 | Daily Jazz Almanac 2026';
         const defaultDesc = '每天一張爵士唱片推薦，365 天不間斷。Daily Jazz Almanac 2026。';
         const defaultImage = siteBase + '/og-image.png';
 
