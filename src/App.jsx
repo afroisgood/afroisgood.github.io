@@ -111,9 +111,7 @@ const MainApp = () => {
             const month = selectedDate.getMonth() + 1;
             const day = selectedDate.getDate();
             const title = month + '月' + day + '日 | ' + currentData.album + ' - ' + currentData.artist;
-            const desc = currentData.content
-                ? currentData.content.slice(0, 80) + '...'
-                : currentData.artist + ' - ' + currentData.album;
+            const desc = month + '月' + day + '日的爵士推薦：' + currentData.artist + '《' + currentData.album + '》';
             const image = currentData.imageUrl
                 ? currentData.imageUrl
                 : youtubeId ? 'https://img.youtube.com/vi/' + youtubeId + '/maxresdefault.jpg'

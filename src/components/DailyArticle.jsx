@@ -3,8 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import { EditorNote } from './EditorNote';
 import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
 import { VintageJazzText } from './VintageJazzText';
-import { ArticleBody } from './ArticleBody';
 import { formatDateString } from '../utils/dateUtils';
+import { MOOD_OPTIONS, resolveMoodHex } from '../utils/moodColors';
 
 export const DailyArticle = ({
     currentData,
@@ -28,7 +28,7 @@ export const DailyArticle = ({
 
         const shareData = {
             title: `日めくりジャズ365 | ${dateText}`,
-            text: `${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》，來聽看看吧\n（原文出處：《日めくりジャズ365》ジャズ録音日調査委員会）`,
+            text: `${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》，來聽看看吧`,
             url: `${window.location.origin}${window.location.pathname}#${dateKey}`,
         };
 
@@ -45,6 +45,17 @@ export const DailyArticle = ({
     };
 
     const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
+
+    // 唱片資訊欄：沒填的欄位不顯示
+    const moodHex = resolveMoodHex(currentData?.mood);
+    const genre = MOOD_OPTIONS.find(o => o.value && o.value.toLowerCase() === moodHex.toLowerCase())?.label.replace(/^\S+\s+/, '');
+    const credits = [
+        { label: 'Date',   value: `${monthName} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}` },
+        { label: 'Artist', value: currentData?.artist },
+        { label: 'Album',  value: currentData?.album },
+        { label: 'Track',  value: currentData?.song },
+        { label: 'Style',  value: genre },
+    ].filter(c => c.value?.trim());
 
     // 專輯名長短差很多（多數 ≤18 字，少數超過 30 字），大標字級跟著長度往下調，避免長標題變成好幾行巨字
     const headline = currentData?.album || currentData?.song || '';
@@ -156,7 +167,7 @@ export const DailyArticle = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
 
                 {/* 左側：專輯封面（純粹視覺焦點） */}
-                <div className="lg:col-span-5 relative z-10 max-w-sm mx-auto lg:max-w-none">
+                <div className="lg:col-span-5 relative z-10 w-full max-w-sm mx-auto lg:max-w-none">
                     <div className="aspect-square w-full relative bg-stone-200 overflow-hidden group retro-album-frame">
 
                         {currentData.imageUrl ? (
@@ -184,63 +195,50 @@ export const DailyArticle = ({
                         )}
                     </div>
 
+                </div>
+
+                {/* 右側：唱片資訊、石編的話、聆聽入口 —— 日文原文與翻譯只留在後台，前台不公開 */}
+                <div className="lg:col-span-7 flex flex-col gap-8 pt-2">
+                    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-3 py-5 border-y-2 border-stone-900/70">
+                        {credits.map(({ label, value }) => (
+                            <div key={label} className="contents">
+                                <dt className="font-mono text-[10px] tracking-[0.3em] text-stone-600 uppercase pt-[3px]">{label}</dt>
+                                <dd className="text-sm lg:text-base font-bold text-stone-900 tracking-wide [overflow-wrap:anywhere]">{value}</dd>
+                            </div>
+                        ))}
+                    </dl>
+
+                    {currentData?.editorNote?.trim() && (
+                        <EditorNote note={currentData.editorNote} />
+                    )}
+
                     {youtubeId && (
                         <button
                             onClick={() => setIsImmersive(true)}
-                            className="w-full flex items-center justify-center gap-2 mt-2"
+                            className="w-full flex items-center justify-center gap-3"
                             style={{
-                                padding: '8px 0',
-                                fontSize: '9px',
-                                letterSpacing: '0.18em',
+                                minHeight: '56px',
+                                fontSize: '12px',
+                                letterSpacing: '0.25em',
                                 fontFamily: "'Courier New', Courier, monospace",
                                 fontWeight: 'bold',
                                 background: '#fde8cc',
-                                color: '#b35c1a',
-                                border: '1.5px solid #f5c49a',
+                                color: '#9a4a10',
+                                border: '2px solid #f5c49a',
                                 cursor: 'pointer',
                                 transition: 'background 0.2s',
                             }}
                             onMouseEnter={e => e.currentTarget.style.background = '#fbd9a8'}
                             onMouseLeave={e => e.currentTarget.style.background = '#fde8cc'}
                         >
-                            <IconDisc className="animate-spin-slow" size={11} />
+                            <IconDisc className="animate-spin-slow" size={18} />
                             VINYL LISTENING
                         </button>
                     )}
-                </div>
-
-                {/* 右側：引言、內文、串流按鈕 */}
-                <div className="lg:col-span-7 flex flex-col justify-between pt-2 min-h-[420px]">
-                    <div className="flex-1">
-                        {currentData?.editorNote?.trim() && (
-                            <div className="mb-8">
-                                <EditorNote note={currentData.editorNote} />
-                            </div>
-                        )}
-
-                        {currentData.quote?.trim() && (
-                            <div className="relative pl-8 mb-10">
-                                <span className="absolute left-0 -top-2 text-6xl font-serif leading-none transition-colors duration-1000" style={{ color: 'var(--mood-accent)', opacity: 0.35 }}>"</span>
-                                <blockquote className="text-xl lg:text-2xl font-medium leading-relaxed font-serif text-justify pt-2 transition-colors duration-1000" style={{ color: 'var(--mood-accent)' }}>
-                                    {currentData.quote}
-                                </blockquote>
-                            </div>
-                        )}
-
-                        <ArticleBody content={currentData.content} noteIdPrefix={dateKey} />
-
-                        {/* 出處標示：分享連結點進來的人多半只看文章，看不到側欄底部的版權聲明 */}
-                        {currentData.content?.trim() && (
-                            <div className="mt-8 pt-4 border-t border-stone-900/10 text-xs leading-relaxed text-stone-600 space-y-0.5">
-                                <p>日文原文出自《日めくりジャズ365》© ジャズ録音日調査委員会</p>
-                                <p>中文翻譯：和煦人（非官方翻譯）</p>
-                                <p>唱片與音樂版權屬各權利人所有</p>
-                            </div>
-                        )}
-                    </div>
 
                     {/* 串流按鈕 — retro OS style */}
-                    <div className="mt-10" style={{ paddingTop: '20px', borderTop: '2px solid', borderTopColor: '#c8b4a4' }}>
+                    <div>
+                        <p className="font-mono text-[10px] tracking-[0.3em] text-stone-600 uppercase mb-2">Listen on</p>
                         <div className="grid grid-cols-2 gap-2">
                             {currentData.youtube && (
                                 <a href={currentData.youtube} target="_blank" rel="noreferrer" className="retro-stream retro-stream-yt">

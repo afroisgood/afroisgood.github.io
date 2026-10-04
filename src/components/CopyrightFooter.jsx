@@ -22,8 +22,6 @@ export const CopyrightFooter = ({ theme = 'light' }) => {
     return (
         <div style={{ fontFamily: "'Courier New', Courier, monospace", letterSpacing: '0.03em', ...containerStyle }}>
             <p>© 2026 ジャズ録音日調査委員会. All editorial rights reserved.</p>
-            <p>All Chinese translations are independently produced by the site author</p>
-            <p>and do not represent official translations of any source material.</p>
             <p>Music and recordings remain the property of their respective rights holders.</p>
             <p style={{ marginTop: isDark ? '8px' : '6px' }}>For corrections or feedback, please contact:</p>
             <p>如有任何指正或回饋，歡迎來信：</p>
