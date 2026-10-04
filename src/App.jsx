@@ -15,6 +15,7 @@ import { MobileNav } from './components/MobileNav';
 import { RetroMenuBar } from './components/RetroMenuBar';
 import { RetroTitleBar } from './components/RetroTitleBar';
 import { IntroCalendar } from './components/IntroCalendar';
+import { MonthWall } from './components/MonthWall';
 
 const SHEET_TEAR_MS = 520; // 與 index.css 的 .page-sheet--tear / --drop 動畫時長一致
 
@@ -69,6 +70,7 @@ const MainApp = () => {
     const [showChangelog, setShowChangelog] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
+    const [viewMode, setViewMode] = useState('day'); // 'day' 單日頁 | 'wall' 月份唱片牆
 
     const dateKey = formatDateString(selectedDate);
 
@@ -283,7 +285,9 @@ const MainApp = () => {
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
     const headline = (currentData?.album || currentData?.song || '').toUpperCase();
-    const winTitle = currentData
+    const winTitle = viewMode === 'wall'
+        ? `${currentMonth.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()} ${currentMonth.getFullYear()} — RECORD WALL`
+        : currentData
         ? `${String(selectedDate.getDate()).padStart(2,'0')} ${selectedDate.toLocaleDateString('en-US',{month:'short'}).toUpperCase()} — ${headline.slice(0,38)}${headline.length>38?'...':''}`
         : 'DAILY JAZZ ALMANAC';
 
@@ -401,6 +405,29 @@ const MainApp = () => {
                         style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
                     />
 
+                    {/* 單日／唱片牆切換 */}
+                    <div className="flex justify-end px-3 py-1.5 bg-[#e8dfd3] border-b border-[#3a2808]/40">
+                        <div className="view-toggle" role="group" aria-label="檢視方式">
+                            <button type="button" aria-pressed={viewMode === 'day'} onClick={() => setViewMode('day')}>單日</button>
+                            <button type="button" aria-pressed={viewMode === 'wall'} onClick={() => setViewMode('wall')}>唱片牆</button>
+                        </div>
+                    </div>
+
+                    {viewMode === 'wall' ? (
+                        <div className="retro-body relative flex-1" style={{ backgroundColor: '#f2ece3' }}>
+                            <MonthWall
+                                month={currentMonth}
+                                data={visibleJazzData}
+                                selectedDate={selectedDate}
+                                onMonthChange={setCurrentMonth}
+                                onPick={(date) => {
+                                    setViewMode('day');
+                                    handleDateChange(date);
+                                    window.scrollTo(0, 0);
+                                }}
+                            />
+                        </div>
+                    ) : (
                     <div className="retro-body relative overflow-hidden flex-1 flex flex-col" style={{ backgroundColor: moodHex }}>
 
                         <PageSheet
@@ -437,6 +464,7 @@ const MainApp = () => {
                             );
                         })}
                     </div>
+                    )}
                 </div>
             </div>
 

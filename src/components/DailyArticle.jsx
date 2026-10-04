@@ -239,6 +239,13 @@ export const DailyArticle = ({
                             </button>
                         </div>
                     </div>
+
+                    {currentData?.albumNotes?.trim() && (
+                        <section aria-labelledby={`album-notes-${dateKey}`} className="mt-3 pt-4 border-t-2 border-stone-900/70">
+                            <h3 id={`album-notes-${dateKey}`} className="font-mono text-[11px] tracking-[0.3em] text-stone-600 uppercase mb-2">Album Notes · 專輯資訊</h3>
+                            <p className="font-zen text-sm leading-relaxed text-stone-800 tracking-wide whitespace-pre-line">{currentData.albumNotes}</p>
+                        </section>
+                    )}
                 </div>
             </div>
         </div>

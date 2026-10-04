@@ -44,7 +44,7 @@ const searchAppleMusic = async (artist, album) => {
 const EMPTY_ENTRY = {
     date: '', song: '', artist: '', album: '', youtube: '',
     spotify: '', appleMusic: '', other: '', imageUrl: '',
-    quote: '', content: '', editorNote: '', mood: '',
+    quote: '', content: '', editorNote: '', albumNotes: '', mood: '',
 };
 
 const EMPTY_CL = { version: '', date: '', content: '' };
@@ -535,6 +535,9 @@ export const AdminPanel = () => {
                             </Field>
                             <Field label="編輯備注 Editor Note" cls="mb-5">
                                 <input type="text" value={form.editorNote} onChange={setField('editorNote')} placeholder="選填：編輯補充說明" className={inputCls} />
+                            </Field>
+                            <Field label="專輯資訊補充（前台顯示）" cls="mb-5">
+                                <textarea value={form.albumNotes} onChange={setField('albumNotes')} rows={4} placeholder="選填：發行年份、廠牌、樂手、錄音背景等自己查到的資訊" className={inputCls + ' resize-y'} />
                             </Field>
                             <Field label="專輯封面圖片 URL" cls="mb-5" flagged={recognizedFields.includes('imageUrl')}>
                                 <input type="url" value={form.imageUrl} onChange={setField('imageUrl')} placeholder="https://i.imgur.com/..." className={inputCls} />
