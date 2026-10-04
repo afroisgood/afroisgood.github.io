@@ -1,6 +1,7 @@
 // src/components/AdminPanel.jsx
 import { useState, useRef } from 'react';
 import { IconDisc } from './Icons';
+import { AdminEntryCalendar } from './AdminEntryCalendar';
 import { MOOD_OPTIONS, DEFAULT_MOOD_COLOR } from '../utils/moodColors';
 
 const OWNER    = 'afroisgood';
@@ -80,6 +81,8 @@ export const AdminPanel = () => {
     // Jazz entry state
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [form, setForm]                   = useState(EMPTY_ENTRY);
+    const [calMonth, setCalMonth]           = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+    const [entrySearch, setEntrySearch]     = useState('');
 
     // 拍照辨識狀態
     const [recognizing, setRecognizing]         = useState(false);
@@ -185,6 +188,8 @@ export const AdminPanel = () => {
     };
 
     const handleEdit = (entry) => {
+        const [y, m] = entry.date.split('-').map(Number);
+        setCalMonth(new Date(y, m - 1, 1));
         setSelectedEntry(entry);
         setForm({ ...EMPTY_ENTRY, ...entry });
         setRecognizedFields([]);
@@ -193,9 +198,9 @@ export const AdminPanel = () => {
         setMessage('');
     };
 
-    const handleNew = () => {
+    const handleNew = (date = '') => {
         setSelectedEntry(null);
-        setForm(EMPTY_ENTRY);
+        setForm({ ...EMPTY_ENTRY, date });
         setRecognizedFields([]);
         setRecognizeError('');
         setError('');
@@ -373,7 +378,7 @@ export const AdminPanel = () => {
             <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 61px)' }}>
 
                 {/* ── 左側：列表 ── */}
-                <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col flex-shrink-0">
+                <aside className="w-72 bg-zinc-900 border-r border-zinc-800 flex flex-col flex-shrink-0">
 
                     {/* Tab 切換 */}
                     <div className="flex border-b border-zinc-800 flex-shrink-0">
@@ -400,7 +405,7 @@ export const AdminPanel = () => {
                     {/* 新增按鈕 */}
                     <div className="p-4 border-b border-zinc-800 flex-shrink-0">
                         {activeTab === 'entries' && (
-                            <button onClick={handleNew} className="w-full bg-amber-500 text-zinc-950 font-black text-[10px] tracking-[0.2em] uppercase py-2.5 rounded-sm hover:bg-amber-400 transition-colors">
+                            <button onClick={() => handleNew()} className="w-full bg-amber-500 text-zinc-950 font-black text-[10px] tracking-[0.2em] uppercase py-2.5 rounded-sm hover:bg-amber-400 transition-colors">
                                 + 新增推薦
                             </button>
                         )}
@@ -419,21 +424,16 @@ export const AdminPanel = () => {
                     {/* 列表 */}
                     <div className="flex-1 overflow-y-auto">
                         {activeTab === 'entries' ? (
-                            entries.length === 0 ? (
-                                <p className="text-zinc-600 text-xs text-center p-8 leading-relaxed">尚無資料<br />點擊新增推薦開始吧</p>
-                            ) : (
-                                entries.slice().reverse().map(entry => (
-                                    <button
-                                        key={entry.date}
-                                        onClick={() => handleEdit(entry)}
-                                        className={'w-full text-left px-4 py-3 border-b border-zinc-800/50 hover:bg-zinc-800 transition-colors ' + (selectedEntry?.date === entry.date ? 'bg-zinc-800 border-l-2 border-l-amber-500' : '')}
-                                    >
-                                        <p className="text-amber-500 text-[10px] font-mono mb-0.5">{entry.date}</p>
-                                        <p className="text-white text-xs font-bold truncate">{entry.artist || '（未填）'}</p>
-                                        <p className="text-zinc-500 text-[10px] truncate">{entry.album || '-'}</p>
-                                    </button>
-                                ))
-                            )
+                            <AdminEntryCalendar
+                                entries={entries}
+                                month={calMonth}
+                                onMonthChange={setCalMonth}
+                                search={entrySearch}
+                                onSearchChange={setEntrySearch}
+                                selectedDate={selectedEntry?.date ?? form.date}
+                                onSelectEntry={handleEdit}
+                                onNewForDate={handleNew}
+                            />
                         ) : (
                             changelog.length === 0 ? (
                                 <p className="text-zinc-600 text-xs text-center p-8 leading-relaxed">尚無更新紀錄<br />點擊上方按鈕新增</p>
