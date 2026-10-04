@@ -4,7 +4,6 @@ import { EditorNote } from './EditorNote';
 import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
 import { VintageJazzText } from './VintageJazzText';
 import { formatDateString } from '../utils/dateUtils';
-import { MOOD_OPTIONS, resolveMoodHex } from '../utils/moodColors';
 
 export const DailyArticle = ({
     currentData,
@@ -45,17 +44,6 @@ export const DailyArticle = ({
     };
 
     const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
-
-    // 唱片資訊欄：沒填的欄位不顯示
-    const moodHex = resolveMoodHex(currentData?.mood);
-    const genre = MOOD_OPTIONS.find(o => o.value && o.value.toLowerCase() === moodHex.toLowerCase())?.label.replace(/^\S+\s+/, '');
-    const credits = [
-        { label: 'Date',   value: `${monthName} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}` },
-        { label: 'Artist', value: currentData?.artist },
-        { label: 'Album',  value: currentData?.album },
-        { label: 'Track',  value: currentData?.song },
-        { label: 'Style',  value: genre },
-    ].filter(c => c.value?.trim());
 
     // 專輯名長短差很多（多數 ≤18 字，少數超過 30 字），大標字級跟著長度往下調，避免長標題變成好幾行巨字
     const headline = currentData?.album || currentData?.song || '';
@@ -127,49 +115,18 @@ export const DailyArticle = ({
 
     return (
         <div className={`relative w-full max-w-5xl mx-auto ${className}`}>
-
-            {/* 藝廊風獨立大標題 — 內容以專輯為單位，專輯名當主標、藝人當副標 */}
-            <header className="relative mb-10 lg:mb-16">
-                {/* 復古爵士海報文字裝飾：只鋪在標題區，不壓在內文後面影響閱讀；
-                    手機和長標題時標題會佔滿寬度、跟裝飾字疊在一起，所以只在桌機＋短標題時顯示 */}
+            {/* 封面在左、所有資訊收在右側 —— 日期／專輯／藝人只出現一次；日文原文與翻譯只留在後台，前台不公開 */}
+            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+                {/* 復古爵士海報文字裝飾：散落在右半邊，只在桌機＋短標題時顯示 */}
                 {!isLongHeadline && (
-                    <div className="hidden lg:block">
+                    <div className="hidden lg:block absolute inset-0 pointer-events-none">
                         <VintageJazzText />
                     </div>
                 )}
 
-                <div className="relative flex items-baseline gap-4 mb-4">
-                    <span className="font-playfair text-6xl lg:text-8xl font-black text-stone-900 tracking-tighter">
-                        {String(selectedDate.getDate()).padStart(2, '0')}
-                    </span>
-                    <span className="text-2xl lg:text-3xl font-playfair italic transition-colors duration-1000" style={{ color: 'var(--mood-accent)' }}>
-                        {monthName}
-                    </span>
-                </div>
-                <h2 className={`relative ${headlineSize} font-black tracking-tight text-stone-900 font-playfair leading-[1.15] uppercase drop-shadow-sm [overflow-wrap:anywhere] [text-wrap:balance] lg:max-w-[85%]`}>
-                    {headline}
-                </h2>
-                <div className="relative mt-4 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-6">
-                    <p className="text-base lg:text-xl font-bold tracking-widest text-stone-800 uppercase">
-                        {currentData.artist}
-                    </p>
-                    {currentData.song && currentData.album && (
-                        <>
-                            <div className="hidden lg:block w-12 h-[2px] transition-colors duration-1000" style={{ backgroundColor: 'var(--mood-accent)', opacity: 0.5 }}></div>
-                            <p className="text-sm font-bold tracking-widest text-stone-600 italic font-serif">
-                                ♪ “{currentData.song}”
-                            </p>
-                        </>
-                    )}
-                </div>
-            </header>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
-
-                {/* 左側：專輯封面（純粹視覺焦點） */}
+                {/* 左側：專輯封面 */}
                 <div className="lg:col-span-5 relative z-10 w-full max-w-sm mx-auto lg:max-w-none">
                     <div className="aspect-square w-full relative bg-stone-200 overflow-hidden group retro-album-frame">
-
                         {currentData.imageUrl ? (
                             <img
                                 src={currentData.imageUrl}
@@ -194,23 +151,37 @@ export const DailyArticle = ({
                             </div>
                         )}
                     </div>
-
                 </div>
 
-                {/* 右側：唱片資訊、石編的話、聆聽入口 —— 日文原文與翻譯只留在後台，前台不公開 */}
-                <div className="lg:col-span-7 flex flex-col gap-8 pt-2">
-                    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-3 py-5 border-y-2 border-stone-900/70">
-                        {credits.map(({ label, value }) => (
-                            <div key={label} className="contents">
-                                <dt className="font-mono text-[10px] tracking-[0.3em] text-stone-600 uppercase pt-[3px]">{label}</dt>
-                                <dd className="text-sm lg:text-base font-bold text-stone-900 tracking-wide [overflow-wrap:anywhere]">{value}</dd>
-                            </div>
-                        ))}
-                    </dl>
+                {/* 右側：日期、專輯、藝人、石編的話、聆聽入口 */}
+                <div className="lg:col-span-7 relative z-10 flex flex-col gap-5">
+                    <header className="flex flex-col gap-3">
+                        <div className="flex items-baseline gap-3">
+                            <span className="font-playfair text-6xl lg:text-7xl font-black text-stone-900 tracking-tighter leading-none [font-variant-numeric:lining-nums]">
+                                {String(selectedDate.getDate()).padStart(2, '0')}
+                            </span>
+                            <span className="text-2xl lg:text-3xl font-playfair italic transition-colors duration-1000" style={{ color: 'var(--mood-accent)' }}>
+                                {monthName}
+                            </span>
+                        </div>
+                        <h2 className={`${headlineSize} font-black tracking-tight text-stone-900 font-playfair leading-[1.1] uppercase [overflow-wrap:anywhere] [text-wrap:balance]`}>
+                            {headline}
+                        </h2>
+                        <p className="text-sm lg:text-base font-bold tracking-widest text-stone-800 uppercase leading-relaxed">
+                            {currentData.artist}
+                        </p>
+                        {currentData.song && currentData.album && (
+                            <p className="text-sm font-bold tracking-widest text-stone-600 italic font-serif">
+                                ♪ “{currentData.song}”
+                            </p>
+                        )}
+                    </header>
 
                     {currentData?.editorNote?.trim() && (
                         <EditorNote note={currentData.editorNote} />
                     )}
+
+                    <div className="h-[2px] bg-stone-900/80 mt-1"></div>
 
                     {youtubeId && (
                         <button
@@ -238,8 +209,7 @@ export const DailyArticle = ({
 
                     {/* 串流按鈕 — retro OS style */}
                     <div>
-                        <p className="font-mono text-[10px] tracking-[0.3em] text-stone-600 uppercase mb-2">Listen on</p>
-                        <div className="grid grid-cols-2 gap-2">
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {currentData.youtube && (
                                 <a href={currentData.youtube} target="_blank" rel="noreferrer" className="retro-stream retro-stream-yt">
                                     YOUTUBE <IconArrowRight size={12}/>
@@ -262,7 +232,7 @@ export const DailyArticle = ({
                             )}
                             <button
                                 onClick={handleShare}
-                                className={`retro-stream ${isCopied ? 'retro-stream-copied' : ''} ${(!currentData.youtube && !currentData.spotify && !currentData.appleMusic && !currentData.other) ? 'col-span-2' : ''}`}
+                                className={`retro-stream ${isCopied ? 'retro-stream-copied' : ''} ${(!currentData.youtube && !currentData.spotify && !currentData.appleMusic && !currentData.other) ? 'col-span-2 sm:col-span-3' : ''}`}
                             >
                                 {isCopied ? 'COPIED!' : 'SHARE'}
                                 {isCopied ? <IconCheck size={12}/> : <IconShare size={12}/>}
@@ -272,6 +242,5 @@ export const DailyArticle = ({
                 </div>
             </div>
         </div>
-
     );
 };

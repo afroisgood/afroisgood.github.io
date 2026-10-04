@@ -393,7 +393,7 @@ const MainApp = () => {
                     setShowChangelog={setShowChangelog} latestVersion={latestVersion}
                 />
 
-                <div className="lg:col-span-9 relative retro-win" style={{ alignSelf: 'flex-start', minHeight: '600px' }}>
+                <div className="lg:col-span-9 relative retro-win flex flex-col" style={{ alignSelf: 'flex-start', minHeight: '600px' }}>
 
                     <RetroTitleBar
                         title={winTitle}
@@ -401,7 +401,7 @@ const MainApp = () => {
                         style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
                     />
 
-                    <div className="retro-body relative overflow-hidden" style={{ backgroundColor: moodHex }}>
+                    <div className="retro-body relative overflow-hidden flex-1" style={{ backgroundColor: moodHex }}>
 
                         <PageSheet
                             key={dateKey}
