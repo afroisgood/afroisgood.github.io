@@ -401,11 +401,11 @@ const MainApp = () => {
                         style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}
                     />
 
-                    <div className="retro-body relative overflow-hidden flex-1" style={{ backgroundColor: moodHex }}>
+                    <div className="retro-body relative overflow-hidden flex-1 flex flex-col" style={{ backgroundColor: moodHex }}>
 
                         <PageSheet
                             key={dateKey}
-                            className={enterDirection === 'backward' ? 'page-sheet--drop' : ''}
+                            className={`flex-1 ${enterDirection === 'backward' ? 'page-sheet--drop' : ''}`}
                             style={{ backgroundColor: moodHex }}
                             date={selectedDate}
                             data={currentData}
