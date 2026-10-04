@@ -85,10 +85,6 @@ export const IntroCalendar = ({ targetDate, ready, onDone }) => {
                 </div>
             </div>
 
-            <p className="intro-quote">
-                JAZZ，是一種帶著焦臭味撲面而來的文字<br />— 平岡正明
-            </p>
-
             <button type="button" className="intro-skip" onClick={() => setSkipped(true)} aria-label="略過開場動畫">
                 SKIP ›
             </button>

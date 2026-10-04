@@ -414,17 +414,6 @@ body {
 .intro-cal-page__rule--on { width: 120px; }
 .intro-cal-page__brand { font-family: 'Zen Old Mincho', serif; font-size: 10px; letter-spacing: 0.3em; color: #7a5840; }
 
-.intro-quote {
-    margin: 0;
-    padding: 0 16px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: clamp(14px, 4vw, 16px);
-    letter-spacing: 0.12em;
-    line-height: 1.8;
-    text-align: center;
-    color: #a8a0c8;
-    animation: fadeIn 0.8s ease 0.3s both;
-}
 .intro-skip {
     position: absolute;
     right: 20px;

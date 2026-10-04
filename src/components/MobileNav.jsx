@@ -64,7 +64,7 @@ export const MobileNav = ({
                             className={`text-amber-500 flex-shrink-0 ${isVinylSpinning ? 'animate-spin-slow' : ''}`}
                             size={18}
                         />
-                        <span className="font-bold text-white font-playfair whitespace-nowrap" style={{ fontSize: '13px', letterSpacing: '0.05em' }}>日めくりジャズ365</span>
+                        <span className="font-bold text-white font-playfair whitespace-nowrap" style={{ fontSize: '13px', letterSpacing: '0.05em' }}>JAZZ 365</span>
                     </div>
 
                     {/* 月份切換 */}
