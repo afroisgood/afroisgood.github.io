@@ -87,7 +87,7 @@ export const DailyArticle = ({
                         <h2 className="font-playfair text-4xl lg:text-5xl font-black tracking-tight uppercase text-stone-500/50 mb-3">
                             Rest & Listen
                         </h2>
-                        <p className="font-zen text-xs tracking-[0.3em] text-stone-500/40">
+                        <p className="font-tc text-xs tracking-[0.3em] text-stone-500/40">
                             本日無推薦曲目
                         </p>
                     </div>
@@ -243,7 +243,7 @@ export const DailyArticle = ({
                     {currentData?.albumNotes?.trim() && (
                         <section aria-labelledby={`album-notes-${dateKey}`} className="mt-3 pt-4 border-t-2 border-stone-900/70">
                             <h3 id={`album-notes-${dateKey}`} className="font-mono text-[11px] tracking-[0.3em] text-stone-600 uppercase mb-2">Album Notes</h3>
-                            <p className="font-zen text-sm leading-relaxed text-stone-800 tracking-wide whitespace-pre-line">{currentData.albumNotes}</p>
+                            <p className="font-tc text-sm leading-relaxed text-stone-800 tracking-wide whitespace-pre-line">{currentData.albumNotes}</p>
                         </section>
                     )}
                 </div>

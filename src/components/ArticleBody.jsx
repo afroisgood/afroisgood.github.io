@@ -41,7 +41,7 @@ export const ArticleBody = ({ content, noteIdPrefix }) => {
     });
 
     return (
-        <div className="font-zen text-stone-800">
+        <div className="font-tc text-stone-800">
             {hasTranslation && <p className={`${LABEL_CLS} mb-3`}>原文</p>}
 
             {paragraphs.map((p, i) => {

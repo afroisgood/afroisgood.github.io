@@ -206,13 +206,13 @@ export const ImmersiveMode = ({
                                 {currentData?.album || currentData?.song || 'Rest & Listen'}
                             </h2>
                             {currentData?.artist && (
-                                <p className="font-zen text-sm lg:text-base tracking-[0.15em] text-[#e0a870] uppercase">{currentData.artist}</p>
+                                <p className="font-tc text-sm lg:text-base tracking-[0.15em] text-[#e0a870] uppercase">{currentData.artist}</p>
                             )}
                         </div>
 
                         {unavailable ? (
                             <div className="flex flex-col gap-2.5 p-4 bg-[#10121e] border border-[#3a2d20]">
-                                <p className="font-zen text-sm leading-relaxed text-[#f2ece3]">{unavailableMessage}</p>
+                                <p className="font-tc text-sm leading-relaxed text-[#f2ece3]">{unavailableMessage}</p>
                                 {streamLinks.length > 0 && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         {streamLinks.map(link => (

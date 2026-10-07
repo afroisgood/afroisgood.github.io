@@ -49,7 +49,7 @@ const EMPTY_ENTRY = {
 
 const EMPTY_CL = { version: '', date: '', content: '' };
 
-const inputCls = 'w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2.5 rounded-sm font-zen focus:outline-none focus:border-amber-500 placeholder:text-zinc-600';
+const inputCls = 'w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3 py-2.5 rounded-sm font-tc focus:outline-none focus:border-amber-500 placeholder:text-zinc-600';
 
 const Field = ({ label, children, cls, flagged }) => (
     <div className={cls}>

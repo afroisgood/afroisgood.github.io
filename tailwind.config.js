@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        zen: ['"Zen Old Mincho"', 'serif'],
+        tc: ['"Noto Serif TC"', 'serif'],
         playfair: ['"Playfair Display"', 'serif'],
       },
     },

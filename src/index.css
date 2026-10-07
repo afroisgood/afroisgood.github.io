@@ -412,7 +412,7 @@ body {
 .intro-cal-page__month { font-family: 'Playfair Display', serif; font-size: 18px; letter-spacing: 0.3em; }
 .intro-cal-page__rule { height: 2px; width: 0; background: #c8a048; transition: width 0.4s ease-out; }
 .intro-cal-page__rule--on { width: 120px; }
-.intro-cal-page__brand { font-family: 'Zen Old Mincho', serif; font-size: 10px; letter-spacing: 0.3em; color: #7a5840; }
+.intro-cal-page__brand { font-family: 'Noto Serif TC', serif; font-size: 10px; letter-spacing: 0.3em; color: #7a5840; }
 
 .intro-skip {
     position: absolute;
