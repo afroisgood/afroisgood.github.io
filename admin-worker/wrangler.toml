@@ -8,7 +8,18 @@ compatibility_date = "2025-01-01"
 [vars]
 # 允許呼叫這支 Worker 的前端網域，逗號分隔。
 ALLOWED_ORIGINS = "https://jazzcalender365.com,https://www.jazzcalender365.com,https://afroisgood.github.io,http://localhost:5173"
-# 後台唯一擁有者的 GitHub 帳號 — 用來驗證呼叫者是否為站主本人。
+# 後台資料所在的 GitHub repo 與檔案（Worker 用 GITHUB_TOKEN 代為讀寫）。
 GITHUB_OWNER = "afroisgood"
+GITHUB_REPO = "afroisgood.github.io"
+DATA_PATH = "public/data.json"
 # 辨識用的 Claude 模型，可依費用/準確度需求調整。
 CLAUDE_MODEL = "claude-sonnet-5-5"
+
+# 後台登入防暴力破解：同一個 IP 每 60 秒最多試 5 次。
+[[ratelimits]]
+name = "LOGIN_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60
