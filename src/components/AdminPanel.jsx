@@ -1,15 +1,22 @@
 // src/components/AdminPanel.jsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { IconDisc } from './Icons';
 import { AdminEntryCalendar } from './AdminEntryCalendar';
 import { MOOD_OPTIONS, DEFAULT_MOOD_COLOR } from '../utils/moodColors';
 
-const OWNER    = 'afroisgood';
-const REPO     = 'afroisgood.github.io';
-const FILE_PATH = 'public/data.json';
+// 後台服務網址（admin-worker）：登入、讀寫 data.json、流量、拍照辨識都經過它，
+// GitHub 金鑰只存在 Worker 裡。部署後填進 .env.local 與 GitHub repo 變數 VITE_ADMIN_WORKER_URL
+const ADMIN_WORKER_URL = import.meta.env.VITE_ADMIN_WORKER_URL || '';
+const SESSION_KEY = 'admin_session';
 
-// 拍照辨識代理服務網址（部署 admin-worker 後填進 .env.local 的 VITE_ADMIN_WORKER_URL）
-const RECOGNIZE_WORKER_URL = import.meta.env.VITE_ADMIN_WORKER_URL || '';
+const readStoredSession = () => {
+    try {
+        const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+        return stored?.token && stored.expiresAt > Date.now() ? stored.token : '';
+    } catch {
+        return '';
+    }
+};
 
 const fileToBase64 = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -66,7 +73,9 @@ const Field = ({ label, children, cls, flagged }) => (
 );
 
 export const AdminPanel = () => {
-    const [token, setToken]               = useState(sessionStorage.getItem('gh_admin_token') || '');
+    const [session, setSession]           = useState(readStoredSession);
+    const [username, setUsername]         = useState('');
+    const [password, setPassword]         = useState('');
     const [isLoggedIn, setIsLoggedIn]     = useState(false);
     const [entries, setEntries]           = useState([]);
     const [changelog, setChangelog]       = useState([]);
@@ -99,22 +108,67 @@ export const AdminPanel = () => {
     const [message, setMessage]   = useState('');
     const [error, setError]       = useState('');
 
-    const apiHeaders = {
-        Authorization: 'token ' + token,
-        'Content-Type': 'application/json',
+    const handleLogout = (reason = '') => {
+        sessionStorage.removeItem(SESSION_KEY);
+        setSession('');
+        setIsLoggedIn(false);
+        setPassword('');
+        setEntries([]);
+        setChangelog([]);
+        setTraffic(null);
+        setError(reason);
     };
 
-    // ── 讀取資料 ──────────────────────────────────────────
-    const loadData = async () => {
+    // 呼叫 admin-worker；登入憑證過期（401）就直接登出回登入畫面
+    const workerFetch = async (path, { method = 'GET', body, token = session } = {}) => {
+        if (!ADMIN_WORKER_URL) throw new Error('尚未設定後台服務網址（VITE_ADMIN_WORKER_URL）');
+        const res = await fetch(ADMIN_WORKER_URL + path, {
+            method,
+            headers: {
+                Authorization: 'Bearer ' + token,
+                ...(body ? { 'Content-Type': 'application/json' } : {}),
+            },
+            body: body ? JSON.stringify(body) : undefined,
+        });
+        const result = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+            handleLogout(result.error || '登入已逾時，請重新登入');
+            throw new Error(result.error || '登入已逾時，請重新登入');
+        }
+        if (!res.ok) throw new Error(result.error || '連線失敗，請再試一次');
+        return result;
+    };
+
+    // ── 登入 ─────────────────────────────────────────────
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        if (!ADMIN_WORKER_URL) { setError('尚未設定後台服務網址（VITE_ADMIN_WORKER_URL）'); return; }
         setIsLoading(true);
         setError('');
         try {
-            const res = await fetch(
-                'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + FILE_PATH,
-                { headers: apiHeaders }
-            );
-            if (!res.ok) throw new Error(res.status === 401 ? '認證失敗，請確認 Token 是否正確' : '讀取資料失敗');
-            const json = await res.json();
+            const res = await fetch(ADMIN_WORKER_URL + '/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            const result = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(result.error || '登入失敗，請再試一次');
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify(result));
+            setSession(result.token);
+            setPassword('');
+            await loadData(result.token);
+        } catch (err) {
+            setError(err.message);
+        }
+        setIsLoading(false);
+    };
+
+    // ── 讀取資料 ──────────────────────────────────────────
+    const loadData = async (token = session) => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const json = await workerFetch('/data', { token });
             setFileSha(json.sha);
             const decoded = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ''))));
             const data = JSON.parse(decoded);
@@ -124,7 +178,6 @@ export const AdminPanel = () => {
             setEntries(loadedEntries.slice().sort((a, b) => a.date.localeCompare(b.date)));
             setChangelog(loadedChangelog.slice().sort((a, b) => b.date.localeCompare(a.date)));
             setIsLoggedIn(true);
-            sessionStorage.setItem('gh_admin_token', token);
         } catch (e) {
             setError(e.message);
         }
@@ -142,21 +195,15 @@ export const AdminPanel = () => {
             const payload = { entries: sortedEntries, changelog: sortedChangelog };
             const jsonStr = JSON.stringify(payload, null, 2);
             const content = btoa(unescape(encodeURIComponent(jsonStr)));
-            const res = await fetch(
-                'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + FILE_PATH,
-                {
-                    method: 'PUT',
-                    headers: apiHeaders,
-                    body: JSON.stringify({
-                        message: 'Update jazz data: ' + new Date().toISOString().slice(0, 10),
-                        content,
-                        sha: fileSha,
-                    }),
-                }
-            );
-            if (!res.ok) throw new Error('儲存失敗，請再試一次');
-            const json = await res.json();
-            setFileSha(json.content.sha);
+            const json = await workerFetch('/data', {
+                method: 'PUT',
+                body: {
+                    message: 'Update jazz data: ' + new Date().toISOString().slice(0, 10),
+                    content,
+                    sha: fileSha,
+                },
+            });
+            setFileSha(json.sha);
             setEntries(sortedEntries);
             setChangelog(sortedChangelog);
             setMessage('儲存成功！網站約 2 分鐘後自動更新。');
@@ -215,25 +262,14 @@ export const AdminPanel = () => {
         e.target.value = ''; // 允許重複選同一張照片
         if (!file) return;
 
-        if (!RECOGNIZE_WORKER_URL) {
-            setRecognizeError('尚未設定辨識服務網址（請部署 admin-worker 並設定 VITE_ADMIN_WORKER_URL）');
-            return;
-        }
-
         setRecognizing(true);
         setRecognizeError('');
         try {
             const dataUrl = await fileToBase64(file);
-            const res = await fetch(RECOGNIZE_WORKER_URL + '/recognize', {
+            const result = await workerFetch('/recognize', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'token ' + token,
-                },
-                body: JSON.stringify({ image: dataUrl, mimeType: file.type }),
+                body: { image: dataUrl, mimeType: file.type },
             });
-            const result = await res.json();
-            if (!res.ok) throw new Error(result.error || '辨識失敗，請再試一次');
 
             const { warnings = [], ...recognized } = result;
 
@@ -289,13 +325,7 @@ export const AdminPanel = () => {
         setTrafficLoading(true);
         setTrafficError('');
         try {
-            const res = await fetch(
-                'https://api.github.com/repos/' + OWNER + '/' + REPO + '/traffic/views',
-                { headers: apiHeaders }
-            );
-            if (!res.ok) throw new Error(res.status === 403 ? '權限不足，Token 需有 repo 範圍' : '讀取流量失敗');
-            const data = await res.json();
-            setTraffic(data);
+            setTraffic(await workerFetch('/traffic'));
         } catch (e) {
             setTrafficError(e.message);
         }
@@ -307,13 +337,11 @@ export const AdminPanel = () => {
         if (tab === 'traffic' && !traffic && !trafficLoading) loadTraffic();
     };
 
-    const handleLogout = () => {
-        sessionStorage.removeItem('gh_admin_token');
-        setIsLoggedIn(false);
-        setToken('');
-        setEntries([]);
-        setChangelog([]);
-    };
+    // 同一個分頁重新整理時，登入憑證還沒過期就直接載入，不用重登
+    useEffect(() => {
+        if (session) loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // ── 登入畫面 ──────────────────────────────────────────
     if (!isLoggedIn) {
@@ -328,30 +356,37 @@ export const AdminPanel = () => {
 
                     <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-8">
                         <h2 className="text-white font-bold text-sm tracking-widest uppercase mb-1">登入後台</h2>
-                        <p className="text-zinc-500 text-xs mb-6 leading-relaxed">
-                            請輸入你的 GitHub Personal Access Token（需有 repo 寫入權限）
-                        </p>
-                        <input
-                            type="password"
-                            value={token}
-                            onChange={e => setToken(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && loadData()}
-                            placeholder="ghp_xxxxxxxxxxxx"
-                            className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-4 py-3 rounded-sm mb-4 font-mono focus:outline-none focus:border-amber-500"
-                        />
-                        {error && <p className="text-red-400 text-xs mb-4">{error}</p>}
-                        <button
-                            onClick={loadData}
-                            disabled={isLoading || !token}
-                            className="w-full bg-amber-500 text-zinc-950 font-black text-[11px] tracking-[0.2em] uppercase py-3 rounded-sm hover:bg-amber-400 transition-colors disabled:opacity-50"
-                        >
-                            {isLoading ? '驗證中...' : '進入後台'}
-                        </button>
-                        <div className="mt-6 pt-6 border-t border-zinc-800">
-                            <p className="text-zinc-600 text-[10px] leading-relaxed">
-                                尚未建立 Token？前往 GitHub Settings → Developer settings → Personal access tokens → Generate new token，勾選 <span className="text-zinc-400 font-mono">repo</span> 權限即可。
-                            </p>
-                        </div>
+                        <p className="text-zinc-500 text-xs mb-6 leading-relaxed">請輸入後台帳號與密碼</p>
+                        <form onSubmit={handleLogin}>
+                            <label htmlFor="admin-username" className="block text-zinc-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-2">帳號</label>
+                            <input
+                                id="admin-username"
+                                type="text"
+                                autoComplete="username"
+                                autoCapitalize="none"
+                                spellCheck={false}
+                                value={username}
+                                onChange={e => setUsername(e.target.value)}
+                                className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-4 py-3 rounded-sm mb-4 focus:outline-none focus:border-amber-500"
+                            />
+                            <label htmlFor="admin-password" className="block text-zinc-400 text-[10px] tracking-[0.2em] uppercase font-bold mb-2">密碼</label>
+                            <input
+                                id="admin-password"
+                                type="password"
+                                autoComplete="current-password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-4 py-3 rounded-sm mb-4 focus:outline-none focus:border-amber-500"
+                            />
+                            {error && <p role="alert" className="text-red-400 text-xs mb-4">{error}</p>}
+                            <button
+                                type="submit"
+                                disabled={isLoading || !username || !password}
+                                className="w-full bg-amber-500 text-zinc-950 font-black text-[11px] tracking-[0.2em] uppercase py-3 rounded-sm hover:bg-amber-400 transition-colors disabled:opacity-50"
+                            >
+                                {isLoading ? '驗證中...' : '進入後台'}
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -371,7 +406,7 @@ export const AdminPanel = () => {
                 </div>
                 <div className="flex items-center gap-6">
                     <a href="/" className="text-zinc-400 hover:text-amber-400 text-[10px] tracking-widest uppercase transition-colors">回網站</a>
-                    <button onClick={handleLogout} className="text-zinc-500 hover:text-red-400 text-[10px] tracking-widest uppercase transition-colors">登出</button>
+                    <button onClick={() => handleLogout()} className="text-zinc-500 hover:text-red-400 text-[10px] tracking-widest uppercase transition-colors">登出</button>
                 </div>
             </header>
 
