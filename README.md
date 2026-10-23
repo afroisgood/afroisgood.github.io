@@ -3,7 +3,7 @@
 每天一張爵士唱片推薦，365 天不間斷。
 Daily Jazz Almanac — a retro-flavored web almanac for jazz lovers.
 
-🔗 **[afroisgood.github.io](https://afroisgood.github.io)**
+🔗 **[jazzcalender365.com](https://jazzcalender365.com)**
 
 ---
 
