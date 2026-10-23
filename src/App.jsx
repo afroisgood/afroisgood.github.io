@@ -7,6 +7,7 @@ import { resolveMoodHex } from './utils/moodColors';
 import { Sidebar } from './components/Sidebar';
 import { ImmersiveMode } from './components/ImmersiveMode';
 import { ChangelogModal } from './components/ChangelogModal';
+import { ShortcutsModal } from './components/ShortcutsModal';
 import { PageSheet } from './components/PageSheet';
 import { EditorNote } from './components/EditorNote';
 import { IconDisc, IconPlay, IconPause, IconX, IconMaximize } from './components/Icons';
@@ -68,6 +69,7 @@ const MainApp = () => {
     const [enterDirection, setEnterDirection] = useState(null); // 帶入目前這頁的方向；null = 尚未換過日期
     const sheetSeqRef = useRef(0);
     const [showChangelog, setShowChangelog] = useState(false);
+    const [showShortcuts, setShowShortcuts] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [viewMode, setViewMode] = useState('day'); // 'day' 單日頁 | 'wall' 月份唱片牆
@@ -304,6 +306,7 @@ const MainApp = () => {
     }, [introMode]);
 
     const handleIntroDone = useCallback(() => setShowIntro(false), []);
+    const closeShortcuts = useCallback(() => setShowShortcuts(false), []);
 
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
@@ -323,7 +326,15 @@ const MainApp = () => {
                 <IntroCalendar targetDate={introTargetDate} ready={dataReady} onDone={handleIntroDone} />
             )}
 
-            <RetroMenuBar />
+            <RetroMenuBar
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                canImmerse={Boolean(youtubeId)}
+                onImmerse={() => { setViewMode('day'); setIsImmersive(true); }}
+                onToday={() => { setViewMode('day'); handleDateChange(new Date()); }}
+                onShowShortcuts={() => setShowShortcuts(true)}
+                onShowChangelog={() => setShowChangelog(true)}
+            />
 
             {(isImmersive || isMinimized) && youtubeId && (
                 <div style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', bottom: 0, left: 0, overflow: 'hidden' }}>
@@ -399,6 +410,8 @@ const MainApp = () => {
                 showChangelog={showChangelog} setShowChangelog={setShowChangelog} changelogData={changelogData}
             />
 
+            <ShortcutsModal open={showShortcuts} onClose={closeShortcuts} />
+
             <MobileNav
                 selectedDate={selectedDate}
                 currentMonth={currentMonth}
@@ -409,6 +422,8 @@ const MainApp = () => {
                 jazzData={visibleJazzData}
                 onSearchOpen={loadAllYears}
                 isVinylSpinning={isVinylSpinning}
+                setShowChangelog={setShowChangelog}
+                latestVersion={latestVersion}
             />
 
             <div className={`max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 relative ${introMode === 'skeleton' ? 'shell-enter' : ''}`}

@@ -18,6 +18,8 @@ export const MobileNav = ({
     jazzData,
     onSearchOpen,
     isVinylSpinning,
+    setShowChangelog,
+    latestVersion,
 }) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -57,16 +59,26 @@ export const MobileNav = ({
                     {/* 拖曳把手 */}
                     <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5"/>
 
-                    {/* JAZZ 365 Logo */}
-                    <div
-                        className="flex items-center gap-2 mb-6 cursor-pointer"
-                        onClick={() => { handleDateChange(new Date()); setDrawerOpen(false); }}
-                    >
-                        <IconDisc
-                            className={`text-amber-500 flex-shrink-0 ${isVinylSpinning ? 'animate-spin-slow' : ''}`}
-                            size={18}
-                        />
-                        <span className="font-bold text-white font-playfair whitespace-nowrap" style={{ fontSize: '13px', letterSpacing: '0.05em' }}>JAZZ 365</span>
+                    {/* JAZZ 365 Logo ＋ 回到今天 */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div
+                            className="flex items-center gap-2 cursor-pointer"
+                            onClick={() => { handleDateChange(new Date()); setDrawerOpen(false); }}
+                        >
+                            <IconDisc
+                                className={`text-amber-500 flex-shrink-0 ${isVinylSpinning ? 'animate-spin-slow' : ''}`}
+                                size={18}
+                            />
+                            <span className="font-bold text-white font-playfair whitespace-nowrap" style={{ fontSize: '13px', letterSpacing: '0.05em' }}>JAZZ 365</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => { handleDateChange(new Date()); setDrawerOpen(false); }}
+                            className="text-zinc-300 hover:text-amber-400 transition-colors font-bold uppercase px-3 py-1.5 border border-white/20 rounded-full"
+                            style={{ fontFamily: "'Courier New', monospace", fontSize: '11px', letterSpacing: '0.24em' }}
+                        >
+                            ↩ Today
+                        </button>
                     </div>
 
                     {/* 月份切換 */}
@@ -105,6 +117,20 @@ export const MobileNav = ({
                         jazzData={jazzData}
                         onNavigate={(date) => { handleDateChange(date); setDrawerOpen(false); }}
                     />
+
+                    {/* 更新日誌 */}
+                    <div className="flex items-center justify-between mt-6">
+                        <button
+                            type="button"
+                            onClick={() => { setShowChangelog(true); setDrawerOpen(false); }}
+                            className="flex items-center gap-1.5 text-zinc-300 hover:text-amber-400 transition-colors font-bold uppercase"
+                            style={{ fontFamily: "'Courier New', monospace", fontSize: '11px', letterSpacing: '0.2em' }}
+                        >
+                            Update Log
+                            <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--mood-glow)', animation: 'pulse 2s infinite' }} />
+                        </button>
+                        <span className="text-zinc-400 font-bold" style={{ fontFamily: "'Courier New', monospace", fontSize: '11px' }}>{latestVersion}</span>
+                    </div>
 
                     {/* 版權聲明 */}
                     <CopyrightFooter theme="dark" />
@@ -148,9 +174,9 @@ export const MobileNav = ({
                     </div>
                     <span style={{
                         fontFamily: "'Courier New', monospace",
-                        fontSize: '8px',
-                        letterSpacing: '0.18em',
-                        color: 'rgba(255,255,255,0.28)',
+                        fontSize: '11px',
+                        letterSpacing: '0.12em',
+                        color: 'rgba(255,255,255,0.4)',
                         textTransform: 'uppercase',
                         lineHeight: 1,
                     }}>

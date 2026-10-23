@@ -2,6 +2,8 @@
 // 共用版權聲明 — Sidebar（light）與 MobileNav（dark）共用
 import { FIRST_YEAR } from '../utils/dateUtils';
 
+export const CONTACT_EMAIL = 'monkeyboy2766@gmail.com';
+
 const thisYear = new Date().getFullYear();
 const years = thisYear > FIRST_YEAR ? `${FIRST_YEAR}–${thisYear}` : `${FIRST_YEAR}`;
 
@@ -32,10 +34,10 @@ export const CopyrightFooter = ({ theme = 'light' }) => {
             <p>
                 和煦人 —{' '}
                 <a
-                    href="mailto:monkeyboy2766@gmail.com"
+                    href={`mailto:${CONTACT_EMAIL}`}
                     style={{ color: linkColor, textDecoration: 'underline' }}
                 >
-                    monkeyboy2766@gmail.com
+                    {CONTACT_EMAIL}
                 </a>
             </p>
         </div>

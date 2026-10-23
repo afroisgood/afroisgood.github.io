@@ -42,7 +42,7 @@ const WallTile = ({ date, entry, isSelected, onPick }) => {
             ) : (
                 <span className="absolute left-2 right-2 bottom-2 flex flex-col gap-1">
                     <span className="font-playfair font-black text-[12px] lg:text-[14px] leading-tight line-clamp-3">{entry.album}</span>
-                    <span className="hidden lg:block font-mono text-[9px] tracking-wider opacity-85 truncate">{entry.artist}</span>
+                    <span className="hidden lg:block font-mono text-[11px] tracking-wider opacity-85 truncate">{entry.artist}</span>
                 </span>
             )}
 

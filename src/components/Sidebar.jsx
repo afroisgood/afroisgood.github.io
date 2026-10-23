@@ -111,63 +111,6 @@ export const Sidebar = ({
                     <div style={{ marginTop: '16px', marginBottom: '16px' }}>
                         <RandomExplore jazzData={jazzData} onNavigate={handleDateChange} />
                     </div>
-
-                    {/* Keyboard shortcuts */}
-                    <div style={{
-                        marginTop: '4px',
-                        paddingTop: '12px',
-                        borderTop: '1px dashed #c8b4a4',
-                    }}>
-                        <p style={{
-                            fontFamily: "'Courier New', Courier, monospace",
-                            fontSize: '11px',
-                            letterSpacing: '0.2em',
-                            color: '#7a5840',
-                            fontWeight: 'bold',
-                            textTransform: 'uppercase',
-                            marginBottom: '8px',
-                        }}>
-                            Keyboard
-                        </p>
-                        {[
-                            ['← →', '切換日期'],
-                            ['I', '沉浸模式'],
-                            ['Space', '播放 / 暫停'],
-                            ['Esc', '退出沉浸'],
-                        ].map(([key, label]) => (
-                            <div key={key} style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                marginBottom: '5px',
-                            }}>
-                                <span style={{
-                                    fontFamily: "'Courier New', Courier, monospace",
-                                    fontSize: '11px',
-                                    fontWeight: 'bold',
-                                    color: '#f2ece3',
-                                    background: '#3a2808',
-                                    border: '1px solid #c8a048',
-                                    borderRadius: '2px',
-                                    padding: '1px 6px',
-                                    letterSpacing: '0.05em',
-                                    minWidth: '50px',
-                                    textAlign: 'center',
-                                    flexShrink: 0,
-                                }}>
-                                    {key}
-                                </span>
-                                <span style={{
-                                    fontFamily: "'Courier New', Courier, monospace",
-                                    fontSize: '12px',
-                                    color: '#7a5840',
-                                    letterSpacing: '0.08em',
-                                }}>
-                                    {label}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
                 </div>
 
                 {/* Footer */}

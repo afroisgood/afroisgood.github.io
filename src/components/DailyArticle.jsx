@@ -72,7 +72,7 @@ export const DailyArticle = ({
                     <div className="relative z-10 w-full max-w-xs mb-12">
                         <div className="flex items-center gap-4">
                             <div className="flex-1 h-[1px] bg-stone-900/20"></div>
-                            <span className="text-[9px] tracking-[0.4em] text-stone-500/60 font-bold uppercase">
+                            <span className="text-[11px] tracking-[0.4em] text-stone-500/60 font-bold uppercase">
                                 {String(selectedDate.getDate()).padStart(2, '0')} {monthName.toUpperCase()}
                             </span>
                             <div className="flex-1 h-[1px] bg-stone-900/20"></div>
@@ -99,7 +99,7 @@ export const DailyArticle = ({
                         <p className="font-serif text-stone-500/40 text-base italic leading-relaxed">
                             "Music is the silence between the notes."
                         </p>
-                        <p className="text-[9px] tracking-[0.3em] text-stone-500/30 mt-3 uppercase">
+                        <p className="text-[11px] tracking-[0.3em] text-stone-500/30 mt-3 uppercase">
                             — Claude Debussy
                         </p>
                     </div>
