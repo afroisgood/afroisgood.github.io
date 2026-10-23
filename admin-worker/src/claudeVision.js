@@ -10,9 +10,7 @@ const EXTRACTION_PROMPT = `你正在協助管理一個「每日一張爵士唱�
 {
   "date": "YYYY-MM-DD 格式的日期；若日曆上只有月日沒有年份，年份留空整個欄位填空字串",
   "artist": "藝人／樂手名稱（保留原文，通常是英文）",
-  "song": "曲名，若有標示的話",
   "album": "專輯名稱（保留原文，通常是英文）",
-  "quote": "若日曆上有特別標出的一句話引言，逐字抄錄；沒有就留空",
   "content_original": "把日曆上完整的日文介紹文字逐字抄錄下來，保留原本的分段",
   "content_translation_draft": "將 content_original 翻譯成通順的繁體中文，語意需準確；這只是給編輯校對用的草稿"
 }`;
@@ -64,9 +62,7 @@ export const recognizeCalendarPhoto = async (env, { base64, mimeType }) => {
     return {
         date: parsed.date || '',
         artist: parsed.artist || '',
-        song: parsed.song || '',
         album: parsed.album || '',
-        quote: parsed.quote || '',
         content: [parsed.content_original, parsed.content_translation_draft]
             .filter(Boolean)
             .join('\n\n'),

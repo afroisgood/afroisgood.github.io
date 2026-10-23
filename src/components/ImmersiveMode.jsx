@@ -203,7 +203,7 @@ export const ImmersiveMode = ({
 
                         <div className="flex flex-col gap-2">
                             <h2 className="font-playfair font-black text-2xl lg:text-4xl leading-[1.1] text-[#f2ece3] uppercase [overflow-wrap:anywhere] [text-wrap:balance]">
-                                {currentData?.album || currentData?.song || 'Rest & Listen'}
+                                {currentData?.album || 'Rest & Listen'}
                             </h2>
                             {currentData?.artist && (
                                 <p className="font-tc text-sm lg:text-base tracking-[0.15em] text-[#e0a870] uppercase">{currentData.artist}</p>

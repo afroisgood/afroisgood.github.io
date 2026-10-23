@@ -284,7 +284,7 @@ const MainApp = () => {
 
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
-    const headline = (currentData?.album || currentData?.song || '').toUpperCase();
+    const headline = (currentData?.album || '').toUpperCase();
     const winTitle = viewMode === 'wall'
         ? `${currentMonth.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()} ${currentMonth.getFullYear()} — RECORD WALL`
         : currentData
@@ -336,7 +336,7 @@ const MainApp = () => {
 
                     <div className="flex-1 min-w-0">
                         <p className="text-stone-100 truncate" style={{ fontSize: '11px', fontFamily: "'Courier New', monospace", fontWeight: 'bold', letterSpacing: '0.06em' }}>
-                            {currentData?.song || currentData?.album || '—'}
+                            {currentData?.album || '—'}
                         </p>
                         <p className="text-amber-500/70 truncate" style={{ fontSize: '10px', letterSpacing: '0.04em' }}>
                             {currentData?.artist}

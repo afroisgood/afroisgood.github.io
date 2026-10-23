@@ -1,7 +1,7 @@
-// 用辨識出的 artist/song/album，分別到三個串流服務搜尋最相關的一筆結果。
+// 用辨識出的 artist/album，分別到三個串流服務搜尋最相關的一筆結果。
 // 三個搜尋彼此獨立，任何一個失敗都不影響其他兩個。
 
-const buildQuery = (artist, songOrAlbum) => [artist, songOrAlbum].filter(Boolean).join(' ').trim();
+const buildQuery = (artist, album) => [artist, album].filter(Boolean).join(' ').trim();
 
 // Cloudflare Worker 的對外 IP 是跟其他用戶共用的，容易被目標服務誤判成流量過高（429）。
 // 遇到 429 就短暫等待後重試，通常一兩次就能過。
@@ -15,8 +15,8 @@ const fetchWithRetry = async (url, options, { retries = 2, delayMs = 600 } = {})
     return res;
 };
 
-export const searchYouTube = async (env, { artist, song, album }) => {
-    const query = buildQuery(artist, song || album);
+export const searchYouTube = async (env, { artist, album }) => {
+    const query = buildQuery(artist, album);
     if (!query || !env.YOUTUBE_API_KEY) return '';
 
     const url = new URL('https://www.googleapis.com/youtube/v3/search');

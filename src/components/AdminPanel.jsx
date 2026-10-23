@@ -49,9 +49,9 @@ const searchAppleMusic = async (artist, album) => {
 };
 
 const EMPTY_ENTRY = {
-    date: '', song: '', artist: '', album: '', youtube: '',
+    date: '', artist: '', album: '', youtube: '',
     spotify: '', appleMusic: '', other: '', imageUrl: '',
-    quote: '', content: '', editorNote: '', albumNotes: '', mood: '',
+    content: '', editorNote: '', albumNotes: '', mood: '',
 };
 
 const EMPTY_CL = { version: '', date: '', content: '' };
@@ -554,17 +554,11 @@ export const AdminPanel = () => {
                                 <Field label="藝人名稱 *" flagged={recognizedFields.includes('artist')}>
                                     <input type="text" value={form.artist} onChange={setField('artist')} placeholder="Miles Davis" required className={inputCls} />
                                 </Field>
-                                <Field label="曲名" flagged={recognizedFields.includes('song')}>
-                                    <input type="text" value={form.song} onChange={setField('song')} placeholder="So What" className={inputCls} />
+                                <Field label="專輯名稱" flagged={recognizedFields.includes('album')}>
+                                    <input type="text" value={form.album} onChange={setField('album')} placeholder="Kind of Blue" className={inputCls} />
                                 </Field>
                             </div>
 
-                            <Field label="專輯名稱" cls="mb-5" flagged={recognizedFields.includes('album')}>
-                                <input type="text" value={form.album} onChange={setField('album')} placeholder="Kind of Blue" className={inputCls} />
-                            </Field>
-                            <Field label="引言 Quote" cls="mb-5" flagged={recognizedFields.includes('quote')}>
-                                <input type="text" value={form.quote} onChange={setField('quote')} placeholder="一句讓人印象深刻的句子..." className={inputCls} />
-                            </Field>
                             <Field label="內容介紹" cls="mb-5" flagged={recognizedFields.includes('content')}>
                                 <textarea value={form.content} onChange={setField('content')} rows={6} placeholder="關於這張專輯的介紹文字..." className={inputCls + ' resize-none'} />
                             </Field>

@@ -1,7 +1,7 @@
 // src/components/DailyArticle.jsx
 import { useState, useEffect, useRef } from 'react';
 import { EditorNote } from './EditorNote';
-import { IconDisc, IconArrowRight, IconQuote, IconShare, IconCheck } from './Icons';
+import { IconDisc, IconArrowRight, IconShare, IconCheck } from './Icons';
 import { VintageJazzText } from './VintageJazzText';
 import { formatDateString } from '../utils/dateUtils';
 
@@ -46,7 +46,7 @@ export const DailyArticle = ({
     const monthName = selectedDate.toLocaleDateString('en-US', { month: 'long' });
 
     // 專輯名長短差很多（多數 ≤18 字，少數超過 30 字），大標字級跟著長度往下調，避免長標題變成好幾行巨字
-    const headline = currentData?.album || currentData?.song || '';
+    const headline = currentData?.album || '';
     const isLongHeadline = headline.length > 30;
     const headlineSize = isLongHeadline
         ? 'text-xl lg:text-3xl'
@@ -170,11 +170,6 @@ export const DailyArticle = ({
                         <p className="text-sm lg:text-base font-bold tracking-widest text-stone-800 uppercase leading-relaxed">
                             {currentData.artist}
                         </p>
-                        {currentData.song && currentData.album && (
-                            <p className="text-sm font-bold tracking-widest text-stone-600 italic font-serif">
-                                ♪ “{currentData.song}”
-                            </p>
-                        )}
                     </header>
 
                     {currentData?.editorNote?.trim() && (

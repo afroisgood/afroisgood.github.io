@@ -25,9 +25,10 @@ Daily Jazz Almanac 2026 — a retro-flavored web almanac for jazz lovers.
 | 項目 | 版本 |
 |------|------|
 | React | 19 |
-| Vite | 6 |
-| Tailwind CSS | 4 |
+| Vite | 7 |
+| Tailwind CSS | 3 |
 | 部署 | GitHub Pages + GitHub Actions |
+| 後台服務 | Cloudflare Worker（`admin-worker/`） |
 
 資料來源：`public/data.json`（單一 JSON 檔，支援 `entries` + `changelog` 結構）
 
@@ -49,7 +50,8 @@ git commit -m "你的更新說明"
 bash deploy.sh
 ```
 
-> `deploy.sh` 會先從遠端拉取最新的 `data.json` 再推送，避免後台資料被本地版本覆蓋。
+> `deploy.sh` 會先拉取 GitHub 上的最新版本（包含後台存的資料、在 GitHub 上合併的 PR）再推送，
+> 不會強制覆蓋遠端；若本地與遠端有衝突，腳本會停下來，請手動解決後再執行一次。
 
 ---
 
