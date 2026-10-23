@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
-import { formatDateString, isDateVisible } from './utils/dateUtils';
+import { FIRST_YEAR, formatDateString, isDateVisible, lastYearDateString } from './utils/dateUtils';
 import { resolveMoodHex } from './utils/moodColors';
 import { Sidebar } from './components/Sidebar';
 import { ImmersiveMode } from './components/ImmersiveMode';
@@ -83,6 +83,10 @@ const MainApp = () => {
     }, [jazzData]);
 
     const currentData = visibleJazzData[dateKey];
+    const lastYearOf = (date) => {
+        const key = lastYearDateString(date);
+        return visibleJazzData[key] && { date: key, ...visibleJazzData[key] };
+    };
 
     const moodHex = resolveMoodHex(currentData?.mood);
     const { accent: moodAccent, glow: moodGlow } = hexToMoodVars(moodHex);
@@ -91,8 +95,8 @@ const MainApp = () => {
 
     useEffect(() => {
         const siteBase = 'https://afroisgood.github.io';
-        const defaultTitle = 'JAZZ 365 | Daily Jazz Almanac 2026';
-        const defaultDesc = '每天一張爵士唱片推薦，365 天不間斷。Daily Jazz Almanac 2026。';
+        const defaultTitle = 'JAZZ 365 | Daily Jazz Almanac';
+        const defaultDesc = '每天一張爵士唱片推薦，365 天不間斷。Daily Jazz Almanac。';
         const defaultImage = siteBase + '/og-image.png';
 
         const setMeta = (title, desc, image, url) => {
@@ -258,22 +262,36 @@ const MainApp = () => {
         handleDateChange(next);
     };
 
-    useEffect(() => {
-        const fetchAllData = async () => {
-            try {
-                const res = await fetch('/data.json');
-                const data = await res.json();
-                const arr = Array.isArray(data) ? data : (data.entries || []);
-                const cl  = Array.isArray(data) ? [] : (data.changelog || []);
-                const map = {};
-                arr.forEach(row => { if (row.date) map[row.date.trim()] = row; });
-                setJazzData(map);
-                setChangelogData(cl.slice().sort((a, b) => b.date.localeCompare(a.date)));
-            } catch (_) {}
-            setDataReady(true);
-        };
-        fetchAllData();
+    // 資料每年一個檔案（public/data/2026.json…），看到哪一年才載入哪一年；
+    // 同一年只抓一次，回傳同一個 promise。還沒有資料的年份（404）就當作空的。
+    const yearLoadsRef = useRef({});
+    const loadYear = useCallback((year) => {
+        if (year < FIRST_YEAR) return Promise.resolve();
+        yearLoadsRef.current[year] ??= fetch(`/data/${year}.json`)
+            .then(res => (res.ok ? res.json() : []))
+            .then(rows => setJazzData(prev => {
+                const next = { ...prev };
+                rows.forEach(row => { if (row.date) next[row.date.trim()] = row; });
+                return next;
+            }))
+            .catch(() => {});
+        return yearLoadsRef.current[year];
     }, []);
+
+    useEffect(() => {
+        const loadChangelog = fetch('/data/changelog.json')
+            .then(res => res.json())
+            .then(cl => setChangelogData(cl.slice().sort((a, b) => b.date.localeCompare(a.date))))
+            .catch(() => {});
+        Promise.all([loadYear(introTargetDate.getFullYear()), loadChangelog]).then(() => setDataReady(true));
+    }, [loadYear, introTargetDate]);
+
+    // 選到的日期、翻到的月份屬於哪一年就載入哪一年；前一年也一起載，「去年的今天」才查得到
+    const selectedYear = selectedDate.getFullYear();
+    const monthYear = currentMonth.getFullYear();
+    useEffect(() => {
+        [selectedYear, selectedYear - 1, monthYear].forEach(loadYear);
+    }, [selectedYear, monthYear, loadYear]);
 
     useEffect(() => {
         if (introMode !== 'calendar') return;
@@ -438,6 +456,7 @@ const MainApp = () => {
                             data={currentData}
                             ready={dataReady}
                             youtubeId={youtubeId}
+                            lastYear={lastYearOf(selectedDate)}
                             setIsImmersive={setIsImmersive}
                             revealContent={enterDirection === null}
                         />
@@ -460,6 +479,7 @@ const MainApp = () => {
                                     data={sheet.data}
                                     ready
                                     youtubeId={getYouTubeVideoId(sheet.data?.youtube)}
+                                    lastYear={lastYearOf(sheet.date)}
                                 />
                             );
                         })}

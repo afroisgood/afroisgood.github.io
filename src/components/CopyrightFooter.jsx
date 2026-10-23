@@ -1,5 +1,9 @@
 // src/components/CopyrightFooter.jsx
 // 共用版權聲明 — Sidebar（light）與 MobileNav（dark）共用
+import { FIRST_YEAR } from '../utils/dateUtils';
+
+const thisYear = new Date().getFullYear();
+const years = thisYear > FIRST_YEAR ? `${FIRST_YEAR}–${thisYear}` : `${FIRST_YEAR}`;
 
 export const CopyrightFooter = ({ theme = 'light' }) => {
     const isDark = theme === 'dark';
@@ -21,7 +25,7 @@ export const CopyrightFooter = ({ theme = 'light' }) => {
 
     return (
         <div style={{ fontFamily: "'Courier New', Courier, monospace", letterSpacing: '0.03em', ...containerStyle }}>
-            <p>© 2026 JAZZ 365.</p>
+            <p>© {years} JAZZ 365.</p>
             <p>Music and recordings remain the property of their respective rights holders.</p>
             <p style={{ marginTop: isDark ? '8px' : '6px' }}>For corrections or feedback, please contact:</p>
             <p>如有任何指正或回饋，歡迎來信：</p>

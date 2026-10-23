@@ -50,6 +50,7 @@ export const PageSheet = ({
     data,
     ready,
     youtubeId,
+    lastYear,
     setIsImmersive = noop,
     revealContent = false,
     className = '',
@@ -72,6 +73,7 @@ export const PageSheet = ({
                     currentData={data}
                     selectedDate={date}
                     youtubeId={youtubeId}
+                    lastYear={lastYear}
                     setIsImmersive={setIsImmersive}
                 />
             ) : (

@@ -8,10 +8,11 @@ compatibility_date = "2025-01-01"
 [vars]
 # 允許呼叫這支 Worker 的前端網域，逗號分隔。
 ALLOWED_ORIGINS = "https://jazzcalender365.com,https://www.jazzcalender365.com,https://afroisgood.github.io,http://localhost:5173"
-# 後台資料所在的 GitHub repo 與檔案（Worker 用 GITHUB_TOKEN 代為讀寫）。
+# 後台資料所在的 GitHub repo 與資料夾（Worker 用 GITHUB_TOKEN 代為讀寫）。
+# 資料夾裡每年一個 2026.json、2027.json…，加上更新日誌 changelog.json。
 GITHUB_OWNER = "afroisgood"
 GITHUB_REPO = "afroisgood.github.io"
-DATA_PATH = "public/data.json"
+DATA_DIR = "public/data"
 # 辨識用的 Claude 模型，可依費用/準確度需求調整。
 CLAUDE_MODEL = "claude-sonnet-5-5"
 
