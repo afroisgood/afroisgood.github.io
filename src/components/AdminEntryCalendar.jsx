@@ -33,7 +33,7 @@ export const AdminEntryCalendar = ({
 
     if (query) {
         const matches = entries
-            .filter(e => [e.date, e.artist, e.album, e.song].some(v => v?.toLowerCase().includes(query)))
+            .filter(e => [e.date, e.artist, e.album].some(v => v?.toLowerCase().includes(query)))
             .slice()
             .reverse();
         return (
