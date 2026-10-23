@@ -2,6 +2,7 @@
 // 後台左側的推薦導覽：月曆跳月份、搜尋找藝人／專輯，取代原本三百多筆的一長串清單
 
 import { IconChevronLeft, IconChevronRight } from './Icons';
+import { matchesQuery } from '../utils/searchEntries';
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
 
@@ -33,7 +34,7 @@ export const AdminEntryCalendar = ({
 
     if (query) {
         const matches = entries
-            .filter(e => [e.date, e.artist, e.album].some(v => v?.toLowerCase().includes(query)))
+            .filter(e => matchesQuery(e, query))
             .slice()
             .reverse();
         return (

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { IconDisc, IconCalendar, IconClose } from './Icons';
 import { RandomExplore } from './RandomExplore';
+import { SearchExplore } from './SearchExplore';
 import { CalendarGrid } from './CalendarGrid';
 import { CopyrightFooter } from './CopyrightFooter';
 import { useMonthNav } from '../hooks/useMonthNav';
@@ -15,6 +16,7 @@ export const MobileNav = ({
     handlePrevDay,
     handleNextDay,
     jazzData,
+    onSearchOpen,
     isVinylSpinning,
 }) => {
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -91,6 +93,11 @@ export const MobileNav = ({
                             onDayClick={handleDayClick}
                             theme="dark"
                         />
+                    </div>
+
+                    {/* 搜尋 */}
+                    <div className="mb-4">
+                        <SearchExplore jazzData={jazzData} onOpen={onSearchOpen} onNavigate={handleDayClick} />
                     </div>
 
                     {/* 隨機探索 */}

@@ -122,7 +122,7 @@ const MainApp = () => {
                 ? currentData.imageUrl
                 : youtubeId ? 'https://img.youtube.com/vi/' + youtubeId + '/maxresdefault.jpg'
                 : defaultImage;
-            setMeta(title, desc, image, siteBase + '/#' + dateKey);
+            setMeta(title, desc, image, siteBase + '/' + dateKey.replaceAll('-', '/') + '/');
         } else {
             setMeta(defaultTitle, defaultDesc, defaultImage, siteBase + '/');
         }
@@ -286,6 +286,11 @@ const MainApp = () => {
         Promise.all([loadYear(introTargetDate.getFullYear()), loadChangelog]).then(() => setDataReady(true));
     }, [loadYear, introTargetDate]);
 
+    // 搜尋要涵蓋所有年份：第一次點進搜尋框時才把其餘年份補齊
+    const loadAllYears = useCallback(() => {
+        for (let year = FIRST_YEAR; year <= new Date().getFullYear(); year++) loadYear(year);
+    }, [loadYear]);
+
     // 選到的日期、翻到的月份屬於哪一年就載入哪一年；前一年也一起載，「去年的今天」才查得到
     const selectedYear = selectedDate.getFullYear();
     const monthYear = currentMonth.getFullYear();
@@ -402,6 +407,7 @@ const MainApp = () => {
                 handlePrevDay={handlePrevDay}
                 handleNextDay={handleNextDay}
                 jazzData={visibleJazzData}
+                onSearchOpen={loadAllYears}
                 isVinylSpinning={isVinylSpinning}
             />
 
@@ -412,6 +418,7 @@ const MainApp = () => {
                     isVinylSpinning={isVinylSpinning}
                     currentMonth={currentMonth} setCurrentMonth={setCurrentMonth}
                     selectedDate={selectedDate} handleDateChange={handleDateChange} jazzData={visibleJazzData}
+                    onSearchOpen={loadAllYears}
                     setShowChangelog={setShowChangelog} latestVersion={latestVersion}
                 />
 

@@ -23,13 +23,14 @@ export const DailyArticle = ({
     const dateKey = formatDateString(selectedDate);
 
     const handleShare = async () => {
-        // 分享出去的訊息常在隔天以後才被點開，日期一律寫明、網址帶上日期，對方才會看到同一張專輯
+        // 分享出去的訊息常在隔天以後才被點開，日期一律寫明、網址帶上日期，對方才會看到同一張專輯；
+        // 網址用每日分享頁（scripts/build-share-pages.mjs 產生），LINE／FB 預覽才會是當天的封面
         const dateText = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
 
         const shareData = {
             title: `JAZZ 365 | ${dateText}`,
             text: `${dateText}的爵士推薦是 ${currentData.artist} 的《${currentData.album}》，來聽看看吧`,
-            url: `${window.location.origin}${window.location.pathname}#${dateKey}`,
+            url: `${window.location.origin}/${dateKey.replaceAll('-', '/')}/`,
         };
 
         if (navigator.share) {

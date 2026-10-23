@@ -1,5 +1,6 @@
 // src/components/Sidebar.jsx
 import { RandomExplore } from './RandomExplore';
+import { SearchExplore } from './SearchExplore';
 import { CalendarGrid } from './CalendarGrid';
 import { RetroTitleBar } from './RetroTitleBar';
 import { CopyrightFooter } from './CopyrightFooter';
@@ -12,6 +13,7 @@ export const Sidebar = ({
     selectedDate,
     handleDateChange,
     jazzData,
+    onSearchOpen,
     setShowChangelog,
     latestVersion
 }) => {
@@ -100,8 +102,13 @@ export const Sidebar = ({
                         />
                     </div>
 
+                    {/* Search */}
+                    <div style={{ marginTop: '20px' }}>
+                        <SearchExplore jazzData={jazzData} onOpen={onSearchOpen} onNavigate={handleDateChange} />
+                    </div>
+
                     {/* Random Explore */}
-                    <div style={{ marginTop: '20px', marginBottom: '16px' }}>
+                    <div style={{ marginTop: '16px', marginBottom: '16px' }}>
                         <RandomExplore jazzData={jazzData} onNavigate={handleDateChange} />
                     </div>
 
