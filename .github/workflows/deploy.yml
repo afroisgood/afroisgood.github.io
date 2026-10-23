@@ -1,10 +1,15 @@
 # 機器人的名字
 name: Deploy static content to Pages
 
-# 什麼時候觸發機器人？當有代碼推送到 main 分支時
+# 什麼時候觸發機器人？當有代碼推送到 main 分支時；
+# 另外每天臺灣時間 07:05（UTC 23:05）重新部署一次，當天的分享頁才會在推薦公開後出現；
+# 也可以在 GitHub 的 Actions 頁面手動執行
 on:
   push:
     branches: ['main']
+  schedule:
+    - cron: '5 23 * * *'
+  workflow_dispatch:
 
 # 給予機器人寫入 GitHub Pages 的權限
 permissions:
