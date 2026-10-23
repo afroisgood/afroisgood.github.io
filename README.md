@@ -1,7 +1,7 @@
-# JAZZ 365 | Daily Jazz Almanac 2026
+# JAZZ 365 | Daily Jazz Almanac
 
 每天一張爵士唱片推薦，365 天不間斷。
-Daily Jazz Almanac 2026 — a retro-flavored web almanac for jazz lovers.
+Daily Jazz Almanac — a retro-flavored web almanac for jazz lovers.
 
 🔗 **[afroisgood.github.io](https://afroisgood.github.io)**
 
@@ -9,7 +9,8 @@ Daily Jazz Almanac 2026 — a retro-flavored web almanac for jazz lovers.
 
 ## 功能特色
 
-- **日曆導覽** — 以月曆形式瀏覽全年 365 天的推薦唱片
+- **日曆導覽** — 以月曆形式瀏覽每天的推薦唱片，可連續跨年翻閱
+- **去年的今天** — 每篇文章底下連到前一年同一天的推薦
 - **沉浸式聆聽模式** — 全螢幕黑膠播放介面，整合 YouTube 播放器
 - **動態封面背景** — 依當日專輯封面自動生成模糊光暈背景
 - **3D 翻頁動畫** — CSS perspective 翻頁效果，呼應日曆撕頁概念
@@ -30,7 +31,7 @@ Daily Jazz Almanac 2026 — a retro-flavored web almanac for jazz lovers.
 | 部署 | GitHub Pages + GitHub Actions |
 | 後台服務 | Cloudflare Worker（`admin-worker/`） |
 
-資料來源：`public/data.json`（單一 JSON 檔，支援 `entries` + `changelog` 結構）
+資料來源：`public/data/`，每年一個檔案（`2026.json`、`2027.json`…），更新日誌另存 `changelog.json`。前台看到哪一年才載入哪一年。
 
 ---
 
@@ -72,7 +73,9 @@ src/
 │   └── useYouTubePlayer.js # YouTube IFrame API 封裝
 └── index.css               # 全域樣式、動畫定義
 public/
-└── data.json               # 所有音樂資料與更新日誌
+└── data/
+    ├── 2026.json           # 每年一個檔案，一筆一天
+    └── changelog.json      # 更新日誌
 ```
 
 ---

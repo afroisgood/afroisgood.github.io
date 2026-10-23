@@ -4,7 +4,7 @@ import { IconDisc } from './Icons';
 import { AdminEntryCalendar } from './AdminEntryCalendar';
 import { MOOD_OPTIONS, DEFAULT_MOOD_COLOR } from '../utils/moodColors';
 
-// 後台服務網址（admin-worker）：登入、讀寫 data.json、流量、拍照辨識都經過它，
+// 後台服務網址（admin-worker）：登入、讀寫資料、流量、拍照辨識都經過它，
 // GitHub 金鑰只存在 Worker 裡。部署後填進 .env.local 與 GitHub repo 變數 VITE_ADMIN_WORKER_URL
 const ADMIN_WORKER_URL = import.meta.env.VITE_ADMIN_WORKER_URL || '';
 const SESSION_KEY = 'admin_session';
@@ -17,6 +17,12 @@ const readStoredSession = () => {
         return '';
     }
 };
+
+// 資料每年一個檔案（public/data/2026.json…），更新日誌另存 changelog.json；GitHub API 傳的是 base64
+const decodeFile = (content) => JSON.parse(decodeURIComponent(escape(atob(content.replace(/\n/g, '')))));
+const encodeFile = (data) => btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2) + '\n')));
+const byDateAsc  = (a, b) => a.date.localeCompare(b.date);
+const byDateDesc = (a, b) => b.date.localeCompare(a.date);
 
 const fileToBase64 = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -79,7 +85,7 @@ export const AdminPanel = () => {
     const [isLoggedIn, setIsLoggedIn]     = useState(false);
     const [entries, setEntries]           = useState([]);
     const [changelog, setChangelog]       = useState([]);
-    const [fileSha, setFileSha]           = useState('');
+    const [fileShas, setFileShas]         = useState({}); // { '2026': sha, changelog: sha }
     const [activeTab, setActiveTab]       = useState('entries');   // 'entries' | 'changelog' | 'traffic'
 
     // Traffic state
@@ -168,15 +174,11 @@ export const AdminPanel = () => {
         setIsLoading(true);
         setError('');
         try {
-            const json = await workerFetch('/data', { token });
-            setFileSha(json.sha);
-            const decoded = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ''))));
-            const data = JSON.parse(decoded);
-            // 相容舊格式（純陣列）和新格式 { entries, changelog }
-            const loadedEntries  = Array.isArray(data) ? data : (data.entries   || []);
-            const loadedChangelog = Array.isArray(data) ? []   : (data.changelog || []);
-            setEntries(loadedEntries.slice().sort((a, b) => a.date.localeCompare(b.date)));
-            setChangelog(loadedChangelog.slice().sort((a, b) => b.date.localeCompare(a.date)));
+            const { files } = await workerFetch('/data', { token });
+            const { changelog: clFile, ...yearFiles } = files;
+            setFileShas(Object.fromEntries(Object.entries(files).map(([name, f]) => [name, f.sha])));
+            setEntries(Object.values(yearFiles).flatMap(f => decodeFile(f.content)).sort(byDateAsc));
+            setChangelog(clFile ? decodeFile(clFile.content).sort(byDateDesc) : []);
             setIsLoggedIn(true);
         } catch (e) {
             setError(e.message);
@@ -184,28 +186,27 @@ export const AdminPanel = () => {
         setIsLoading(false);
     };
 
-    // ── 統一儲存（jazz entries + changelog 一起寫入） ────
-    const saveAll = async (newEntries, newChangelog) => {
+    // ── 儲存：只寫有變動的那個檔案（某一年的推薦，或更新日誌） ────
+    // 新的一年第一次存檔時還沒有檔案，sha 傳 null，Worker 會直接建立
+    const saveFile = async (file, data) => {
+        const json = await workerFetch('/data', {
+            method: 'PUT',
+            body: {
+                file,
+                message: 'Update jazz data: ' + new Date().toISOString().slice(0, 10),
+                content: encodeFile(data),
+                sha: fileShas[file] || null,
+            },
+        });
+        setFileShas(prev => ({ ...prev, [file]: json.sha }));
+    };
+
+    const save = async (write) => {
         setIsSaving(true);
         setMessage('');
         setError('');
         try {
-            const sortedEntries   = [...newEntries].sort((a, b) => a.date.localeCompare(b.date));
-            const sortedChangelog = [...newChangelog].sort((a, b) => b.date.localeCompare(a.date));
-            const payload = { entries: sortedEntries, changelog: sortedChangelog };
-            const jsonStr = JSON.stringify(payload, null, 2);
-            const content = btoa(unescape(encodeURIComponent(jsonStr)));
-            const json = await workerFetch('/data', {
-                method: 'PUT',
-                body: {
-                    message: 'Update jazz data: ' + new Date().toISOString().slice(0, 10),
-                    content,
-                    sha: fileSha,
-                },
-            });
-            setFileSha(json.sha);
-            setEntries(sortedEntries);
-            setChangelog(sortedChangelog);
+            await write();
             setMessage('儲存成功！網站約 2 分鐘後自動更新。');
             setSelectedEntry(null);
             setForm(EMPTY_ENTRY);
@@ -218,20 +219,34 @@ export const AdminPanel = () => {
         setIsSaving(false);
     };
 
+    const saveEntries = (newEntries, date) => save(async () => {
+        const year = date.slice(0, 4);
+        const sorted = [...newEntries].sort(byDateAsc);
+        await saveFile(year, sorted.filter(e => e.date.startsWith(year + '-')));
+        setEntries(sorted);
+    });
+
+    const saveChangelog = (newChangelog) => save(async () => {
+        const sorted = [...newChangelog].sort(byDateDesc);
+        await saveFile('changelog', sorted);
+        setChangelog(sorted);
+    });
+
     // ── Jazz entry handlers ───────────────────────────────
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!form.date || !form.artist) { setError('日期與藝人名稱為必填'); return; }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date)) { setError('日期格式需為 YYYY-MM-DD'); return; }
         const exists    = entries.find(entry => entry.date === form.date);
         const newEntries = exists
             ? entries.map(entry => entry.date === form.date ? form : entry)
             : [...entries, form];
-        saveAll(newEntries, changelog);
+        saveEntries(newEntries, form.date);
     };
 
     const handleDelete = (date) => {
         if (!window.confirm('確定要刪除 ' + date + ' 的資料嗎？')) return;
-        saveAll(entries.filter(e => e.date !== date), changelog);
+        saveEntries(entries.filter(e => e.date !== date), date);
     };
 
     const handleEdit = (entry) => {
@@ -298,12 +313,12 @@ export const AdminPanel = () => {
         const newCl   = exists
             ? changelog.map(c => c.version === clForm.version ? clForm : c)
             : [...changelog, clForm];
-        saveAll(entries, newCl);
+        saveChangelog(newCl);
     };
 
     const handleClDelete = (version) => {
         if (!window.confirm('確定要刪除 ' + version + ' 嗎？')) return;
-        saveAll(entries, changelog.filter(c => c.version !== version));
+        saveChangelog(changelog.filter(c => c.version !== version));
     };
 
     const handleClEdit = (cl) => {

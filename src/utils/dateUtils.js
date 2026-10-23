@@ -17,11 +17,20 @@ export const isToday = (date) => {
            date.getDate()     === today.getDate();
 };
 
+/** 第一年的資料從這一年開始（public/data/2026.json） */
+export const FIRST_YEAR = 2026;
+
 /**
- * 判斷給定月份是否已到最早邊界（2026年1月）
+ * 判斷給定月份是否已到最早邊界（第一年的 1 月）
  */
 export const isAtMinMonth = (currentMonth) =>
-    currentMonth.getFullYear() === 2026 && currentMonth.getMonth() === 0;
+    currentMonth.getFullYear() === FIRST_YEAR && currentMonth.getMonth() === 0;
+
+/**
+ * 前一年的同一天，"YYYY-MM-DD"；2/29 往前推會落到不存在的日期，查不到資料就不顯示
+ */
+export const lastYearDateString = (date) =>
+    `${date.getFullYear() - 1}-${formatDateString(date).slice(5)}`;
 
 /**
  * 判斷某個日期的內容是否可以對外顯示。

@@ -3,7 +3,7 @@
 AdminPanel（`#admin`）背後的 Cloudflare Worker，負責：
 
 - **帳號密碼登入**：驗證成功後發一張 12 小時有效的登入憑證。
-- **代為讀寫 `public/data.json`、讀取流量**：GitHub 金鑰只存在 Worker 裡，前端拿不到。
+- **代為讀寫 `public/data/` 裡的資料（每年一個檔案）、讀取流量**：GitHub 金鑰只存在 Worker 裡，前端拿不到。
 - **拍照辨識**：呼叫 Claude Vision 辨識日曆照片，再去 YouTube / Spotify 搜尋串流連結。
 
 所有金鑰都放在這裡，前端完全看不到。

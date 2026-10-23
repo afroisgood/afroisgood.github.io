@@ -9,6 +9,7 @@ export const DailyArticle = ({
     currentData,
     selectedDate,
     youtubeId,
+    lastYear,
     setIsImmersive,
     className = '',
 }) => {
@@ -239,6 +240,28 @@ export const DailyArticle = ({
                         <section aria-labelledby={`album-notes-${dateKey}`} className="mt-3 pt-4 border-t-2 border-stone-900/70">
                             <h3 id={`album-notes-${dateKey}`} className="font-mono text-[11px] tracking-[0.3em] text-stone-600 uppercase mb-2">Album Notes</h3>
                             <p className="font-tc text-sm leading-relaxed text-stone-800 tracking-wide whitespace-pre-line">{currentData.albumNotes}</p>
+                        </section>
+                    )}
+
+                    {lastYear && (
+                        <section aria-labelledby={`last-year-${dateKey}`} className="mt-3 pt-4 border-t-2 border-stone-900/70">
+                            <h3 id={`last-year-${dateKey}`} className="font-mono text-[11px] tracking-[0.3em] text-stone-600 uppercase mb-2">
+                                One Year Ago · 去年的今天
+                            </h3>
+                            <a href={`#${lastYear.date}`} className="group flex items-center gap-3">
+                                {lastYear.imageUrl ? (
+                                    <img src={lastYear.imageUrl} alt="" loading="lazy" className="w-12 h-12 object-cover border border-stone-900/40 flex-shrink-0" />
+                                ) : (
+                                    <span className="w-12 h-12 flex items-center justify-center bg-stone-800 flex-shrink-0">
+                                        <IconDisc size={20} className="text-stone-500" />
+                                    </span>
+                                )}
+                                <span className="min-w-0 flex-1">
+                                    <span className="block font-playfair font-bold text-stone-900 uppercase truncate group-hover:underline">{lastYear.album}</span>
+                                    <span className="block text-xs tracking-widest text-stone-600 uppercase truncate">{lastYear.artist} · {lastYear.date.replaceAll('-', '.')}</span>
+                                </span>
+                                <IconArrowRight size={14} className="text-stone-600 flex-shrink-0" />
+                            </a>
                         </section>
                     )}
                 </div>
