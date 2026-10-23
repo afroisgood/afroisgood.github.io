@@ -9,7 +9,7 @@
 import { readFileSync, readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const SITE = 'https://afroisgood.github.io';
+const SITE = 'https://jazzcalender365.com';
 const DIST = 'dist';
 const DATA_DIR = join(DIST, 'data');
 

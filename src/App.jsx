@@ -94,7 +94,7 @@ const MainApp = () => {
     const youtubeId = useMemo(() => getYouTubeVideoId(currentData?.youtube), [currentData]);
 
     useEffect(() => {
-        const siteBase = 'https://afroisgood.github.io';
+        const siteBase = 'https://jazzcalender365.com';
         const defaultTitle = 'JAZZ 365 | Daily Jazz Almanac';
         const defaultDesc = '每天一張爵士唱片推薦，365 天不間斷。Daily Jazz Almanac。';
         const defaultImage = siteBase + '/og-image.png';
