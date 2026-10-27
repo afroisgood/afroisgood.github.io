@@ -105,6 +105,12 @@ export const AdminPanel = () => {
     const [recognizedFields, setRecognizedFields] = useState([]);
     const photoInputRef = useRef(null);
 
+    // 專輯資訊補充 AI 草稿狀態；切換編輯的日期時遞增，讓還沒回來的舊請求不會寫進新表單
+    const [generatingNotes, setGeneratingNotes] = useState(false);
+    const [notesError, setNotesError]           = useState('');
+    const [aiNotes, setAiNotes]                 = useState(''); // 最近一次的 AI 草稿，內容沒改過就標示「請確認」
+    const notesRequestRef = useRef(0);
+
     // Changelog state
     const [selectedCl, setSelectedCl] = useState(null);
     const [clForm, setClForm]         = useState(EMPTY_CL);
@@ -256,6 +262,7 @@ export const AdminPanel = () => {
         setForm({ ...EMPTY_ENTRY, ...entry });
         setRecognizedFields([]);
         setRecognizeError('');
+        resetNotesState();
         setError('');
         setMessage('');
     };
@@ -265,11 +272,45 @@ export const AdminPanel = () => {
         setForm({ ...EMPTY_ENTRY, date });
         setRecognizedFields([]);
         setRecognizeError('');
+        resetNotesState();
         setError('');
         setMessage('');
     };
 
     const setField = (key) => (e) => setForm(prev => ({ ...prev, [key]: e.target.value }));
+
+    // ── 專輯資訊補充 AI 草稿 ─────────────────────────────────
+    const resetNotesState = () => {
+        notesRequestRef.current++;
+        setGeneratingNotes(false);
+        setNotesError('');
+        setAiNotes('');
+    };
+
+    // overwrite=false 時（拍照辨識後自動產生）不覆蓋已經寫好的內容
+    const generateNotes = async ({ artist, album, content }, { overwrite }) => {
+        const requestId = ++notesRequestRef.current;
+        setGeneratingNotes(true);
+        setNotesError('');
+        try {
+            const { albumNotes } = await workerFetch('/album-notes', {
+                method: 'POST',
+                body: { artist, album, content },
+            });
+            if (requestId !== notesRequestRef.current) return;
+            setAiNotes(albumNotes);
+            setForm(prev => (!overwrite && prev.albumNotes.trim() ? prev : { ...prev, albumNotes }));
+        } catch (err) {
+            if (requestId === notesRequestRef.current) setNotesError(err.message);
+        }
+        if (requestId === notesRequestRef.current) setGeneratingNotes(false);
+    };
+
+    const handleGenerateNotes = () => {
+        if (!form.artist.trim() && !form.album.trim()) { setNotesError('請先填寫藝人或專輯名稱'); return; }
+        if (form.albumNotes.trim() && !window.confirm('要用 AI 草稿取代目前的專輯資訊補充嗎？')) return;
+        generateNotes(form, { overwrite: true });
+    };
 
     // ── 拍照辨識 ───────────────────────────────────────────
     const handlePhotoSelected = async (e) => {
@@ -299,6 +340,9 @@ export const AdminPanel = () => {
             setForm(prev => ({ ...prev, ...recognized }));
             setRecognizedFields(Object.keys(recognized).filter(k => recognized[k]));
             if (warnings.length) setRecognizeError(warnings.join('；'));
+
+            // 接著根據辨識結果產生專輯資訊補充（要上網查證，比較慢，不擋住表單）
+            if (recognized.artist || recognized.album) generateNotes(recognized, { overwrite: false });
         } catch (err) {
             setRecognizeError(err.message);
         }
@@ -580,8 +624,21 @@ export const AdminPanel = () => {
                             <Field label="編輯備注 Editor Note" cls="mb-5">
                                 <input type="text" value={form.editorNote} onChange={setField('editorNote')} placeholder="選填：編輯補充說明" className={inputCls} />
                             </Field>
-                            <Field label="專輯資訊補充（前台顯示）" cls="mb-5">
+                            <Field label="專輯資訊補充（前台顯示）" cls="mb-5" flagged={!!aiNotes && form.albumNotes === aiNotes}>
                                 <textarea value={form.albumNotes} onChange={setField('albumNotes')} rows={4} placeholder="選填：發行年份、廠牌、樂手、錄音背景等自己查到的資訊" className={inputCls + ' resize-y'} />
+                                <div className="flex items-center gap-3 mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleGenerateNotes}
+                                        disabled={generatingNotes}
+                                        className="flex-shrink-0 border border-zinc-700 text-zinc-300 font-bold text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm hover:border-amber-500 hover:text-amber-400 transition-colors disabled:opacity-50"
+                                    >
+                                        {generatingNotes ? '查證撰寫中...' : '✦ AI 產生草稿'}
+                                    </button>
+                                    <p className={`text-[10px] leading-relaxed ${notesError ? 'text-amber-500' : 'text-zinc-500'}`}>
+                                        {notesError || '依樂手、專輯與內容介紹上網查證後撰寫，約需半分鐘到一分鐘，請務必校對'}
+                                    </p>
+                                </div>
                             </Field>
                             <Field label="專輯封面圖片 URL" cls="mb-5" flagged={recognizedFields.includes('imageUrl')}>
                                 <input type="url" value={form.imageUrl} onChange={setField('imageUrl')} placeholder="https://i.imgur.com/..." className={inputCls} />

@@ -1,4 +1,5 @@
 import { recognizeCalendarPhoto } from './claudeVision.js';
+import { generateAlbumNotes } from './albumNotes.js';
 import { searchYouTube, searchSpotify } from './streamingSearch.js';
 import { verifyLogin, createSession, verifySession } from './auth.js';
 import { readData, writeData, readTraffic } from './github.js';
@@ -61,9 +62,17 @@ const recognize = async (request, env) => {
     };
 };
 
+// 根據樂手、專輯與介紹文字產生「專輯資訊補充」草稿
+const albumNotes = async (request, env) => {
+    const { artist = '', album = '', content = '' } = await request.json();
+    if (!artist.trim() && !album.trim()) throw Object.assign(new Error('請先填寫藝人或專輯名稱'), { status: 400 });
+    return generateAlbumNotes(env, { artist, album, content });
+};
+
 // 以下端點都要先登入
 const routes = {
     'POST /recognize': recognize,
+    'POST /album-notes': albumNotes,
     'GET /data': (request, env) => readData(env),
     'PUT /data': async (request, env) => writeData(env, await request.json()),
     'GET /traffic': (request, env) => readTraffic(env),
