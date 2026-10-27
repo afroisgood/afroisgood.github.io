@@ -5,6 +5,7 @@ AdminPanel（`#admin`）背後的 Cloudflare Worker，負責：
 - **帳號密碼登入**：驗證成功後發一張 12 小時有效的登入憑證。
 - **代為讀寫 `public/data/` 裡的資料（每年一個檔案）、讀取流量**：GitHub 金鑰只存在 Worker 裡，前端拿不到。
 - **拍照辨識**：呼叫 Claude Vision 辨識日曆照片，再去 YouTube / Spotify 搜尋串流連結。
+- **專輯資訊補充草稿**：根據樂手、專輯與內容介紹，讓 Claude 上網查證後寫出「專輯資訊補充」（用同一把 `ANTHROPIC_API_KEY`，網路搜尋每次另計費用）。
 
 所有金鑰都放在這裡，前端完全看不到。
 
@@ -84,5 +85,5 @@ npm run dev
   git 紀錄裡。
 - 密碼只存 PBKDF2-SHA256 雜湊（10 萬次），Worker 本身也不知道原始密碼。
 - 同一個 IP 每分鐘最多嘗試登入 5 次（`wrangler.toml` 的 `LOGIN_LIMITER`）。
-- `/data`、`/traffic`、`/recognize` 都要帶有效的登入憑證才會放行；
+- `/data`、`/traffic`、`/recognize`、`/album-notes` 都要帶有效的登入憑證才會放行；
   Worker 只開放這幾個固定動作，不能拿來對 GitHub 做其他事。
