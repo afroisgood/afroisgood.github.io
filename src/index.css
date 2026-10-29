@@ -822,7 +822,7 @@ body {
 @keyframes deckCutIris { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(80% at 50% 50%); } }
 .shop-deck__stage {
     position: relative; flex: none;
-    height: min(62vw, 320px);
+    height: min(86vw, 400px);
     background: #2a1a12;
 }
 @media (min-width: 1024px) { .shop-deck__stage { flex: 1 1 auto; height: auto; min-width: 0; } }
@@ -894,9 +894,16 @@ body {
 .deck-stage--spinning .deck-cut-spin { animation: spin 0.9s steps(8) infinite; }
 .deck-stage--spinning .deck-cut-note--1 { animation: deckNoteLoop 2.4s linear infinite; }
 .deck-stage--spinning .deck-cut-note--2 { animation: deckNoteLoop 2.4s linear 1.2s infinite; }
+.deck-dancer-turn { transform-origin: 68px 106px; }
+.deck-dancer-bob { transform-origin: 68px 106px; }
+.deck-stage--spinning .deck-dancer-bob { animation: deckDancerBob 0.5s steps(1) infinite; }
+.deck-stage--spinning .deck-dancer-turn { animation: deckDancerTurn 3s steps(1) infinite; }
+@keyframes deckDancerBob { 0% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes deckDancerTurn { 0% { transform: scaleX(1); } 50% { transform: scaleX(-1); } }
 @keyframes deckNoteLoop { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-4px, -20px); } }
 @media (prefers-reduced-motion: reduce) {
     .shop-deck { animation: none; }
-    .deck-stage--spinning .deck-cut-note--1, .deck-stage--spinning .deck-cut-note--2 { animation: none; }
+    .deck-stage--spinning .deck-cut-note--1, .deck-stage--spinning .deck-cut-note--2,
+    .deck-stage--spinning .deck-dancer-bob, .deck-stage--spinning .deck-dancer-turn { animation: none; }
     .deck-stage--settled .deck-cut-arm { transition: none; }
 }
