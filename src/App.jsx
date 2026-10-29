@@ -290,13 +290,14 @@ const MainApp = () => {
         playNow(getYouTubeVideoId(record.youtube));
     };
 
-    // 唱片行過場播完：日期和沉浸模式同一次更新；播放器已經在播這張的話就接著播，不會重來
+    // 唱片行過場播完：換到這張的日期，留在店裡用迷你播放器播（想看大唱盤再按展開），
+    // 不再跳進沉浸模式；播放器已經在播這張的話就接著播，不會重來
     const handleShopPlay = (record) => {
         const [y, m, d] = record.date.split('-').map(Number);
         if (record.date !== dateKey) triggerTransition(new Date(y, m - 1, d), { keepPlaying: true });
         window.location.hash = record.date;
         setIsImmersive(true);
-        setIsMinimized(false);
+        setIsMinimized(true);
     };
 
     const handleShopRead = (record) => {
