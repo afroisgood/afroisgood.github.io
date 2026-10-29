@@ -144,7 +144,17 @@ const MainApp = () => {
         }
     }, [selectedDate, currentData, youtubeId]);
 
-    const { player, playerState, playerError } = useYouTubePlayer((isImmersive || isMinimized) ? youtubeId : null);
+    // 唱片行裡先把播放器建好、載入影片但不播放：按「放上唱盤」時要在點擊當下開始播放，iPhone Safari 才會出聲。
+    // 暖機用當天的影片，當天沒有就用最新一張有試聽的。
+    const playerActive = isImmersive || isMinimized;
+    const shopWarmId = useMemo(() => {
+        if (viewMode !== 'shop') return null;
+        if (youtubeId) return youtubeId;
+        const latest = Object.keys(visibleJazzData).sort().reverse().find(k => getYouTubeVideoId(visibleJazzData[k].youtube));
+        return latest ? getYouTubeVideoId(visibleJazzData[latest].youtube) : null;
+    }, [viewMode, youtubeId, visibleJazzData]);
+    const playerVideoId = playerActive ? youtubeId : shopWarmId;
+    const { player, playerState, playerError, playNow } = useYouTubePlayer(playerVideoId, { autoplay: playerActive });
     const isVinylSpinning = playerState === 1 || playerState === 3;
 
     // Refs：讓事件監聽器永遠讀到最新值，避免 stale closure 造成切換第三個日期失敗
@@ -242,12 +252,17 @@ const MainApp = () => {
         setIsMinimized(false);
     };
 
-    const triggerTransition = (newDate) => {
-        try {
-            const p = playerRef2.current;
-            if (p && playerStateRef2.current === 1 && typeof p.pauseVideo === 'function') p.pauseVideo();
-        } catch (_) {}
+    // keepPlaying：唱片行放上唱盤時，音樂已經在點擊當下開始播了，換日期不要把它停掉
+    const triggerTransition = (newDate, { keepPlaying = false } = {}) => {
+        if (!keepPlaying) {
+            try {
+                const p = playerRef2.current;
+                if (p && playerStateRef2.current === 1 && typeof p.pauseVideo === 'function') p.pauseVideo();
+            } catch (_) {}
+        }
         const prevDate = selectedDateRef.current;
+        // 先更新 ref：接著改網址觸發的 hashchange 若比重新渲染早到，才不會把同一天再換一次
+        selectedDateRef.current = newDate;
         const direction = newDate > prevDate ? 'forward' : 'backward';
 
         // 新頁立刻換上；舊頁留一張快照做動畫：往後翻時蓋在上面撕走，往前翻時墊在下面讓新頁落下來蓋住。
@@ -270,10 +285,15 @@ const MainApp = () => {
         window.location.hash = formatDateString(newDate);
     };
 
-    // 唱片行抽出一張放上唱盤：日期和沉浸模式同一次更新，播放器直接載入這張，不會先播到原本那天
+    // 唱片行按下「放上唱盤」的當下（還在點擊事件裡）：用預先建好的播放器直接開始播這張
+    const handleShopStart = (record) => {
+        playNow(getYouTubeVideoId(record.youtube));
+    };
+
+    // 唱片行過場播完：日期和沉浸模式同一次更新；播放器已經在播這張的話就接著播，不會重來
     const handleShopPlay = (record) => {
         const [y, m, d] = record.date.split('-').map(Number);
-        if (record.date !== dateKey) triggerTransition(new Date(y, m - 1, d));
+        if (record.date !== dateKey) triggerTransition(new Date(y, m - 1, d), { keepPlaying: true });
         window.location.hash = record.date;
         setIsImmersive(true);
         setIsMinimized(false);
@@ -397,7 +417,7 @@ const MainApp = () => {
                 onShowChangelog={() => setShowChangelog(true)}
             />
 
-            {(isImmersive || isMinimized) && youtubeId && (
+            {playerVideoId && (
                 <div style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', bottom: 0, left: 0, overflow: 'hidden' }}>
                     <div id="yt-player-mount" style={{ width: '100%', height: '100%' }}></div>
                 </div>
@@ -526,6 +546,7 @@ const MainApp = () => {
                                     interactive={viewMode === 'shop' && !(isImmersive && !isMinimized) && !showShortcuts && !showChangelog}
                                     nowPlaying={isImmersive && currentData ? { ...currentData, date: dateKey } : null}
                                     isVinylSpinning={isVinylSpinning}
+                                    onStartPlay={handleShopStart}
                                     onPlay={handleShopPlay}
                                     onRead={handleShopRead}
                                 />

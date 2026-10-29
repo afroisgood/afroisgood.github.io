@@ -17,7 +17,7 @@ const loadCharacterId = () => {
     try { return localStorage.getItem(CHARACTER_KEY); } catch { return null; }
 };
 
-const ShopMode = ({ data, interactive, nowPlaying, isVinylSpinning, onPlay, onRead }) => {
+const ShopMode = ({ data, interactive, nowPlaying, isVinylSpinning, onStartPlay, onPlay, onRead }) => {
     const [characterId, setCharacterId] = useState(loadCharacterId);
     const [choosing, setChoosing] = useState(() => !findCharacter(characterId));
     const [open, setOpen] = useState(null); // { crate, records }
@@ -35,8 +35,10 @@ const ShopMode = ({ data, interactive, nowPlaying, isVinylSpinning, onPlay, onRe
         setOpen({ crate, records: crate.shuffle ? shuffled(crate.records) : crate.records });
     }, []);
 
-    // 放上唱盤：先播唱盤特寫過場，播完（或跳過）才交給 App 開沉浸模式
+    // 放上唱盤：音樂在點擊當下就開始（iPhone 只允許這時候出聲），
+    // 同時播唱盤特寫過場，播完（或跳過）才交給 App 開沉浸模式
     const placeRecord = (record) => {
+        onStartPlay?.(record);
         if (prefersReducedMotion()) { onPlay(record); return; }
         setPlacing(record);
     };
