@@ -683,7 +683,6 @@ body {
     white-space: nowrap;
 }
 .shop-open { position: absolute; background: #b4513a; color: #f2ece3; }
-.shop-poster { position: absolute; background: #f2ece3; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45); }
 .shop-crate { position: absolute; display: block; padding: 0; background: none; border: 0; cursor: pointer; }
 .shop-crate__sleeve { position: absolute; display: block; box-shadow: 1px 0 0 rgba(0, 0, 0, 0.4); }
 .shop-crate__mystery { display: flex; align-items: center; justify-content: center; background: #5b4a6e; color: #e0bc68; }
