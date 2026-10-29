@@ -1,4 +1,4 @@
-// 探索模式「唱片行」：選角色 → 在店裡走動 → 翻唱片櫃 → 放上唱盤（交給 App 開沉浸模式播放）
+// 探索模式「唱片行」：選角色 → 在店裡走動 → 翻唱片櫃 → 放上唱盤（交給 App 用迷你播放器播放）
 import { useCallback, useMemo, useState } from 'react';
 import { findCharacter } from './sprites';
 import { buildCrates, shuffled } from './crates';
@@ -36,7 +36,7 @@ const ShopMode = ({ data, interactive, nowPlaying, isVinylSpinning, onStartPlay,
     }, []);
 
     // 放上唱盤：音樂在點擊當下就開始（iPhone 只允許這時候出聲），
-    // 同時播唱盤特寫過場，播完（或跳過）才交給 App 開沉浸模式
+    // 同時播唱盤特寫過場，播完（或跳過）回到店裡，交給 App 開迷你播放器
     const placeRecord = (record) => {
         onStartPlay?.(record);
         if (prefersReducedMotion()) { onPlay(record); return; }

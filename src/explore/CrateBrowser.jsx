@@ -25,7 +25,9 @@ export const CrateBrowser = ({ crate, records, enabled, nowPlayingDate, onClose,
     const swipeRef = useRef(null);
     const closeRef = useRef(null);
     const record = records[index];
-    const canPlay = Boolean(getYouTubeId(record?.youtube));
+    const onDeck = nowPlayingDate === record?.date;
+    // 已經在唱盤上的這張不再放一次（會重播過場、歌也從頭開始），改用底部播放器控制
+    const canPlay = Boolean(getYouTubeId(record?.youtube)) && !onDeck;
     const note = record?.editorNote?.trim();
     const albumNote = record?.albumNotes?.trim();
 
@@ -82,7 +84,7 @@ export const CrateBrowser = ({ crate, records, enabled, nowPlayingDate, onClose,
                         onPointerCancel={() => { swipeRef.current = null; }}
                     >
                         <Cover record={record} />
-                        {nowPlayingDate === record.date && <span className="shop-pixel-text crate-cover__playing">ON DECK</span>}
+                        {onDeck && <span className="shop-pixel-text crate-cover__playing">ON DECK</span>}
                     </div>
                     <button type="button" className="shop-btn shop-btn--square" onClick={() => flip(1)} disabled={records.length < 2} aria-label="下一張">›</button>
                 </div>
@@ -95,11 +97,11 @@ export const CrateBrowser = ({ crate, records, enabled, nowPlayingDate, onClose,
 
                     <div className="crate-browser__actions">
                         <button type="button" className="shop-btn shop-btn--primary" disabled={!canPlay} onClick={() => onPlay(record)}>
-                            ▶ 放上唱盤
+                            {onDeck ? '♪ 唱盤上' : '▶ 放上唱盤'}
                         </button>
                         <button type="button" className="shop-btn" onClick={() => onRead(record)}>閱讀這天 →</button>
                     </div>
-                    {!canPlay && <p className="crate-browser__desc">這張沒有試聽連結，可以先看這天的文章</p>}
+                    {!canPlay && !onDeck && <p className="crate-browser__desc">這張沒有試聽連結，可以先看這天的文章</p>}
 
                     {(note || albumNote) && (
                         <div className="crate-pop">
