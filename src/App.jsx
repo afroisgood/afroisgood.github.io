@@ -87,6 +87,7 @@ const MainApp = () => {
     const [viewMode, setViewMode] = useState('day'); // 'day' 單日頁 | 'wall' 月份唱片牆 | 'shop' 唱片行
     const [shopOpened, setShopOpened] = useState(false); // 進過唱片行就一直掛著，切回來時角色位置和翻到的唱片都還在
     const [backToShop, setBackToShop] = useState(false); // 從唱片行「閱讀這天」過來，單日頁顯示回到唱片行
+    const [shopDeckOpen, setShopDeckOpen] = useState(false); // 唱片行的唱盤畫面開著（播放控制在那裡，迷你播放器先藏起來）
 
     const dateKey = formatDateString(selectedDate);
 
@@ -290,8 +291,8 @@ const MainApp = () => {
         playNow(getYouTubeVideoId(record.youtube));
     };
 
-    // 唱片行過場播完：換到這張的日期，留在店裡用迷你播放器播（想看大唱盤再按展開），
-    // 不再跳進沉浸模式；播放器已經在播這張的話就接著播，不會重來
+    // 唱片行過場播完：換到這張的日期、以縮小狀態播放（畫面停在唱片行的唱盤上，回到店裡時底部是迷你播放器），
+    // 不跳進沉浸模式；播放器已經在播這張的話就接著播，不會重來
     const handleShopPlay = (record) => {
         const [y, m, d] = record.date.split('-').map(Number);
         if (record.date !== dateKey) triggerTransition(new Date(y, m - 1, d), { keepPlaying: true });
@@ -435,7 +436,7 @@ const MainApp = () => {
                 playerError={playerError}
             />
 
-            {isImmersive && isMinimized && (
+            {isImmersive && isMinimized && !(viewMode === 'shop' && shopDeckOpen) && (
                 <div
                     className="fixed left-0 right-0 z-[300] flex items-center gap-3 px-4 py-2 bottom-14 lg:bottom-0"
                     style={{ background: 'rgba(18,13,10,0.96)', borderTop: '1px solid rgba(255,255,255,0.07)', backdropFilter: 'blur(8px)' }}
@@ -547,9 +548,14 @@ const MainApp = () => {
                                     interactive={viewMode === 'shop' && !(isImmersive && !isMinimized) && !showShortcuts && !showChangelog}
                                     nowPlaying={isImmersive && currentData ? { ...currentData, date: dateKey } : null}
                                     isVinylSpinning={isVinylSpinning}
+                                    player={player}
+                                    playerState={playerState}
+                                    playerError={playerError}
+                                    onTogglePlay={togglePlay}
                                     onStartPlay={handleShopStart}
                                     onPlay={handleShopPlay}
                                     onRead={handleShopRead}
+                                    onDeckOpenChange={setShopDeckOpen}
                                 />
                             </Suspense>
                         </div>

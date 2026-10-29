@@ -1,13 +1,6 @@
-// 翻唱片：一次看一張，左右翻；抽到喜歡的就放上唱盤，直接進沉浸模式播放
+// 翻唱片：一次看一張，左右翻；抽到喜歡的就放上唱盤，切到唱盤畫面播放
 import { useEffect, useRef, useState } from 'react';
-import { coverSrc, getYouTubeId } from './crates';
-
-const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-
-const formatRecordDate = (key) => {
-    const [y, m, d] = key.split('-').map(Number);
-    return `${y}.${String(m).padStart(2, '0')}.${String(d).padStart(2, '0')} ${WEEKDAYS[new Date(y, m - 1, d).getDay()]}`;
-};
+import { coverSrc, getYouTubeId, formatRecordDate } from './crates';
 
 const Cover = ({ record }) => {
     const [broken, setBroken] = useState(false);
@@ -19,8 +12,8 @@ const Cover = ({ record }) => {
     );
 };
 
-export const CrateBrowser = ({ crate, records, enabled, nowPlayingDate, onClose, onPlay, onRead }) => {
-    const [index, setIndex] = useState(0);
+export const CrateBrowser = ({ crate, records, startIndex = 0, enabled, covered = false, nowPlayingDate, onClose, onPlay, onRead }) => {
+    const [index, setIndex] = useState(startIndex);
     const [dir, setDir] = useState(1);
     const swipeRef = useRef(null);
     const closeRef = useRef(null);
@@ -63,7 +56,8 @@ export const CrateBrowser = ({ crate, records, enabled, nowPlayingDate, onClose,
     };
 
     return (
-        <div className="crate-browser" role="dialog" aria-modal="true" aria-label={`翻唱片：${crate.title}`}>
+        // covered：唱盤畫面蓋在上面時，Tab 和螢幕報讀都跳過底下的唱片櫃
+        <div className="crate-browser" role="dialog" aria-modal="true" aria-label={`翻唱片：${crate.title}`} inert={covered} aria-hidden={covered || undefined}>
             <header className="crate-browser__head">
                 <div>
                     <p className="shop-pixel-text crate-browser__eyebrow">{crate.label} {crate.sub}</p>

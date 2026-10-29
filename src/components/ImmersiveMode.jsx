@@ -1,41 +1,15 @@
 // src/components/ImmersiveMode.jsx
 // 沉浸模式：唱盤。唱片以封面當中心圓標旋轉，唱臂在開始播放後落下並隨進度往內圈移、播完或無法播放時抬起；
 // 側欄放完整正方形封面、播放狀態、進度條與前一天／播放／下一天。
-import { useEffect, useState } from 'react';
 import { IconX, IconMinimize, IconDisc, IconPause, IconPlay, IconSkipBack, IconSkipForward, IconArrowRight } from './Icons';
+import { formatTime, usePlaybackTime } from '../hooks/usePlaybackTime';
 
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-
-const formatTime = (seconds) => {
-    if (!Number.isFinite(seconds) || seconds <= 0) return '00:00';
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-};
 
 // 唱臂角度：架上、唱片最外圈、最內圈（標籤外緣）。依轉盤幾何換算，播放進度 0→1 對應外圈→內圈
 const ARM_REST_DEG = -6;
 const ARM_OUTER_DEG = 9;
 const ARM_INNER_DEG = 29;
-
-// 只有沉浸模式畫面在時才輪詢 YouTube 播放時間（唱臂與進度條共用）
-const usePlaybackTime = (player, enabled) => {
-    const [time, setTime] = useState({ current: 0, duration: 0 });
-
-    useEffect(() => {
-        if (!player || !enabled) return;
-        const id = setInterval(() => {
-            // YT.Player 物件一建立就拿得到，但 getCurrentTime 等方法要等播放器 ready 才會掛上
-            if (typeof player.getCurrentTime !== 'function') return;
-            try {
-                setTime({ current: player.getCurrentTime() || 0, duration: player.getDuration() || 0 });
-            } catch { /* 播放器切換影片中，下一輪再讀 */ }
-        }, 500);
-        return () => clearInterval(id);
-    }, [player, enabled]);
-
-    return [time, setTime];
-};
 
 const PlaybackProgress = ({ player, time, setTime, disabled }) => {
     const { current, duration } = time;
