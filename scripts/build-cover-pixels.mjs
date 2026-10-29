@@ -3,20 +3,22 @@
 // 唱片行唱盤中間的標籤用它畫成像素風封面。封面放在 Discogs、Apple 等外站，瀏覽器不讓網頁讀外站圖片的像素，
 // 所以在部署時先算好、跟網站放在同一個網域。
 // 只處理已經公開的日期；抓過的封面存在 .cache/cover-px（GitHub Actions 會快取這個資料夾），之後只抓新的。
-// 任何一張抓不到或解不開都直接略過（標籤改用預設的金色），不會讓部署失敗。
+// 任何一張抓不到或解不開都直接略過（標籤改用預設的金色），不會讓部署失敗；失敗原因依網站彙整印在部署紀錄裡。
 
 import { readFileSync, readdirSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import jpeg from 'jpeg-js';
+import sharp from 'sharp';
 
 const DIST = 'dist';
 const DATA_DIR = join(DIST, 'data');
 const OUT_DIR = join(DIST, 'cover-px');
 const CACHE_DIR = join('.cache', 'cover-px');
 const SIZE = 60; // 與 src/explore/coverPixels.js 的 COVER_SIZE 一致
-const CONCURRENCY = 6;
+const CONCURRENCY = 4;
 const TIMEOUT_MS = 15000;
+// Wikimedia 等網站要求請求帶上可辨識的身分與聯絡方式，否則會拒絕
+const USER_AGENT = 'JAZZ365-build/1.0 (https://jazzcalender365.com)';
 
 // 與 build-share-pages.mjs 同一套「已公開」規則（臺灣時間當天上午 7 點後）
 const taipeiNow = new Intl.DateTimeFormat('en-CA', {
@@ -31,37 +33,28 @@ const coverUrl = (entry) => {
     return match && match[2].length === 11 ? `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg` : null;
 };
 
-// 取中間的正方形，每一格取區域平均色，輸出 SIZE×SIZE 個 rrggbb 連在一起的字串
-const toPixels = ({ width, height, data }) => {
-    const side = Math.min(width, height);
-    const x0 = Math.floor((width - side) / 2);
-    const y0 = Math.floor((height - side) / 2);
-    let hex = '';
-    for (let gy = 0; gy < SIZE; gy++) {
-        for (let gx = 0; gx < SIZE; gx++) {
-            const sx0 = x0 + Math.floor((gx * side) / SIZE), sx1 = x0 + Math.floor(((gx + 1) * side) / SIZE);
-            const sy0 = y0 + Math.floor((gy * side) / SIZE), sy1 = y0 + Math.floor(((gy + 1) * side) / SIZE);
-            let r = 0, g = 0, b = 0, n = 0;
-            for (let y = sy0; y < sy1; y++) {
-                for (let x = sx0; x < sx1; x++) {
-                    const i = (y * width + x) * 4;
-                    r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
-                }
-            }
-            hex += [r, g, b].map(v => Math.round(v / Math.max(1, n)).toString(16).padStart(2, '0')).join('');
-        }
-    }
-    return hex;
-};
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// 下載封面（被限速或伺服器出錯時等一下再試一次），取中間的正方形縮成 SIZE×SIZE，輸出 rrggbb 連在一起的字串。
+// 只要 JPEG，但有些網站（例如 Apple）仍可能回 WebP／AVIF，sharp 都解得開。
 const fetchPixels = async (url) => {
-    const res = await fetch(url, {
-        headers: { Accept: 'image/jpeg,image/*;q=0.8', 'User-Agent': 'jazzcalender365-build' },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+    let res;
+    for (let attempt = 0; attempt < 2; attempt++) {
+        res = await fetch(url, {
+            headers: { Accept: 'image/jpeg', 'User-Agent': USER_AGENT },
+            signal: AbortSignal.timeout(TIMEOUT_MS),
+        });
+        if (res.status !== 429 && res.status < 500) break;
+        await sleep(2000);
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const image = jpeg.decode(Buffer.from(await res.arrayBuffer()), { useTArray: true, maxMemoryUsageInMB: 256 });
-    return toPixels(image);
+    const { data, info } = await sharp(Buffer.from(await res.arrayBuffer()))
+        .flatten({ background: '#000000' })
+        .resize(SIZE, SIZE, { fit: 'cover' })
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+    if (info.width !== SIZE || info.height !== SIZE || info.channels !== 3) throw new Error(`尺寸 ${info.width}×${info.height}×${info.channels}`);
+    return data.toString('hex');
 };
 
 const entries = readdirSync(DATA_DIR)
@@ -72,7 +65,8 @@ const entries = readdirSync(DATA_DIR)
 mkdirSync(OUT_DIR, { recursive: true });
 mkdirSync(CACHE_DIR, { recursive: true });
 
-let made = 0, fetched = 0, failed = 0;
+let made = 0, fetched = 0;
+const failures = new Map(); // 「網站：原因」→ 張數
 const queue = [...entries];
 const worker = async () => {
     for (let entry = queue.shift(); entry; entry = queue.shift()) {
@@ -84,8 +78,9 @@ const worker = async () => {
                 px = await fetchPixels(url);
                 writeFileSync(cacheFile, px);
                 fetched++;
-            } catch {
-                failed++;
+            } catch (err) {
+                const reason = `${new URL(url).host}：${err.name === 'TimeoutError' ? '逾時' : err.message}`;
+                failures.set(reason, (failures.get(reason) ?? 0) + 1);
                 continue;
             }
         }
@@ -95,4 +90,6 @@ const worker = async () => {
 };
 await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
+const failed = [...failures.values()].reduce((a, b) => a + b, 0);
 console.log(`像素封面：${made} 張（新抓 ${fetched} 張，抓不到 ${failed} 張）`);
+for (const [reason, count] of failures) console.log(`  抓不到 ${count} 張｜${reason}`);
