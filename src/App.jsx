@@ -58,6 +58,12 @@ const getIntroMode = () => {
     return 'calendar';
 };
 
+// 首頁入口上次選的模式，下次進站預先選好
+const HOME_MODE_KEY = 'jazz365_home_mode';
+const getHomeMode = () => {
+    try { return localStorage.getItem(HOME_MODE_KEY) === 'shop' ? 'shop' : 'day'; } catch { return 'day'; }
+};
+
 // ── 主應用（所有 hooks 都在此，無條件式 early return）──
 const MainApp = () => {
     const [selectedDate, setSelectedDate] = useState(() => parseHashDate() || new Date());
@@ -67,7 +73,10 @@ const MainApp = () => {
     const [dataReady, setDataReady] = useState(false);
     const [introMode] = useState(getIntroMode);
     const [introTargetDate] = useState(selectedDate);
-    const [showIntro, setShowIntro] = useState(introMode === 'calendar');
+    // 網址沒有指定日期（從首頁進站）時，開場日曆停在今天讓讀者選日曆模式或唱片行模式；分享連結直接看那天
+    const [chooseOnEntry] = useState(() => !parseHashDate());
+    const [homeMode] = useState(getHomeMode);
+    const [showIntro, setShowIntro] = useState(introMode === 'calendar' || chooseOnEntry);
     const [leavingSheets, setLeavingSheets] = useState([]); // 正在撕走（或被蓋住）的舊頁
     const [enterDirection, setEnterDirection] = useState(null); // 帶入目前這頁的方向；null = 尚未換過日期
     const sheetSeqRef = useRef(0);
@@ -76,6 +85,8 @@ const MainApp = () => {
     const [isImmersive, setIsImmersive] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [viewMode, setViewMode] = useState('day'); // 'day' 單日頁 | 'wall' 月份唱片牆 | 'shop' 唱片行
+    const [shopOpened, setShopOpened] = useState(false); // 進過唱片行就一直掛著，切回來時角色位置和翻到的唱片都還在
+    const [backToShop, setBackToShop] = useState(false); // 從唱片行「閱讀這天」過來，單日頁顯示回到唱片行
 
     const dateKey = formatDateString(selectedDate);
 
@@ -271,6 +282,7 @@ const MainApp = () => {
     const handleShopRead = (record) => {
         const [y, m, d] = record.date.split('-').map(Number);
         setViewMode('day');
+        setBackToShop(true);
         handleDateChange(new Date(y, m - 1, d));
         window.scrollTo(0, 0);
     };
@@ -334,6 +346,17 @@ const MainApp = () => {
     }, [introMode]);
 
     const handleIntroDone = useCallback(() => setShowIntro(false), []);
+
+    const changeViewMode = (mode) => {
+        if (mode === 'shop') setShopOpened(true);
+        setBackToShop(false);
+        setViewMode(mode);
+    };
+
+    const handleIntroChoose = (mode) => {
+        changeViewMode(mode);
+        try { localStorage.setItem(HOME_MODE_KEY, mode); } catch { /* 記不住就下次再選 */ }
+    };
     const closeShortcuts = useCallback(() => setShowShortcuts(false), []);
 
     const latestVersion = changelogData[0]?.version || "v1.0.0";
@@ -353,15 +376,23 @@ const MainApp = () => {
              style={{ '--mood-accent': moodAccent, '--mood-glow': moodGlow }}>
 
             {showIntro && (
-                <IntroCalendar targetDate={introTargetDate} ready={dataReady} onDone={handleIntroDone} />
+                <IntroCalendar
+                    targetDate={introTargetDate}
+                    ready={dataReady}
+                    onDone={handleIntroDone}
+                    animate={introMode === 'calendar'}
+                    choose={chooseOnEntry}
+                    defaultChoice={homeMode}
+                    onChoose={handleIntroChoose}
+                />
             )}
 
             <RetroMenuBar
                 viewMode={viewMode}
-                onViewModeChange={setViewMode}
+                onViewModeChange={changeViewMode}
                 canImmerse={Boolean(youtubeId)}
-                onImmerse={() => { setViewMode('day'); setIsImmersive(true); }}
-                onToday={() => { setViewMode('day'); handleDateChange(new Date()); }}
+                onImmerse={() => { changeViewMode('day'); setIsImmersive(true); }}
+                onToday={() => { changeViewMode('day'); handleDateChange(new Date()); }}
                 onShowShortcuts={() => setShowShortcuts(true)}
                 onShowChangelog={() => setShowChangelog(true)}
             />
@@ -476,20 +507,23 @@ const MainApp = () => {
                     />
 
                     {/* 單日／唱片牆切換 */}
-                    <div className="flex justify-end px-3 py-1.5 bg-[#e8dfd3] border-b border-[#3a2808]/40">
+                    <div className="flex items-center justify-end gap-2 px-3 py-1.5 bg-[#e8dfd3] border-b border-[#3a2808]/40">
+                        {viewMode === 'day' && backToShop && (
+                            <button type="button" className="back-to-shop mr-auto" onClick={() => changeViewMode('shop')}>← 回到唱片行</button>
+                        )}
                         <div className="view-toggle" role="group" aria-label="檢視方式">
-                            <button type="button" aria-pressed={viewMode === 'day'} onClick={() => setViewMode('day')}>單日</button>
-                            <button type="button" aria-pressed={viewMode === 'wall'} onClick={() => setViewMode('wall')}>唱片牆</button>
-                            <button type="button" aria-pressed={viewMode === 'shop'} onClick={() => setViewMode('shop')}>唱片行</button>
+                            <button type="button" aria-pressed={viewMode === 'day'} onClick={() => changeViewMode('day')}>單日</button>
+                            <button type="button" aria-pressed={viewMode === 'wall'} onClick={() => changeViewMode('wall')}>唱片牆</button>
+                            <button type="button" aria-pressed={viewMode === 'shop'} onClick={() => changeViewMode('shop')}>唱片行</button>
                         </div>
                     </div>
 
-                    {viewMode === 'shop' ? (
-                        <div className="retro-body relative flex-1 shop-body">
+                    {shopOpened && (
+                        <div className="retro-body relative flex-1 shop-body" style={{ display: viewMode === 'shop' ? undefined : 'none' }}>
                             <Suspense fallback={<div className="shop-root shop-root--loading"><p className="shop-pixel-text">LOADING...</p></div>}>
                                 <ShopMode
                                     data={visibleJazzData}
-                                    interactive={!(isImmersive && !isMinimized) && !showShortcuts && !showChangelog}
+                                    interactive={viewMode === 'shop' && !(isImmersive && !isMinimized) && !showShortcuts && !showChangelog}
                                     nowPlaying={isImmersive && currentData ? { ...currentData, date: dateKey } : null}
                                     isVinylSpinning={isVinylSpinning}
                                     onPlay={handleShopPlay}
@@ -497,7 +531,8 @@ const MainApp = () => {
                                 />
                             </Suspense>
                         </div>
-                    ) : viewMode === 'wall' ? (
+                    )}
+                    {viewMode === 'wall' ? (
                         <div className="retro-body relative flex-1" style={{ backgroundColor: '#f2ece3' }}>
                             <MonthWall
                                 month={currentMonth}
@@ -505,13 +540,13 @@ const MainApp = () => {
                                 selectedDate={selectedDate}
                                 onMonthChange={setCurrentMonth}
                                 onPick={(date) => {
-                                    setViewMode('day');
+                                    changeViewMode('day');
                                     handleDateChange(date);
                                     window.scrollTo(0, 0);
                                 }}
                             />
                         </div>
-                    ) : (
+                    ) : viewMode === 'day' ? (
                     <div className="retro-body relative overflow-hidden flex-1 flex flex-col" style={{ backgroundColor: moodHex }}>
 
                         <PageSheet
@@ -550,7 +585,7 @@ const MainApp = () => {
                             );
                         })}
                     </div>
-                    )}
+                    ) : null}
                 </div>
             </div>
 
