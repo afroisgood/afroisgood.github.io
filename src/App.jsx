@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from 'react';
 
 import { useYouTubePlayer } from './hooks/useYouTubePlayer';
 import { FIRST_YEAR, formatDateString, isDateVisible, lastYearDateString } from './utils/dateUtils';
@@ -17,6 +17,9 @@ import { RetroMenuBar } from './components/RetroMenuBar';
 import { RetroTitleBar } from './components/RetroTitleBar';
 import { IntroCalendar } from './components/IntroCalendar';
 import { MonthWall } from './components/MonthWall';
+
+// 唱片行（探索模式）用到才載入，只看每日推薦的人不必多下載
+const ShopMode = lazy(() => import('./explore/ShopMode'));
 
 const SHEET_TEAR_MS = 520; // 與 index.css 的 .page-sheet--tear / --drop 動畫時長一致
 
@@ -72,7 +75,7 @@ const MainApp = () => {
     const [showShortcuts, setShowShortcuts] = useState(false);
     const [isImmersive, setIsImmersive] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
-    const [viewMode, setViewMode] = useState('day'); // 'day' 單日頁 | 'wall' 月份唱片牆
+    const [viewMode, setViewMode] = useState('day'); // 'day' 單日頁 | 'wall' 月份唱片牆 | 'shop' 唱片行
 
     const dateKey = formatDateString(selectedDate);
 
@@ -175,11 +178,14 @@ const MainApp = () => {
 
             switch (e.key) {
                 case 'Escape':
+                    // 唱片行裡 Esc 留給「把唱片放回去」，不要順手關掉迷你播放器
+                    if (viewMode === 'shop' && isMinimized) break;
                     if (isImmersive) {
                         isMinimized ? handleCloseImmersive() : handleMinimizeImmersive();
                     }
                     break;
                 case 'ArrowLeft': {
+                    if (viewMode === 'shop' && !(isImmersive && !isMinimized)) break; // 唱片行裡方向鍵用來走路
                     e.preventDefault();
                     const prev = new Date(selectedDateRef.current);
                     prev.setDate(prev.getDate() - 1);
@@ -187,6 +193,7 @@ const MainApp = () => {
                     break;
                 }
                 case 'ArrowRight': {
+                    if (viewMode === 'shop' && !(isImmersive && !isMinimized)) break;
                     e.preventDefault();
                     const next = new Date(selectedDateRef.current);
                     next.setDate(next.getDate() + 1);
@@ -207,7 +214,7 @@ const MainApp = () => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isImmersive, isMinimized, youtubeId]);
+    }, [isImmersive, isMinimized, youtubeId, viewMode]);
 
     const handleCloseImmersive = () => {
         const p = playerRef2.current;
@@ -252,6 +259,22 @@ const MainApp = () => {
         window.location.hash = formatDateString(newDate);
     };
 
+    // 唱片行抽出一張放上唱盤：日期和沉浸模式同一次更新，播放器直接載入這張，不會先播到原本那天
+    const handleShopPlay = (record) => {
+        const [y, m, d] = record.date.split('-').map(Number);
+        if (record.date !== dateKey) triggerTransition(new Date(y, m - 1, d));
+        window.location.hash = record.date;
+        setIsImmersive(true);
+        setIsMinimized(false);
+    };
+
+    const handleShopRead = (record) => {
+        const [y, m, d] = record.date.split('-').map(Number);
+        setViewMode('day');
+        handleDateChange(new Date(y, m - 1, d));
+        window.scrollTo(0, 0);
+    };
+
     const handlePrevDay = () => {
         const prev = new Date(selectedDate);
         prev.setDate(selectedDate.getDate() - 1);
@@ -293,6 +316,11 @@ const MainApp = () => {
         for (let year = FIRST_YEAR; year <= new Date().getFullYear(); year++) loadYear(year);
     }, [loadYear]);
 
+    // 唱片行的櫃子要擺滿所有年份
+    useEffect(() => {
+        if (viewMode === 'shop') loadAllYears();
+    }, [viewMode, loadAllYears]);
+
     // 選到的日期、翻到的月份屬於哪一年就載入哪一年；前一年也一起載，「去年的今天」才查得到
     const selectedYear = selectedDate.getFullYear();
     const monthYear = currentMonth.getFullYear();
@@ -311,7 +339,9 @@ const MainApp = () => {
     const latestVersion = changelogData[0]?.version || "v1.0.0";
 
     const headline = (currentData?.album || '').toUpperCase();
-    const winTitle = viewMode === 'wall'
+    const winTitle = viewMode === 'shop'
+        ? 'JAZZ 365 RECORDS — EXPLORE'
+        : viewMode === 'wall'
         ? `${currentMonth.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()} ${currentMonth.getFullYear()} — RECORD WALL`
         : currentData
         ? `${String(selectedDate.getDate()).padStart(2,'0')} ${selectedDate.toLocaleDateString('en-US',{month:'short'}).toUpperCase()} — ${headline.slice(0,38)}${headline.length>38?'...':''}`
@@ -450,10 +480,24 @@ const MainApp = () => {
                         <div className="view-toggle" role="group" aria-label="檢視方式">
                             <button type="button" aria-pressed={viewMode === 'day'} onClick={() => setViewMode('day')}>單日</button>
                             <button type="button" aria-pressed={viewMode === 'wall'} onClick={() => setViewMode('wall')}>唱片牆</button>
+                            <button type="button" aria-pressed={viewMode === 'shop'} onClick={() => setViewMode('shop')}>唱片行</button>
                         </div>
                     </div>
 
-                    {viewMode === 'wall' ? (
+                    {viewMode === 'shop' ? (
+                        <div className="retro-body relative flex-1 shop-body">
+                            <Suspense fallback={<div className="shop-root shop-root--loading"><p className="shop-pixel-text">LOADING...</p></div>}>
+                                <ShopMode
+                                    data={visibleJazzData}
+                                    interactive={!(isImmersive && !isMinimized) && !showShortcuts && !showChangelog}
+                                    nowPlaying={isImmersive && currentData ? { ...currentData, date: dateKey } : null}
+                                    isVinylSpinning={isVinylSpinning}
+                                    onPlay={handleShopPlay}
+                                    onRead={handleShopRead}
+                                />
+                            </Suspense>
+                        </div>
+                    ) : viewMode === 'wall' ? (
                         <div className="retro-body relative flex-1" style={{ backgroundColor: '#f2ece3' }}>
                             <MonthWall
                                 month={currentMonth}
