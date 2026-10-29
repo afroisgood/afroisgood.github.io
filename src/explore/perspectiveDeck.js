@@ -1,7 +1,8 @@
 // 落針後的透視唱盤（斜上方一點透視）：桌面木紋朝同一個消失點收、底座看得到前側面、轉盤和唱片是橢圓。
 // 全部在 180×105 格的座標裡用程式算出像素，再交給 ShopDeck 畫成 SVG。
 // 唱片不能直接旋轉（會破壞像素），改成預先算好 8 格轉動角度輪播；標籤是這張專輯的像素封面。
-import { COVER_SIZE, LABEL_R, toRuns } from './coverPixels';
+// 唱片用比場景細 DETAIL 倍的格子畫成圖片，封面才看得清楚。
+import { COVER_SIZE, DETAIL, LABEL_R, paintCells, toRuns } from './coverPixels';
 
 export const SCENE_W = 180;
 export const SCENE_H = 105;
@@ -88,38 +89,34 @@ const buildScene = () => {
 let sceneRuns = null;
 export const perspectiveSceneRuns = () => (sceneRuns ??= buildScene());
 
-/** 8 格轉動中的唱片；px 是像素封面顏色（沒有就用金色標籤） */
-export const perspectiveDiscFrames = (px) => Array.from({ length: FRAMES }, (_, f) => {
+/** 8 格轉動中的唱片，回傳每一格的圖片網址；px 是像素封面顏色（沒有就用金色標籤） */
+export const perspectiveDiscFrameImages = (px) => Array.from({ length: FRAMES }, (_, f) => {
     const th = (f * Math.PI * 2) / FRAMES;
-    const g = blank(FRAME_W, FRAME_H);
-    for (let y = 0; y < FRAME_H; y++) {
-        for (let x = 0; x < FRAME_W; x++) {
-            const dx = x + 0.5 - FRAME_W / 2;
-            const dy = (y + 0.5 - FRAME_H / 2) / DISC_SQUASH;
-            const r = Math.hypot(dx, dy);
-            if (r > 24) continue;
-            // 唱片自己的座標（跟著轉）
-            const u = dx * Math.cos(th) + dy * Math.sin(th);
-            const v = -dx * Math.sin(th) + dy * Math.cos(th);
-            let c = r > 23 ? '#0e0a0a' : '#151010';
-            for (const k of [21, 18, 15, 12]) if (Math.abs(r - k) < 0.7) c = '#2e2622';
-            // 反光固定在畫面同一處，不跟著轉
-            const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
-            if (r > 11 && r < 22.5 && ang > -150 && ang < -110) c = r % 3 < 1.5 ? '#4a4440' : '#3a3430';
-            if (r < LABEL_R) {
-                if (px) {
-                    const ix = Math.min(COVER_SIZE - 1, Math.max(0, Math.floor(u + LABEL_R)));
-                    const iy = Math.min(COVER_SIZE - 1, Math.max(0, Math.floor(v + LABEL_R)));
-                    c = px[iy * COVER_SIZE + ix];
-                } else {
-                    c = (Math.abs(v + 3.5) < 0.9 && Math.abs(u) < 6) || (Math.abs(v - 2.5) < 0.9 && Math.abs(u) < 4) ? '#7a3b2e' : '#c8a048';
-                }
+    return paintCells(FRAME_W * DETAIL, FRAME_H * DETAIL, (x, y) => {
+        const dx = (x + 0.5) / DETAIL - FRAME_W / 2;
+        const dy = ((y + 0.5) / DETAIL - FRAME_H / 2) / DISC_SQUASH;
+        const r = Math.hypot(dx, dy);
+        if (r > 24) return null;
+        // 唱片自己的座標（跟著轉）
+        const u = dx * Math.cos(th) + dy * Math.sin(th);
+        const v = -dx * Math.sin(th) + dy * Math.cos(th);
+        let c = r > 23 ? '#0e0a0a' : '#151010';
+        for (const k of [21, 18, 15, 12]) if (Math.abs(r - k) < 0.42) c = '#2e2622';
+        // 反光固定在畫面同一處，不跟著轉
+        const ang = (Math.atan2(dy, dx) * 180) / Math.PI;
+        if (r > 11 && r < 22.5 && ang > -150 && ang < -110) c = r % 3 < 1.5 ? '#4a4440' : '#3a3430';
+        if (r < LABEL_R) {
+            if (px) {
+                const ix = Math.min(COVER_SIZE - 1, Math.max(0, Math.floor((u + LABEL_R) * DETAIL)));
+                const iy = Math.min(COVER_SIZE - 1, Math.max(0, Math.floor((v + LABEL_R) * DETAIL)));
+                c = px[iy * COVER_SIZE + ix];
+            } else {
+                c = (Math.abs(v + 3.5) < 0.9 && Math.abs(u) < 6) || (Math.abs(v - 2.5) < 0.9 && Math.abs(u) < 4) ? '#7a3b2e' : '#c8a048';
             }
-            if (r < 1.6) c = '#1c1410';
-            g[y][x] = c;
         }
-    }
-    return toRuns(g);
+        if (r < 1.6) c = '#1c1410';
+        return c;
+    });
 });
 
 // 唱臂（落在最外圈的姿勢）：兩格粗的線，加上唱頭

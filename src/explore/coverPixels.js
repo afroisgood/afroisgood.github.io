@@ -1,10 +1,14 @@
-// 唱片中間標籤用的像素封面：部署時 scripts/build-cover-pixels.mjs 把每天的封面縮成 20×20，
+// 唱片中間標籤用的像素封面：部署時 scripts/build-cover-pixels.mjs 把每天的封面縮成 60×60，
 // 存在 /cover-px/<日期>.json（跟網站同網域，外站封面讀不到像素的限制就不存在）。
 // 開發模式或某張封面抓不到時沒有這個檔，標籤就用預設的金色。
 import { useEffect, useState } from 'react';
 
-export const COVER_SIZE = 20;
-export const LABEL_R = COVER_SIZE / 2; // 標籤半徑（格），一格對一個封面像素
+// 唱片和標籤用比場景細 3 倍的格子畫（一個場景格 = 3×3 個唱片格），封面才看得清楚
+export const DETAIL = 3;
+export const LABEL_R = 10; // 標籤半徑（場景格）
+export const COVER_SIZE = LABEL_R * 2 * DETAIL; // 60：標籤直徑上的唱片格數，一格對一個封面像素
+// 畫進畫布時每個唱片格放大成幾個像素，放進 SVG 再縮放時邊緣才不會糊
+export const CANVAS_CELL = 4;
 
 const cache = new Map(); // date → 顏色陣列，或 null（沒有像素封面）
 
@@ -51,9 +55,26 @@ export const toRuns = (rows) => {
     return runs;
 };
 
+/** 畫一張 w×h 唱片格的圖（colorAt 回傳 null 就留透明），回傳可以放進 SVG <image> 的網址 */
+export const paintCells = (w, h, colorAt) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = w * CANVAS_CELL;
+    canvas.height = h * CANVAS_CELL;
+    const ctx = canvas.getContext('2d');
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const c = colorAt(x, y);
+            if (!c) continue;
+            ctx.fillStyle = c;
+            ctx.fillRect(x * CANVAS_CELL, y * CANVAS_CELL, CANVAS_CELL, CANVAS_CELL);
+        }
+    }
+    return canvas.toDataURL();
+};
+
 /** 俯視的圓形標籤：封面裁成圓形 */
-export const labelRows = (px) => Array.from({ length: COVER_SIZE }, (_, j) =>
-    Array.from({ length: COVER_SIZE }, (_, i) => {
-        const dx = i + 0.5 - LABEL_R, dy = j + 0.5 - LABEL_R;
-        return dx * dx + dy * dy <= LABEL_R * LABEL_R ? px[j * COVER_SIZE + i] : null;
-    }));
+export const labelImage = (px) => paintCells(COVER_SIZE, COVER_SIZE, (i, j) => {
+    const r = COVER_SIZE / 2;
+    const dx = i + 0.5 - r, dy = j + 0.5 - r;
+    return dx * dx + dy * dy <= r * r ? px[j * COVER_SIZE + i] : null;
+});

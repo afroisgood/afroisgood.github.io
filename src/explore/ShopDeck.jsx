@@ -9,10 +9,10 @@ import { formatTime, usePlaybackTime } from '../hooks/usePlaybackTime';
 import { formatRecordDate } from './crates';
 import { spriteRuns } from './sprites';
 import { useWalkCycle } from './useWalkCycle';
-import { useCoverPixels, labelRows, toRuns, LABEL_R } from './coverPixels';
+import { useCoverPixels, labelImage, LABEL_R } from './coverPixels';
 import {
     SCENE_W, SCENE_H, DISC_CX, DISC_CY, FRAME_W, FRAME_H, FRAMES, ARM_PIVOT_X, ARM_PIVOT_Y,
-    ARM_REST, ARM_OUTER, ARM_INNER, perspectiveSceneRuns, perspectiveDiscFrames, perspectiveArmRuns,
+    ARM_REST, ARM_OUTER, ARM_INNER, perspectiveSceneRuns, perspectiveDiscFrameImages, perspectiveArmRuns,
 } from './perspectiveDeck';
 
 const CUT_MS = 2300; // 與 index.css 的 .deck-cut-* 動畫總長一致
@@ -63,13 +63,25 @@ const Runs = ({ runs, x = 0, y = 0 }) => runs.map((r, i) => (
     <rect key={i} x={x + r.x} y={y + r.y} width={r.w} height={1} fill={r.fill} />
 ));
 
+// 細格子畫成的圖片放進 SVG：保持像素邊緣，不要平滑
+const PixelImage = ({ href, x, y, width, height }) => (
+    <image href={href} x={x} y={y} width={width} height={height} imageRendering="optimizeSpeed" style={{ imageRendering: 'pixelated' }} />
+);
+
+// 俯視的標籤：像素封面裁成圓形；換唱片才重畫
+const CoverLabel = memo(({ px }) => {
+    const href = useMemo(() => labelImage(px), [px]);
+    return <PixelImage href={href} x={CX - LABEL_R} y={CY - LABEL_R} width={LABEL_R * 2} height={LABEL_R * 2} />;
+});
+CoverLabel.displayName = 'CoverLabel';
+
 // 俯視的唱片；px 是像素封面（沒有就用金色標籤）
 const Disc = ({ px }) => (
     <>
         {disk(CX, CY, 24, '#151010', 'd')}
         {[21, 18, 15, 12].flatMap(r => [...disk(CX, CY, r + 0.6, '#2e2622', `g${r}`), ...disk(CX, CY, r, '#151010', `h${r}`)])}
         {px ? (
-            <Runs runs={toRuns(labelRows(px))} x={CX - LABEL_R} y={CY - LABEL_R} />
+            <CoverLabel px={px} />
         ) : (
             <>
                 {disk(CX, CY, 8, '#c8a048', 'l')}
@@ -105,10 +117,10 @@ PerspectiveScene.displayName = 'PerspectiveScene';
 
 // 8 格轉動的唱片疊在一起，播放中由 CSS 輪流顯示（.deck-pframe）；換唱片才重算
 const PerspectiveDisc = memo(({ px }) => {
-    const frames = useMemo(() => perspectiveDiscFrames(px), [px]);
-    return frames.map((runs, f) => (
+    const frames = useMemo(() => perspectiveDiscFrameImages(px), [px]);
+    return frames.map((href, f) => (
         <g key={f} className={'deck-pframe' + (f === 0 ? ' deck-pframe--first' : '')} style={{ animationDelay: `${(-f * 0.9) / FRAMES}s` }}>
-            <Runs runs={runs} x={DISC_CX - FRAME_W / 2} y={DISC_CY - FRAME_H / 2 - 1} />
+            <PixelImage href={href} x={DISC_CX - FRAME_W / 2} y={DISC_CY - FRAME_H / 2 - 1} width={FRAME_W} height={FRAME_H} />
         </g>
     ));
 });

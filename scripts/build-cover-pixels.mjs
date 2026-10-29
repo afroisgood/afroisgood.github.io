@@ -1,5 +1,5 @@
 // scripts/build-cover-pixels.mjs
-// vite build 之後執行：把每一天的封面縮成 20×20 的像素顏色，寫到 dist/cover-px/2026-10-23.json。
+// vite build 之後執行：把每一天的封面縮成 60×60 的像素顏色，寫到 dist/cover-px/2026-10-23.json。
 // 唱片行唱盤中間的標籤用它畫成像素風封面。封面放在 Discogs、Apple 等外站，瀏覽器不讓網頁讀外站圖片的像素，
 // 所以在部署時先算好、跟網站放在同一個網域。
 // 只處理已經公開的日期；抓過的封面存在 .cache/cover-px（GitHub Actions 會快取這個資料夾），之後只抓新的。
@@ -14,7 +14,7 @@ const DIST = 'dist';
 const DATA_DIR = join(DIST, 'data');
 const OUT_DIR = join(DIST, 'cover-px');
 const CACHE_DIR = join('.cache', 'cover-px');
-const SIZE = 20;
+const SIZE = 60; // 與 src/explore/coverPixels.js 的 COVER_SIZE 一致
 const CONCURRENCY = 6;
 const TIMEOUT_MS = 15000;
 
