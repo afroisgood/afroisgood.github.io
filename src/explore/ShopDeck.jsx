@@ -1,11 +1,13 @@
 // 唱片行的唱盤畫面：放上唱盤時先播過場（手把唱片放上轉盤、拉唱臂落針），之後就停在這個像素唱盤畫面播放。
-// 唱盤畫在 160×84 格的座標裡（畫面只取唱盤附近 118×76 格），過場動畫用 CSS（index.css 的 .deck-cut-*），時間軸對照 CUT_MS。
-// 播放中唱片轉、唱臂隨進度由外圈往內圈移；暫停時唱片停住，播完或無法播放時唱臂抬起。
+// 唱盤畫在 160×112 格的座標裡（畫面取唱盤附近 118×104 格），過場動畫用 CSS（index.css 的 .deck-cut-*），時間軸對照 CUT_MS。
+// 播放中唱片轉、唱臂隨進度由外圈往內圈移，角色站在唱盤下方跟著音樂搖擺；暫停時唱片停住、角色站著，播完或無法播放時唱臂抬起。
 // 旁邊是唱片資訊、進度條、播放／上一張／下一張（同一櫃），以及回到店裡、閱讀這天。
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IconPause, IconPlay, IconSkipBack, IconSkipForward } from '../components/Icons';
 import { formatTime, usePlaybackTime } from '../hooks/usePlaybackTime';
 import { formatRecordDate } from './crates';
+import { spriteRuns } from './sprites';
+import { useWalkCycle } from './useWalkCycle';
 
 const CUT_MS = 2300; // 與 index.css 的 .deck-cut-* 動畫總長一致
 
@@ -79,6 +81,14 @@ const Note = ({ x, y }) => (
     </>
 );
 
+// 角色站的位置（格）：唱盤下方的地板上
+const DANCER_X = 60;
+const DANCER_Y = 82;
+
+const prefersReducedMotion = () => {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
+};
+
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
 
 export const ShopDeck = ({
@@ -89,6 +99,7 @@ export const ShopDeck = ({
     const settled = !placing;
     const [time, setTime] = usePlaybackTime(player, settled && onDeck);
     const placedRef = useRef(false);
+    const [reduceMotion] = useState(prefersReducedMotion);
     const handlersRef = useRef({});
 
     useEffect(() => { handlersRef.current = { onPlaced, onPrev, onNext, onBack }; });
@@ -137,6 +148,9 @@ export const ShopDeck = ({
     };
 
     const playing = onDeck && (playerState === 1 || playerState === 3);
+    // 播放中角色跟著音樂換腳；上下擺動和轉身交給 CSS（.deck-stage--spinning .deck-dancer-*）
+    const dancing = settled && playing && !reduceMotion;
+    const danceFrame = useWalkCycle(dancing, 4);
     const unavailable = onDeck && Boolean(playerError);
     const progress = time.duration > 0 ? Math.min(1, Math.max(0, time.current / time.duration)) : 0;
     const armOnRecord = settled && onDeck && !playerError && [1, 2, 3].includes(playerState);
@@ -163,7 +177,14 @@ export const ShopDeck = ({
     const streamLinks = STREAM_LINKS.filter(l => record[l.key]);
 
     const planks = [];
-    for (let y = 11; y < 84; y += 12) planks.push(<rect key={y} x={0} y={y} width={160} height={1} fill="#24160f" />);
+    for (let y = 11; y < 76; y += 12) planks.push(<rect key={y} x={0} y={y} width={160} height={1} fill="#24160f" />);
+    // 唱盤桌前面的地板，跟店裡一樣的格子
+    const tiles = [];
+    for (let row = 0; row * 7 < 30; row++) {
+        for (let col = 0; col * 8 < 160; col++) {
+            if ((row + col) % 2) tiles.push(<rect key={row + '-' + col} x={col * 8} y={82 + row * 7} width={8} height={7} fill="#b39c78" />);
+        }
+    }
 
     const stageClass = 'shop-deck__stage '
         + (placing ? 'deck-stage--placing' : 'deck-stage--settled')
@@ -173,9 +194,23 @@ export const ShopDeck = ({
         <div className="shop-deck" role="dialog" aria-label={`唱盤：${record.artist}《${record.album}》`}>
             {/* take 每放一次唱片就換，整個舞台重掛，過場動畫從頭播 */}
             <div key={take} className={stageClass}>
-                <svg className="deck-cut__svg" viewBox="22 4 118 76" shapeRendering="crispEdges" aria-hidden="true">
-                    <rect x={0} y={0} width={160} height={84} fill="#2a1a12" />
+                <svg className="deck-cut__svg" viewBox="22 4 118 104" shapeRendering="crispEdges" aria-hidden="true">
+                    <rect x={0} y={0} width={160} height={112} fill="#2a1a12" />
                     {planks}
+                    <rect x={0} y={76} width={160} height={3} fill="#6b4630" />
+                    <rect x={0} y={79} width={160} height={3} fill="#4a2f22" />
+                    <rect x={0} y={82} width={160} height={30} fill="#d9c7a5" />
+                    {tiles}
+
+                    {/* 角色：站在唱盤下方，播放中跟著音樂搖擺 */}
+                    <ellipse cx={DANCER_X + 8} cy={DANCER_Y + 24} rx={7} ry={1.5} fill="#000" opacity={0.25} />
+                    <g className="deck-dancer-turn">
+                        <g className="deck-dancer-bob">
+                            {spriteRuns(character, dancing ? danceFrame : 'idle').map((r, i) => (
+                                <rect key={i} x={DANCER_X + r.x} y={DANCER_Y + r.y} width={r.w} height={1} fill={r.fill} />
+                            ))}
+                        </g>
+                    </g>
 
                     {/* 唱盤（俯視） */}
                     <rect x={32} y={12} width={96} height={60} fill={OUTLINE} />
