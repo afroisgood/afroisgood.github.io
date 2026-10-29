@@ -3,6 +3,14 @@
 
 const MONTH_LABELS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
+const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+/** "2026-10-29" → "2026.10.29 THU" */
+export const formatRecordDate = (key) => {
+    const [y, m, d] = key.split('-').map(Number);
+    return `${y}.${String(m).padStart(2, '0')}.${String(d).padStart(2, '0')} ${WEEKDAYS[new Date(y, m - 1, d).getDay()]}`;
+};
+
 export const getYouTubeId = (url) => {
     const match = url?.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
     return match && match[2].length === 11 ? match[2] : null;
