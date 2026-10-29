@@ -190,13 +190,6 @@ const ShopScenery = memo(({ crates, scale, worldW, nearId, onCrateClick, onCrate
                 OPEN
             </div>
 
-            {/* 牆上的海報：隔一個櫃子掛一張 */}
-            {crates.map((crate, i) => (i % 2 === 1 && crate.records[1] && !crate.shuffle ? (
-                <div key={'poster-' + crate.id} className="shop-poster" style={{ left: u(crateCenter(i) - 11), top: u(i % 4 === 1 ? 26 : 30), padding: u(1) }}>
-                    <PixelCover src={coverSrc(crate.records[1])} res={10} size={u(20)} fallback={SLEEVES[(i + 5) % SLEEVES.length]} />
-                </div>
-            ) : null))}
-
             {crates.map((crate, i) => {
                 const cx = crateCenter(i);
                 const front = crate.records[0];
