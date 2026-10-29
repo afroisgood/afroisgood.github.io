@@ -3,11 +3,11 @@
 // 開發模式或某張封面抓不到時沒有這個檔，標籤就用預設的金色。
 import { useEffect, useState } from 'react';
 
-// 唱片和標籤用比場景細 3 倍的格子畫（一個場景格 = 3×3 個唱片格），封面才看得清楚
+// 標籤用比場景細 3 倍的格子畫（一個場景格 = 3×3 個標籤格），封面才看得清楚
 export const DETAIL = 3;
 export const LABEL_R = 10; // 標籤半徑（場景格）
-export const COVER_SIZE = LABEL_R * 2 * DETAIL; // 60：標籤直徑上的唱片格數，一格對一個封面像素
-// 畫進畫布時每個唱片格放大成幾個像素，放進 SVG 再縮放時邊緣才不會糊
+export const COVER_SIZE = LABEL_R * 2 * DETAIL; // 60：標籤直徑上的格數，一格對一個封面像素
+// 畫進畫布時每格放大成幾個像素，放進 SVG 再縮放時邊緣才不會糊
 export const CANVAS_CELL = 4;
 
 const cache = new Map(); // date → 顏色陣列，或 null（沒有像素封面）
@@ -38,24 +38,7 @@ export const useCoverPixels = (date) => {
     return loaded.date === date ? loaded.px : cache.get(date) ?? null;
 };
 
-// 把一列一列的顏色合併成同色的水平線段，SVG 元素數少很多
-export const toRuns = (rows) => {
-    const runs = [];
-    rows.forEach((row, y) => {
-        let x = 0;
-        while (x < row.length) {
-            const c = row[x];
-            if (!c) { x++; continue; }
-            let end = x + 1;
-            while (end < row.length && row[end] === c) end++;
-            runs.push({ x, y, w: end - x, fill: c });
-            x = end;
-        }
-    });
-    return runs;
-};
-
-/** 畫一張 w×h 唱片格的圖（colorAt 回傳 null 就留透明），回傳可以放進 SVG <image> 的網址 */
+/** 畫一張 w×h 格的圖（colorAt 回傳 null 就留透明），回傳可以放進 SVG <image> 的網址 */
 export const paintCells = (w, h, colorAt) => {
     const canvas = document.createElement('canvas');
     canvas.width = w * CANVAS_CELL;
