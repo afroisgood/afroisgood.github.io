@@ -1,7 +1,8 @@
 // 唱片行的唱盤畫面：放上唱盤時先播俯視特寫的過場（手把唱片放上轉盤、拉唱臂落針），
-// 落針後鏡頭往前傾，切到斜上方的透視唱盤（perspectiveDeck.js）停在那裡播放。唱片中間的標籤是這張專輯的像素封面。
-// 俯視特寫畫在 160×112 格的座標裡（畫面取唱盤附近 118×104 格），過場動畫用 CSS（index.css 的 .deck-cut-*），時間軸對照 CUT_MS。
-// 透視畫面裡：播放中唱片轉、唱臂隨進度由外圈往內圈移，角色站在桌前跟著音樂搖擺；暫停時唱片停住、角色站著，播完或無法播放時唱臂抬起。
+// 落針後鏡頭往前傾：唱盤整片用 CSS 3D 往後倒，唱片在透視平面上轉，停在那裡播放。唱片中間的標籤是這張專輯的像素封面。
+// 畫在 160×112 格的座標裡（畫面取 118×104 格）。分三層：背景（桌面、地板、角色，不傾斜）、唱盤平面（會傾斜）、音符。
+// 過場動畫用 CSS（index.css 的 .deck-cut-*），時間軸對照 CUT_MS。
+// 播放中唱片轉、唱臂隨進度由外圈往內圈移，角色跟著音樂搖擺；暫停時唱片停住、角色站著，播完或無法播放時唱臂抬起。
 // 旁邊是唱片資訊、進度條、播放／上一張／下一張（同一櫃），以及回到店裡、閱讀這天。
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { IconPause, IconPlay, IconSkipBack, IconSkipForward } from '../components/Icons';
@@ -10,14 +11,21 @@ import { formatRecordDate } from './crates';
 import { spriteRuns } from './sprites';
 import { useWalkCycle } from './useWalkCycle';
 import { useCoverPixels, labelImage, LABEL_R } from './coverPixels';
-import {
-    SCENE_W, SCENE_H, DISC_CX, DISC_CY, FRAME_W, FRAME_H, FRAMES, ARM_PIVOT_X, ARM_PIVOT_Y,
-    ARM_REST, ARM_OUTER, ARM_INNER, perspectiveSceneRuns, perspectiveDiscFrameImages, perspectiveArmRuns,
-} from './perspectiveDeck';
 
 const CUT_MS = 2300; // 與 index.css 的 .deck-cut-* 動畫總長一致
 
 const OUTLINE = '#1c1410';
+
+// 唱臂角度：架上、唱片最外圈、最內圈（依下面的唱盤幾何換算）
+const ARM_REST_DEG = 0;
+const ARM_OUTER_DEG = 37;
+const ARM_INNER_DEG = 53;
+
+// 畫面取的範圍（背景層）與唱盤平面的範圍（格）；兩層疊在同一個固定比例的畫框裡才對得齊
+const VIEW = { x: 22, y: 4, w: 118, h: 104 };
+const PLANE = { x: 28, y: 8, w: 104, h: 68 };
+const DECK_FRONT_Y = 72; // 唱盤底座前緣，傾斜時以這裡為軸
+const pct = (v) => `${v * 100}%`;
 
 const STREAM_LINKS = [
     { key: 'youtube', label: 'YouTube' },
@@ -105,26 +113,9 @@ const Note = ({ x, y }) => (
     </>
 );
 
-// 角色站的位置（格）：俯視特寫裡在唱盤下方，透視畫面裡在桌子前面的地板上
+// 角色站的位置（格）：唱盤下方的地板上
 const DANCER_X = 60;
 const DANCER_Y = 82;
-const P_DANCER_X = 82;
-const P_DANCER_Y = 80;
-
-// 透視畫面的背景（牆、桌、底座、轉盤）不會變，只畫一次
-const PerspectiveScene = memo(() => <Runs runs={perspectiveSceneRuns()} />);
-PerspectiveScene.displayName = 'PerspectiveScene';
-
-// 8 格轉動的唱片疊在一起，播放中由 CSS 輪流顯示（.deck-pframe）；換唱片才重算
-const PerspectiveDisc = memo(({ px }) => {
-    const frames = useMemo(() => perspectiveDiscFrameImages(px), [px]);
-    return frames.map((href, f) => (
-        <g key={f} className={'deck-pframe' + (f === 0 ? ' deck-pframe--first' : '')} style={{ animationDelay: `${(-f * 0.9) / FRAMES}s` }}>
-            <PixelImage href={href} x={DISC_CX - FRAME_W / 2} y={DISC_CY - FRAME_H / 2 - 1} width={FRAME_W} height={FRAME_H} />
-        </g>
-    ));
-});
-PerspectiveDisc.displayName = 'PerspectiveDisc';
 
 const prefersReducedMotion = () => {
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
@@ -196,10 +187,7 @@ export const ShopDeck = ({
     const unavailable = onDeck && Boolean(playerError);
     const progress = time.duration > 0 ? Math.min(1, Math.max(0, time.current / time.duration)) : 0;
     const armOnRecord = settled && onDeck && !playerError && [1, 2, 3].includes(playerState);
-    const arm = armOnRecord
-        ? { deg: ARM_OUTER.deg + (ARM_INNER.deg - ARM_OUTER.deg) * progress, scale: ARM_OUTER.scale + (ARM_INNER.scale - ARM_OUTER.scale) * progress }
-        : ARM_REST;
-    const dancerRuns = spriteRuns(character, dancing ? danceFrame : 'idle');
+    const armAngle = armOnRecord ? ARM_OUTER_DEG + (ARM_INNER_DEG - ARM_OUTER_DEG) * progress : ARM_REST_DEG;
 
     const status = placing ? 'PLACING…'
         : unavailable ? 'UNAVAILABLE'
@@ -239,92 +227,94 @@ export const ShopDeck = ({
         <div className="shop-deck" role="dialog" aria-label={`唱盤：${record.artist}《${record.album}》`}>
             {/* take 每放一次唱片就換，整個舞台重掛，過場動畫從頭播 */}
             <div key={take} className={stageClass}>
-                {/* 俯視特寫：放唱片的過場 */}
-                <svg className="deck-cut__svg deck-view deck-view--top" viewBox="22 4 118 104" shapeRendering="crispEdges" aria-hidden="true">
-                    <rect x={0} y={0} width={160} height={112} fill="#2a1a12" />
-                    {planks}
-                    <rect x={0} y={76} width={160} height={3} fill="#6b4630" />
-                    <rect x={0} y={79} width={160} height={3} fill="#4a2f22" />
-                    <rect x={0} y={82} width={160} height={30} fill="#d9c7a5" />
-                    {tiles}
-
-                    {/* 角色：站在唱盤下方，播放中跟著音樂搖擺 */}
-                    <ellipse cx={DANCER_X + 8} cy={DANCER_Y + 24} rx={7} ry={1.5} fill="#000" opacity={0.25} />
-                    <Runs runs={spriteRuns(character, 'idle')} x={DANCER_X} y={DANCER_Y} />
-
-                    {/* 唱盤（俯視） */}
-                    <rect x={32} y={12} width={96} height={60} fill={OUTLINE} />
-                    <rect x={33} y={13} width={94} height={58} fill="#6b4630" />
-                    <rect x={33} y={13} width={94} height={2} fill="#8a5a3a" />
-                    <rect x={33} y={68} width={94} height={3} fill="#4a2f22" />
-                    {disk(CX, CY, 27, OUTLINE, 'p0')}
-                    {disk(CX, CY, 26, '#3a3430', 'p1')}
-                    {disk(CX, CY, 24, '#2a2420', 'p2')}
-                    {disk(CX, CY, 2, '#9a948c', 'spindle')}
-                    <rect x={106} y={52} width={14} height={10} fill="#2a1a12" />
-                    <rect x={108} y={54} width={4} height={2} fill="#b4513a" />
-                    <rect x={114} y={54} width={4} height={2} fill="#c8a048" />
-                    {disk(PIVOT_X, PIVOT_Y, 5, OUTLINE, 'b0')}
-                    {disk(PIVOT_X, PIVOT_Y, 4, '#9a948c', 'b1')}
-
-                    {/* 唱片放下前的影子 */}
-                    <ellipse className="deck-cut-shadow" cx={CX + 2} cy={CY + 4} rx={22} ry={21} fill="#000" />
-
-                    {/* 手拿著唱片從左邊進來，放下後手退出去 */}
-                    <g className="deck-cut-carry">
-                        <g className="deck-cut-lift">
-                            <g className="deck-cut-spin">
-                                <Disc px={coverPx} />
+                {/* 固定比例的畫框：背景、唱盤平面、音符三層用同一套座標 */}
+                <div className="deck-frame">
+                    {/* 背景：桌面、地板、角色（不跟著傾斜） */}
+                    <svg className="deck-layer" viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`} shapeRendering="crispEdges" aria-hidden="true">
+                        <rect x={0} y={0} width={160} height={112} fill="#2a1a12" />
+                        {planks}
+                        <rect x={0} y={76} width={160} height={3} fill="#6b4630" />
+                        <rect x={0} y={79} width={160} height={3} fill="#4a2f22" />
+                        <rect x={0} y={82} width={160} height={30} fill="#d9c7a5" />
+                        {tiles}
+                        <ellipse cx={DANCER_X + 8} cy={DANCER_Y + 24} rx={7} ry={1.5} fill="#000" opacity={0.25} />
+                        <g className="deck-dancer-turn" style={{ transformOrigin: `${DANCER_X + 8}px ${DANCER_Y + 24}px` }}>
+                            <g className="deck-dancer-bob" style={{ transformOrigin: `${DANCER_X + 8}px ${DANCER_Y + 24}px` }}>
+                                <Runs runs={spriteRuns(character, dancing ? danceFrame : 'idle')} x={DANCER_X} y={DANCER_Y} />
                             </g>
                         </g>
-                        <g className="deck-cut-hand-out">
-                            <Hand x={CX - 24 - 14} y={CY - 7} palette={character.palette} />
-                        </g>
-                    </g>
+                    </svg>
 
-                    {/* 唱臂：過場時另一隻手把它推到唱片外圈 */}
-                    <g className="deck-cut-arm">
-                        <rect x={PIVOT_X - 1} y={PIVOT_Y} width={2} height={38} fill="#c9c3b8" />
-                        <rect x={PIVOT_X} y={PIVOT_Y} width={1} height={38} fill="#9a948c" />
-                        <rect x={PIVOT_X - 3} y={PIVOT_Y + 37} width={6} height={7} fill="#2a2420" />
-                        <rect x={PIVOT_X - 2} y={PIVOT_Y + 38} width={4} height={2} fill="#c8a048" />
-                        <rect x={PIVOT_X - 1} y={PIVOT_Y + 44} width={2} height={2} fill="#9a948c" />
-                        <g className="deck-cut-hand2">
-                            <Hand x={PIVOT_X + 1} y={PIVOT_Y + 34} palette={character.palette} flip />
-                        </g>
-                    </g>
-                    {disk(PIVOT_X, PIVOT_Y, 2, '#4a4440', 'cap')}
+                    {/* 唱盤平面：放唱片時是正上方看，落針後整片往後倒（.deck-stage--settled .deck-plane） */}
+                    <div className="deck-plane-wrap">
+                        <div
+                            className="deck-plane"
+                            style={{
+                                left: pct((PLANE.x - VIEW.x) / VIEW.w), top: pct((PLANE.y - VIEW.y) / VIEW.h),
+                                width: pct(PLANE.w / VIEW.w), height: pct(PLANE.h / VIEW.h),
+                                transformOrigin: `50% ${pct((DECK_FRONT_Y - PLANE.y) / PLANE.h)}`,
+                            }}
+                        >
+                            <svg className="deck-layer" viewBox={`${PLANE.x} ${PLANE.y} ${PLANE.w} ${PLANE.h}`} shapeRendering="crispEdges" aria-hidden="true">
+                                <rect x={32} y={12} width={96} height={60} fill={OUTLINE} />
+                                <rect x={33} y={13} width={94} height={58} fill="#6b4630" />
+                                <rect x={33} y={13} width={94} height={2} fill="#8a5a3a" />
+                                <rect x={33} y={68} width={94} height={3} fill="#4a2f22" />
+                                {disk(CX, CY, 27, OUTLINE, 'p0')}
+                                {disk(CX, CY, 26, '#3a3430', 'p1')}
+                                {disk(CX, CY, 24, '#2a2420', 'p2')}
+                                {disk(CX, CY, 2, '#9a948c', 'spindle')}
+                                <rect x={106} y={52} width={14} height={10} fill="#2a1a12" />
+                                <rect x={108} y={54} width={4} height={2} fill={playing ? '#e0bc68' : '#b4513a'} />
+                                <rect x={114} y={54} width={4} height={2} fill="#c8a048" />
+                                {disk(PIVOT_X, PIVOT_Y, 5, OUTLINE, 'b0')}
+                                {disk(PIVOT_X, PIVOT_Y, 4, '#9a948c', 'b1')}
 
-                    <g className="deck-cut-note deck-cut-note--1"><Note x={CX - 10} y={CY - 16} /></g>
-                    <g className="deck-cut-note deck-cut-note--2"><Note x={CX + 4} y={CY - 14} /></g>
-                </svg>
+                                {/* 唱片放下前的影子 */}
+                                <ellipse className="deck-cut-shadow" cx={CX + 2} cy={CY + 4} rx={22} ry={21} fill="#000" />
 
-                {/* 透視唱盤：落針後鏡頭往前傾切到這裡，停在這裡播放 */}
-                <svg
-                    className="deck-cut__svg deck-view deck-view--persp"
-                    viewBox={`0 0 ${SCENE_W} ${SCENE_H}`}
-                    preserveAspectRatio="xMidYMid slice"
-                    shapeRendering="crispEdges"
-                    aria-hidden="true"
-                >
-                    <PerspectiveScene />
-                    <PerspectiveDisc px={coverPx} />
-                    <g
-                        className="deck-parm"
-                        style={{ transformOrigin: `${ARM_PIVOT_X}px ${ARM_PIVOT_Y}px`, transform: `rotate(${arm.deg}deg) scale(${arm.scale})` }}
-                    >
-                        <Runs runs={perspectiveArmRuns} />
-                    </g>
-                    <g className="deck-cut-note deck-cut-note--1"><Note x={DISC_CX - 12} y={DISC_CY - 18} /></g>
-                    <g className="deck-cut-note deck-cut-note--2"><Note x={DISC_CX + 4} y={DISC_CY - 16} /></g>
+                                {/* 手拿著唱片從左邊進來，放下後手退出去 */}
+                                <g className="deck-cut-carry">
+                                    <g className="deck-cut-lift">
+                                        <g className="deck-cut-spin">
+                                            <Disc px={coverPx} />
+                                        </g>
+                                    </g>
+                                    <g className="deck-cut-hand-out">
+                                        <Hand x={CX - 24 - 14} y={CY - 7} palette={character.palette} />
+                                    </g>
+                                </g>
 
-                    <ellipse cx={P_DANCER_X + 8} cy={P_DANCER_Y + 24} rx={7} ry={1.5} fill="#000" opacity={0.25} />
-                    <g className="deck-dancer-turn" style={{ transformOrigin: `${P_DANCER_X + 8}px ${P_DANCER_Y + 24}px` }}>
-                        <g className="deck-dancer-bob" style={{ transformOrigin: `${P_DANCER_X + 8}px ${P_DANCER_Y + 24}px` }}>
-                            <Runs runs={dancerRuns} x={P_DANCER_X} y={P_DANCER_Y} />
-                        </g>
-                    </g>
-                </svg>
+                                {/* 唱臂：過場時另一隻手把它推到唱片外圈；之後隨播放進度往內圈移 */}
+                                <g className="deck-cut-arm" style={settled ? { transform: `rotate(${armAngle}deg)` } : undefined}>
+                                    <rect x={PIVOT_X - 1} y={PIVOT_Y} width={2} height={38} fill="#c9c3b8" />
+                                    <rect x={PIVOT_X} y={PIVOT_Y} width={1} height={38} fill="#9a948c" />
+                                    <rect x={PIVOT_X - 3} y={PIVOT_Y + 37} width={6} height={7} fill="#2a2420" />
+                                    <rect x={PIVOT_X - 2} y={PIVOT_Y + 38} width={4} height={2} fill="#c8a048" />
+                                    <rect x={PIVOT_X - 1} y={PIVOT_Y + 44} width={2} height={2} fill="#9a948c" />
+                                    <g className="deck-cut-hand2">
+                                        <Hand x={PIVOT_X + 1} y={PIVOT_Y + 34} palette={character.palette} flip />
+                                    </g>
+                                </g>
+                                {disk(PIVOT_X, PIVOT_Y, 2, '#4a4440', 'cap')}
+
+                                <g className="deck-cut-note deck-cut-note--1"><Note x={CX - 10} y={CY - 16} /></g>
+                                <g className="deck-cut-note deck-cut-note--2"><Note x={CX + 4} y={CY - 14} /></g>
+                            </svg>
+                            {/* 底座前側面：俯視時看不到，傾斜後露出來 */}
+                            <div
+                                className="deck-plane__front"
+                                style={{ left: pct((32 - PLANE.x) / PLANE.w), width: pct(96 / PLANE.w), top: pct((DECK_FRONT_Y - PLANE.y) / PLANE.h) }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* 播放中的音符：不跟著傾斜，從傾斜後的唱片上方冒出來 */}
+                    <svg className="deck-layer deck-layer--notes" viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`} shapeRendering="crispEdges" aria-hidden="true">
+                        <g className="deck-pnote deck-pnote--1"><Note x={CX - 12} y={CY + 2} /></g>
+                        <g className="deck-pnote deck-pnote--2"><Note x={CX + 4} y={CY + 4} /></g>
+                    </svg>
+                </div>
                 {placing ? (
                     <button type="button" className="shop-deck__skip" onClick={skip} aria-label="放上唱盤中，點一下跳過">
                         <span className="deck-cut__hint">點一下跳過</span>
