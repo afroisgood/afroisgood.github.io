@@ -481,6 +481,32 @@ body {
 }
 .intro-skip:hover { color: #d0c8e8; border-color: #c8a048; }
 
+.intro-choose {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: min(360px, calc(100vw - 32px));
+    animation: fadeIn 0.3s ease both;
+}
+.intro-choose__btn {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    min-height: 84px; padding: 12px 10px;
+    background: #12142a;
+    border: 2px solid #2a2d48;
+    color: #d0c8e8;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.intro-choose__btn:hover, .intro-choose__btn:focus-visible { border-color: #c8a048; background: #1c1f3a; outline: none; }
+.intro-choose__btn--last { border-color: #c8a048; }
+.intro-choose__btn:disabled { cursor: default; }
+.intro-choose__title { font-family: 'Noto Serif TC', serif; font-weight: 900; font-size: 17px; letter-spacing: 0.12em; color: #f2ece3; }
+.intro-choose__desc { font-family: 'Noto Serif TC', serif; font-size: 12px; letter-spacing: 0.06em; line-height: 1.5; color: #8a86a8; }
+@media (prefers-reduced-motion: reduce) {
+    .intro-cal-pad, .intro-choose { animation: none; }
+    .intro-cal-page--tear { animation: fadeOut 0.3s ease forwards; }
+}
+
 @keyframes introPadIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes introPageOut { from { transform: rotateX(0deg); opacity: 1; } to { transform: rotateX(-95deg); opacity: 0; } }
 
@@ -517,6 +543,13 @@ body {
     font-size: 12px;
     letter-spacing: 0.15em;
 }
+.back-to-shop {
+    min-height: 36px; padding: 0 12px;
+    border: 2px solid #1c1917; background: #c8a048; color: #1c1917;
+    font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 12px; letter-spacing: 0.1em;
+    cursor: pointer; white-space: nowrap;
+}
+.back-to-shop:focus-visible { outline: 2px solid #1c1917; outline-offset: 2px; }
 .view-toggle button { min-height: 36px; padding: 0 14px; background: transparent; color: #1c1917; cursor: pointer; }
 .view-toggle button[aria-pressed="true"] { background: #1c1917; color: #f2ece3; }
 .view-toggle button:focus-visible { outline: 2px solid #c8a048; outline-offset: 2px; }
