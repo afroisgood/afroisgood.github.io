@@ -894,8 +894,19 @@ body {
 .deck-stage--spinning .deck-cut-spin { animation: spin 0.9s steps(8) infinite; }
 .deck-stage--spinning .deck-cut-note--1 { animation: deckNoteLoop 2.4s linear infinite; }
 .deck-stage--spinning .deck-cut-note--2 { animation: deckNoteLoop 2.4s linear 1.2s infinite; }
-.deck-dancer-turn { transform-origin: 68px 106px; }
-.deck-dancer-bob { transform-origin: 68px 106px; }
+/* 落針後：俯視特寫往前傾、淡出，切到透視唱盤 */
+.deck-view { position: absolute; inset: 0; }
+.deck-view--persp { opacity: 0; }
+.deck-stage--settled .deck-view--top { pointer-events: none; transform-origin: 50% 100%; animation: deckTopOut 0.55s ease-in both; }
+.deck-stage--settled .deck-view--persp { animation: deckPerspIn 0.55s ease-out 0.2s both; }
+@keyframes deckTopOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: perspective(700px) rotateX(42deg) scale(0.94); } }
+@keyframes deckPerspIn { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: none; } }
+/* 透視唱片 8 格輪播；沒在播時停在第一格 */
+.deck-pframe { opacity: 0; }
+.deck-pframe--first { opacity: 1; }
+.deck-stage--spinning .deck-pframe { animation: deckPFrame 0.9s steps(1, end) infinite; }
+@keyframes deckPFrame { 0% { opacity: 1; } 12.5%, 100% { opacity: 0; } }
+.deck-parm { transition: transform 0.6s ease-in-out; }
 .deck-stage--spinning .deck-dancer-bob { animation: deckDancerBob 0.5s steps(1) infinite; }
 .deck-stage--spinning .deck-dancer-turn { animation: deckDancerTurn 3s steps(1) infinite; }
 @keyframes deckDancerBob { 0% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
@@ -905,5 +916,8 @@ body {
     .shop-deck { animation: none; }
     .deck-stage--spinning .deck-cut-note--1, .deck-stage--spinning .deck-cut-note--2,
     .deck-stage--spinning .deck-dancer-bob, .deck-stage--spinning .deck-dancer-turn { animation: none; }
-    .deck-stage--settled .deck-cut-arm { transition: none; }
+    .deck-stage--settled .deck-cut-arm, .deck-parm { transition: none; }
+    .deck-stage--settled .deck-view--top { animation: none; opacity: 0; }
+    .deck-stage--settled .deck-view--persp { animation: none; opacity: 1; }
+    .deck-stage--spinning .deck-pframe { animation: none; }
 }

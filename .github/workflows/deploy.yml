@@ -38,6 +38,13 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci
+      # 唱片行的像素封面：抓過的封面留在快取，每次部署只抓新的
+      - name: Cache cover pixels
+        uses: actions/cache@v4
+        with:
+          path: .cache/cover-px
+          key: cover-px-${{ github.run_id }}
+          restore-keys: cover-px-
       - name: Build
         run: npm run build
         env:
