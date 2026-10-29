@@ -28,4 +28,4 @@
 
 ## 檢查
 
-- `npm run build`（會一併產生每日分享頁）、`npm run lint`。lint 目前有 13 個原本就存在的問題，新改動不要讓數量增加。
+- `npm run build`（會一併產生每日分享頁，以及唱片行唱盤標籤用的像素封面 `dist/cover-px/`；抓不到的封面會略過，不會讓 build 失敗）、`npm run lint`。lint 目前有 13 個原本就存在的問題，新改動不要讓數量增加。
