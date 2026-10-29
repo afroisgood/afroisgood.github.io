@@ -5,8 +5,13 @@ import { buildCrates, shuffled } from './crates';
 import { CharacterSelect } from './CharacterSelect';
 import { ShopFloor } from './ShopFloor';
 import { CrateBrowser } from './CrateBrowser';
+import { DeckCutscene } from './DeckCutscene';
 
 const CHARACTER_KEY = 'jazz365_shop_character';
+
+const prefersReducedMotion = () => {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
+};
 
 const loadCharacterId = () => {
     try { return localStorage.getItem(CHARACTER_KEY); } catch { return null; }
@@ -16,6 +21,7 @@ const ShopMode = ({ data, interactive, nowPlaying, isVinylSpinning, onPlay, onRe
     const [characterId, setCharacterId] = useState(loadCharacterId);
     const [choosing, setChoosing] = useState(() => !findCharacter(characterId));
     const [open, setOpen] = useState(null); // { crate, records }
+    const [placing, setPlacing] = useState(null); // 正在放上唱盤的唱片（播過場動畫中）
     const crates = useMemo(() => buildCrates(data), [data]);
     const character = findCharacter(characterId);
 
@@ -28,6 +34,17 @@ const ShopMode = ({ data, interactive, nowPlaying, isVinylSpinning, onPlay, onRe
     const openCrate = useCallback((crate) => {
         setOpen({ crate, records: crate.shuffle ? shuffled(crate.records) : crate.records });
     }, []);
+
+    // 放上唱盤：先播唱盤特寫過場，播完（或跳過）才交給 App 開沉浸模式
+    const placeRecord = (record) => {
+        if (prefersReducedMotion()) { onPlay(record); return; }
+        setPlacing(record);
+    };
+    const finishPlacing = () => {
+        const record = placing;
+        setPlacing(null);
+        if (record) onPlay(record);
+    };
 
     if (choosing || !character) {
         return (
@@ -62,13 +79,14 @@ const ShopMode = ({ data, interactive, nowPlaying, isVinylSpinning, onPlay, onRe
                     key={open.crate.id}
                     crate={open.crate}
                     records={open.records}
-                    enabled={interactive}
+                    enabled={interactive && !placing}
                     nowPlayingDate={nowPlaying?.date}
                     onClose={() => setOpen(null)}
-                    onPlay={onPlay}
+                    onPlay={placeRecord}
                     onRead={onRead}
                 />
             )}
+            {placing && <DeckCutscene key={placing.date} character={character} onDone={finishPlacing} />}
         </div>
     );
 };
