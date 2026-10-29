@@ -1,5 +1,5 @@
 // src/hooks/useYouTubePlayer.js
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // 所有 hook 實例共用同一個「API 就緒」promise，避免重複插入 script tag，
 // 也讓延遲建立播放器的邏輯可以用 cancelled flag 取消，而不是链式覆寫全域 callback。
@@ -25,13 +25,20 @@ const loadYouTubeApi = () => {
     return ytApiReadyPromise;
 };
 
-export const useYouTubePlayer = (videoId) => {
+// autoplay 為 false 時只先把播放器建好、影片載入但不播放（唱片行預先暖機用），
+// 之後由 playNow 在使用者點擊的當下開始播放 —— iPhone Safari 只允許在點擊當下開始出聲。
+export const useYouTubePlayer = (videoId, { autoplay = true } = {}) => {
     const [player, setPlayer] = useState(null);
     const [playerState, setPlayerState] = useState(-1);
     const [playerError, setPlayerError] = useState(null);
     const playerRef = useRef(null);
     const videoIdRef = useRef(videoId);
     videoIdRef.current = videoId;
+    const autoplayRef = useRef(autoplay);
+    const loadedIdRef = useRef(null); // 播放器目前載入的影片，避免同一支被重複載入而從頭播
+
+    // 同步 autoplay 給下面的非同步建立流程讀（放在播放器生命週期的 effect 前面，先執行）
+    useEffect(() => { autoplayRef.current = autoplay; }, [autoplay]);
 
     // 預先載入 YouTube IFrame API script（只執行一次，跨所有 hook 實例共用）
     useEffect(() => {
@@ -47,6 +54,7 @@ export const useYouTubePlayer = (videoId) => {
             if (playerRef.current) {
                 try { playerRef.current.destroy(); } catch (_) {}
                 playerRef.current = null;
+                loadedIdRef.current = null;
                 setPlayer(null);
                 setPlayerState(-1);
                 setPlayerError(null);
@@ -61,10 +69,14 @@ export const useYouTubePlayer = (videoId) => {
 
             // 播放器已存在 → 直接切換影片，避免重建造成卡頓
             if (playerRef.current && typeof playerRef.current.loadVideoById === 'function') {
+                // 已經由 playNow 載入這支（或本來就是這支）就不再載一次
+                if (loadedIdRef.current === videoIdRef.current) return;
                 try {
                     setPlayerError(null);
-                    playerRef.current.loadVideoById(videoIdRef.current);
-                } catch (_) {}
+                    if (autoplayRef.current) playerRef.current.loadVideoById(videoIdRef.current);
+                    else playerRef.current.cueVideoById(videoIdRef.current);
+                    loadedIdRef.current = videoIdRef.current;
+                } catch { /* 播放器切換中，下次換影片再載 */ }
                 return;
             }
 
@@ -81,7 +93,7 @@ export const useYouTubePlayer = (videoId) => {
                     'controls': 0,     // 隱藏 YT 原生控制列
                     'rel': 0,          // 不顯示相關影片
                     'modestbranding': 1,
-                    'autoplay': 1,     // 進入沉浸模式自動播放
+                    'autoplay': autoplayRef.current ? 1 : 0, // 進入沉浸模式自動播放；預先暖機時不播
                     'mute': 0,
                 },
                 events: {
@@ -97,11 +109,37 @@ export const useYouTubePlayer = (videoId) => {
             });
 
             playerRef.current = newPlayer;
+            loadedIdRef.current = videoIdRef.current;
             setPlayer(newPlayer);
         });
 
         return () => { cancelled = true; };
     }, [videoId]);
+
+    // 預先暖機的播放器轉成要播放（例如從選單開沉浸模式）時，影片已經載好，補一個播放
+    useEffect(() => {
+        const p = playerRef.current;
+        if (!autoplay || !p || typeof p.getPlayerState !== 'function') return;
+        if (loadedIdRef.current !== videoIdRef.current) return;
+        try {
+            const state = p.getPlayerState();
+            if (state !== 1 && state !== 3) p.playVideo();
+        } catch { /* 播放器尚未就緒 */ }
+    }, [autoplay]);
+
+    // 在使用者點擊的事件裡直接呼叫：播放器已就緒就立刻換成這支並播放，回傳是否成功
+    const playNow = useCallback((id) => {
+        const p = playerRef.current;
+        if (!id || !p || typeof p.loadVideoById !== 'function') return false;
+        try {
+            setPlayerError(null);
+            p.loadVideoById(id);
+            loadedIdRef.current = id;
+            return true;
+        } catch {
+            return false;
+        }
+    }, []);
 
     // 元件徹底卸載時銷毀播放器，避免殘留 iframe 與監聽器
     useEffect(() => {
@@ -113,5 +151,5 @@ export const useYouTubePlayer = (videoId) => {
         };
     }, []);
 
-    return { player, playerState, playerError };
+    return { player, playerState, playerError, playNow };
 };
