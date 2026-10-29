@@ -86,6 +86,7 @@ export const RetroMenuBar = ({
                             <div role="menu" aria-label="View" className="retro-menu-dropdown">
                                 <MenuItem label="單日" checked={viewMode === 'day'} onSelect={pick(() => onViewModeChange('day'))} />
                                 <MenuItem label="唱片牆" checked={viewMode === 'wall'} onSelect={pick(() => onViewModeChange('wall'))} />
+                                <MenuItem label="唱片行（探索）" checked={viewMode === 'shop'} onSelect={pick(() => onViewModeChange('shop'))} />
                                 <div className="retro-menu-sep" role="separator" />
                                 <MenuItem label="沉浸聆聽" disabled={!canImmerse} onSelect={pick(onImmerse)} />
                                 <MenuItem label="回到今天" onSelect={pick(onToday)} />
