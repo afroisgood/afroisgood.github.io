@@ -1,6 +1,6 @@
-// 唱片行的唱盤畫面：放上唱盤時先播俯視特寫的過場（手把唱片放上轉盤、拉唱臂落針），
-// 落針後鏡頭往前傾：唱盤整片用 CSS 3D 往後倒，唱片在透視平面上轉，停在那裡播放。唱片中間的標籤是這張專輯的像素封面。
-// 畫在 160×112 格的座標裡（畫面取 118×104 格）。分三層：背景（桌面、地板、角色，不傾斜）、唱盤平面（會傾斜）、音符。
+// 唱片行的唱盤畫面：從斜上方看的立體唱盤（唱盤整片用 CSS 3D 往後倒），放上唱盤時播過場
+// （手把唱片放上轉盤、拉唱臂落針），之後停在這裡播放，唱片在透視平面上轉。唱片中間的標籤是這張專輯的像素封面。
+// 畫在 160×112 格的座標裡（畫面取 118×104 格）。分三層：背景（桌面、地板、角色，不傾斜）、唱盤平面（傾斜）、音符。
 // 過場動畫用 CSS（index.css 的 .deck-cut-*），時間軸對照 CUT_MS。
 // 播放中唱片轉、唱臂隨進度由外圈往內圈移，角色跟著音樂搖擺；暫停時唱片停住、角色站著，播完或無法播放時唱臂抬起。
 // 旁邊是唱片資訊、進度條、播放／上一張／下一張（同一櫃），以及回到店裡、閱讀這天。
@@ -245,7 +245,7 @@ export const ShopDeck = ({
                         </g>
                     </svg>
 
-                    {/* 唱盤平面：放唱片時是正上方看，落針後整片往後倒（.deck-stage--settled .deck-plane） */}
+                    {/* 唱盤平面：整片往後倒成斜上方的視角（.deck-plane） */}
                     <div className="deck-plane-wrap">
                         <div
                             className="deck-plane"
@@ -301,7 +301,7 @@ export const ShopDeck = ({
                                 <g className="deck-cut-note deck-cut-note--1"><Note x={CX - 10} y={CY - 16} /></g>
                                 <g className="deck-cut-note deck-cut-note--2"><Note x={CX + 4} y={CY - 14} /></g>
                             </svg>
-                            {/* 底座前側面：俯視時看不到，傾斜後露出來 */}
+                            {/* 底座前側面：傾斜後露出來的厚度 */}
                             <div
                                 className="deck-plane__front"
                                 style={{ left: pct((32 - PLANE.x) / PLANE.w), width: pct(96 / PLANE.w), top: pct((DECK_FRONT_Y - PLANE.y) / PLANE.h) }}
