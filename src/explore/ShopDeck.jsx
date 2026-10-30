@@ -1,9 +1,9 @@
 // 唱片行的唱盤畫面：從斜上方看的立體唱盤（唱盤整片用 CSS 3D 往後倒），放上唱盤時播過場
 // （手把唱片放上轉盤、拉唱臂落針），之後停在這裡播放，唱片在透視平面上轉。唱片中間的標籤是這張專輯的像素封面。
 // 畫在 160×112 格的座標裡（畫面取 118×104 格）。分三層：背景（桌面、地板、角色，不傾斜）、唱盤平面（傾斜）、音符。
-// 過場動畫用 CSS（index.css 的 .deck-cut-*），時間軸對照 CUT_MS。
+// 過場動畫用 CSS（index.css 的 .deck-cut-*），時間軸對照 CUT_MS。連續播放換下一張時，前面先加一段手把舊唱片拿走（.deck-swap-*，SWAP_MS）。
 // 播放中唱片轉、唱臂隨進度由外圈往內圈移，角色跟著音樂搖擺；暫停時唱片停住、角色站著，播完或無法播放時唱臂抬起。
-// 旁邊是唱片資訊、進度條、播放／上一張／下一張（同一櫃），以及回到店裡、閱讀這天。
+// 旁邊是唱片資訊、進度條、播放／上一張／下一張（同一櫃）、連續播放開關，以及回到店裡、閱讀這天。
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { IconPause, IconPlay, IconSkipBack, IconSkipForward } from '../components/Icons';
 import { formatTime, usePlaybackTime } from '../hooks/usePlaybackTime';
@@ -13,6 +13,7 @@ import { useWalkCycle } from './useWalkCycle';
 import { useCoverPixels, labelImage, LABEL_R } from './coverPixels';
 
 const CUT_MS = 2300; // 與 index.css 的 .deck-cut-* 動畫總長一致
+const SWAP_MS = 1000; // 與 index.css 的 .deck-swap-* 動畫總長、--cut-delay 一致
 
 const OUTLINE = '#1c1410';
 
@@ -124,8 +125,9 @@ const prefersReducedMotion = () => {
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
 
 export const ShopDeck = ({
-    character, record, take, placing, enabled, onPlaced, onDeck,
+    character, record, take, placing, swapFrom, enabled, onPlaced, onDeck,
     player, playerState, playerError,
+    autoNext, onToggleAutoNext, skipping, stalled,
     onTogglePlay, onReplay, onPrev, onNext, onBack, onRead,
 }) => {
     const settled = !placing;
@@ -133,6 +135,9 @@ export const ShopDeck = ({
     const placedRef = useRef(false);
     const [reduceMotion] = useState(prefersReducedMotion);
     const coverPx = useCoverPixels(record.date);
+    const swapPx = useCoverPixels(swapFrom?.date);
+    const swapping = placing && Boolean(swapFrom);
+    const cutMs = CUT_MS + (swapping ? SWAP_MS : 0);
     const handlersRef = useRef({});
 
     useEffect(() => { handlersRef.current = { onPlaced, onPrev, onNext, onBack }; });
@@ -146,7 +151,7 @@ export const ShopDeck = ({
             placedRef.current = true;
             handlersRef.current.onPlaced();
         };
-        const timer = setTimeout(finish, CUT_MS);
+        const timer = setTimeout(finish, cutMs);
         const onKey = (e) => {
             if (e.metaKey || e.ctrlKey || e.altKey) return;
             e.preventDefault();
@@ -157,7 +162,7 @@ export const ShopDeck = ({
             clearTimeout(timer);
             window.removeEventListener('keydown', onKey);
         };
-    }, [placing, record.date]);
+    }, [placing, record.date, cutMs]);
 
     // 落定後：Esc 回到店裡，← → 換同一櫃的上一張／下一張（Space 播放／暫停由 App 處理）。
     // 唱片行被切走（閱讀這天）或沉浸模式全螢幕時不搶按鍵
@@ -189,7 +194,8 @@ export const ShopDeck = ({
     const armOnRecord = settled && onDeck && !playerError && [1, 2, 3].includes(playerState);
     const armAngle = armOnRecord ? ARM_OUTER_DEG + (ARM_INNER_DEG - ARM_OUTER_DEG) * progress : ARM_REST_DEG;
 
-    const status = placing ? 'PLACING…'
+    const status = swapping ? 'CHANGING…'
+        : placing ? 'PLACING…'
         : unavailable ? 'UNAVAILABLE'
         : !onDeck ? 'STOPPED'
         : playerState === 1 ? 'NOW SPINNING'
@@ -221,6 +227,7 @@ export const ShopDeck = ({
 
     const stageClass = 'shop-deck__stage '
         + (placing ? 'deck-stage--placing' : 'deck-stage--settled')
+        + (swapping ? ' deck-stage--swap' : '')
         + (settled && playing ? ' deck-stage--spinning' : '');
 
     return (
@@ -273,6 +280,16 @@ export const ShopDeck = ({
                                 {/* 唱片放下前的影子 */}
                                 <ellipse className="deck-cut-shadow" cx={CX + 2} cy={CY + 4} rx={22} ry={21} fill="#000" />
 
+                                {/* 換下一張：手從左邊伸進來，拿起舊唱片往左收走 */}
+                                {swapping && (
+                                    <g className="deck-swap-carry">
+                                        <g className="deck-swap-lift"><Disc px={swapPx} /></g>
+                                        <g className="deck-swap-hand">
+                                            <Hand x={CX - 24 - 14} y={CY - 7} palette={character.palette} />
+                                        </g>
+                                    </g>
+                                )}
+
                                 {/* 手拿著唱片從左邊進來，放下後手退出去 */}
                                 <g className="deck-cut-carry">
                                     <g className="deck-cut-lift">
@@ -315,8 +332,13 @@ export const ShopDeck = ({
                         <g className="deck-pnote deck-pnote--2"><Note x={CX + 4} y={CY + 4} /></g>
                     </svg>
                 </div>
+                {settled && stalled && onDeck && !playing && !unavailable && (
+                    <button type="button" className="shop-btn shop-btn--primary shop-deck__resume" onClick={onTogglePlay}>
+                        <IconPlay size={16} /> 繼續播放
+                    </button>
+                )}
                 {placing ? (
-                    <button type="button" className="shop-deck__skip" onClick={skip} aria-label="放上唱盤中，點一下跳過">
+                    <button type="button" className="shop-deck__skip" onClick={skip} aria-label={swapping ? '換唱片中，點一下跳過' : '放上唱盤中，點一下跳過'}>
                         <span className="deck-cut__hint">點一下跳過</span>
                     </button>
                 ) : (
@@ -332,6 +354,7 @@ export const ShopDeck = ({
 
                 {unavailable ? (
                     <div className="shop-deck__error">
+                        {skipping && <p className="shop-deck__skipping">這張放不出來，馬上換下一張…</p>}
                         <p>{playerError === 101 || playerError === 150
                             ? '這張唱片的版權方不允許在網站內播放，請到串流平台收聽：'
                             : `影片無法播放（錯誤 ${playerError}），請到串流平台收聽：`}</p>
@@ -378,6 +401,9 @@ export const ShopDeck = ({
                     </button>
                     <button type="button" className="shop-btn shop-btn--square" onClick={onNext} disabled={!onNext} aria-label="同一櫃的下一張">
                         <IconSkipForward size={16} />
+                    </button>
+                    <button type="button" className="shop-btn shop-deck__auto" aria-pressed={autoNext} onClick={onToggleAutoNext}>
+                        連續播放 {autoNext ? 'ON' : 'OFF'}
                     </button>
                 </div>
 

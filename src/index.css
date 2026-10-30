@@ -850,6 +850,14 @@ body {
 .shop-deck__link { display: inline-flex; align-items: center; text-decoration: none; }
 .shop-deck__nav { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
 .shop-deck__keys { margin: 2px 0 6px; }
+.shop-deck__auto { min-height: 44px; padding: 0 10px; font-size: 11px; color: #a8977a; border-color: #a8977a; }
+.shop-deck__auto[aria-pressed="true"] { color: #e0bc68; border-color: #c8a048; }
+.shop-deck__skipping { color: #e0bc68; font-weight: 700; }
+.shop-deck__resume {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 1;
+    display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px; font-size: 15px;
+}
+.shop-deck__resume:active:not(:disabled) { transform: translate(calc(-50% + 2px), 2px); }
 .shop-deck__back { position: absolute; top: 10px; left: 10px; min-height: 36px; font-size: 12px; }
 .shop-deck .crate-browser__album { font-size: 21px; }
 @media (min-width: 1024px) { .shop-deck .crate-browser__album { font-size: 24px; } }
@@ -858,32 +866,42 @@ body {
 .deck-cut-arm { transform-origin: 112px 22px; }
 .deck-cut-lift, .deck-cut-spin { transform-origin: 68px 42px; }
 .deck-cut-note { opacity: 0; }
-.deck-stage--placing .deck-cut-carry { animation: deckCutCarry 2.3s both; }
+.deck-stage--placing .deck-cut-carry { animation: deckCutCarry 2.3s var(--cut-delay, 0s) both; }
 @keyframes deckCutCarry {
     0%, 13% { transform: translate(-110px, -6px); animation-timing-function: ease-out; }
     37% { transform: translate(0, -5px); }
     43%, 100% { transform: translate(0, 0); }
 }
-.deck-stage--placing .deck-cut-lift { animation: deckCutLift 2.3s both; }
+.deck-stage--placing .deck-cut-lift { animation: deckCutLift 2.3s var(--cut-delay, 0s) both; }
 @keyframes deckCutLift { 0%, 37% { transform: scale(1.08); } 43%, 100% { transform: scale(1); } }
 .deck-cut-shadow { opacity: 0; }
-.deck-stage--placing .deck-cut-shadow { animation: deckCutShadow 2.3s both; }
+.deck-stage--placing .deck-cut-shadow { animation: deckCutShadow 2.3s var(--cut-delay, 0s) both; }
 @keyframes deckCutShadow { 0%, 13% { opacity: 0; } 22%, 37% { opacity: 0.45; } 43%, 100% { opacity: 0; } }
-.deck-stage--placing .deck-cut-hand-out { animation: deckCutHandOut 2.3s both; }
+.deck-stage--placing .deck-cut-hand-out { animation: deckCutHandOut 2.3s var(--cut-delay, 0s) both; }
 @keyframes deckCutHandOut { 0%, 43% { transform: translate(0, 0); animation-timing-function: ease-in; } 56%, 100% { transform: translate(-130px, 8px); } }
-.deck-stage--placing .deck-cut-arm { animation: deckCutArm 2.3s both; }
+.deck-stage--placing .deck-cut-arm { animation: deckCutArm 2.3s var(--cut-delay, 0s) both; }
 @keyframes deckCutArm { 0%, 57% { transform: rotate(0deg); animation-timing-function: ease-in-out; } 70%, 100% { transform: rotate(37deg); } }
-.deck-stage--placing .deck-cut-hand2 { animation: deckCutHand2 2.3s both; }
+.deck-stage--placing .deck-cut-hand2 { animation: deckCutHand2 2.3s var(--cut-delay, 0s) both; }
 @keyframes deckCutHand2 {
     0%, 45% { opacity: 0; transform: translate(20px, 10px); }
     55%, 70% { opacity: 1; transform: translate(0, 0); }
     80%, 100% { opacity: 0; transform: translate(24px, 10px); }
 }
-.deck-stage--placing .deck-cut-spin { animation: spin 0.9s steps(8) 1.6s infinite; }
-.deck-stage--placing .deck-cut-note--1 { animation: deckCutNote1 2.3s both; }
-.deck-stage--placing .deck-cut-note--2 { animation: deckCutNote2 2.3s both; }
+.deck-stage--placing .deck-cut-spin { animation: spin 0.9s steps(8) calc(1.6s + var(--cut-delay, 0s)) infinite; }
+.deck-stage--placing .deck-cut-note--1 { animation: deckCutNote1 2.3s var(--cut-delay, 0s) both; }
+.deck-stage--placing .deck-cut-note--2 { animation: deckCutNote2 2.3s var(--cut-delay, 0s) both; }
 @keyframes deckCutNote1 { 0%, 72% { opacity: 0; transform: translate(0, 0); } 78% { opacity: 1; } 100% { opacity: 0; transform: translate(-6px, -18px); } }
 @keyframes deckCutNote2 { 0%, 80% { opacity: 0; transform: translate(0, 0); } 86% { opacity: 1; } 100% { opacity: 0.2; transform: translate(6px, -16px); } }
+
+/* 連續播放換下一張：先花 1 秒把舊唱片拿走，上面的放唱片過場整段往後延 1 秒（與 ShopDeck 的 SWAP_MS 一致） */
+.deck-stage--swap { --cut-delay: 1s; }
+.deck-swap-lift { transform-origin: 68px 42px; }
+.deck-stage--swap .deck-swap-hand { animation: deckSwapHand 1s both; }
+@keyframes deckSwapHand { 0% { transform: translate(-110px, 8px); animation-timing-function: ease-out; } 35%, 100% { transform: translate(0, 0); } }
+.deck-stage--swap .deck-swap-lift { animation: deckSwapLift 1s both; }
+@keyframes deckSwapLift { 0%, 38% { transform: scale(1); } 46%, 100% { transform: scale(1.08); } }
+.deck-stage--swap .deck-swap-carry { animation: deckSwapCarry 1s both; }
+@keyframes deckSwapCarry { 0%, 46% { transform: translate(0, 0); animation-timing-function: ease-in; } 92%, 100% { transform: translate(-120px, -5px); } }
 
 /* 落定之後：手收起來；唱臂角度由元件依播放進度給，轉動用 transition；播放中唱片轉 */
 .deck-stage--settled .deck-cut-hand-out, .deck-stage--settled .deck-cut-hand2 { display: none; }

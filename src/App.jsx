@@ -292,11 +292,13 @@ const MainApp = () => {
     };
 
     // 唱片行過場播完：換到這張的日期、以縮小狀態播放（畫面停在唱片行的唱盤上，回到店裡時底部是迷你播放器），
-    // 不跳進沉浸模式；播放器已經在播這張的話就接著播，不會重來
-    const handleShopPlay = (record) => {
+    // 不跳進沉浸模式；播放器已經在播這張的話就接著播，不會重來。
+    // auto：連續播放自動換下一張，只換日期，播放器原本是縮小還是展開都不動
+    const handleShopPlay = (record, { auto = false } = {}) => {
         const [y, m, d] = record.date.split('-').map(Number);
         if (record.date !== dateKey) triggerTransition(new Date(y, m - 1, d), { keepPlaying: true });
         window.location.hash = record.date;
+        if (auto) return;
         setIsImmersive(true);
         setIsMinimized(true);
     };
@@ -545,6 +547,7 @@ const MainApp = () => {
                             <Suspense fallback={<div className="shop-root shop-root--loading"><p className="shop-pixel-text">LOADING...</p></div>}>
                                 <ShopMode
                                     data={visibleJazzData}
+                                    active={viewMode === 'shop'}
                                     interactive={viewMode === 'shop' && !(isImmersive && !isMinimized) && !showShortcuts && !showChangelog}
                                     nowPlaying={isImmersive && currentData ? { ...currentData, date: dateKey } : null}
                                     isVinylSpinning={isVinylSpinning}
