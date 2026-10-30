@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { coverSrc, getYouTubeId, formatRecordDate } from './crates';
 
-const Cover = ({ record }) => {
+export const Cover = ({ record }) => {
     const [broken, setBroken] = useState(false);
     const src = coverSrc(record);
     return src && !broken ? (

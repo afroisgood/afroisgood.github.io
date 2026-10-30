@@ -28,8 +28,8 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
 
-// 角色移動：按住方向鍵／按鈕持續走，點地板或櫃子就自己走過去；只有在動的時候才跑 requestAnimationFrame
-const usePlayerMovement = (worldW, enabled, onArrive) => {
+// 角色移動：按住方向鍵／按鈕持續走，點地板或櫃子就自己走過去（走到了再做 then：翻櫃子、跟店長說話）；只有在動的時候才跑 requestAnimationFrame
+const usePlayerMovement = (worldW, enabled) => {
     const [x, setX] = useState(START_X);
     const [facing, setFacing] = useState(1);
     const [moving, setMoving] = useState(false);
@@ -37,9 +37,6 @@ const usePlayerMovement = (worldW, enabled, onArrive) => {
     const holdRef = useRef(0);
     const targetRef = useRef(null);
     const rafRef = useRef(0);
-    const onArriveRef = useRef(onArrive);
-
-    useEffect(() => { onArriveRef.current = onArrive; }, [onArrive]);
 
     const kick = useCallback(() => {
         if (rafRef.current) return;
@@ -72,7 +69,7 @@ const usePlayerMovement = (worldW, enabled, onArrive) => {
             } else {
                 setMoving(false);
                 rafRef.current = 0;
-                if (arrived?.crate) onArriveRef.current(arrived.crate);
+                arrived?.then?.();
             }
         };
         rafRef.current = requestAnimationFrame(frame);
@@ -83,8 +80,8 @@ const usePlayerMovement = (worldW, enabled, onArrive) => {
         if (dir) kick();
     }, [kick]);
 
-    const walkTo = useCallback((targetX, crate = null) => {
-        targetRef.current = { x: clamp(targetX, MIN_X, worldW - MIN_X), crate };
+    const walkTo = useCallback((targetX, then = null) => {
+        targetRef.current = { x: clamp(targetX, MIN_X, worldW - MIN_X), then };
         kick();
     }, [kick, worldW]);
 
@@ -121,7 +118,7 @@ const PixelDisc = ({ size, label }) => {
 };
 
 // 牆、地板、門、燈、唱片櫃、櫃台：角色走動時不用重畫，所以包成 memo
-const ShopScenery = memo(({ crates, scale, worldW, nearId, onCrateClick, onCrateFocus, nowPlaying, isVinylSpinning }) => {
+const ShopScenery = memo(({ crates, scale, worldW, nearId, onCrateClick, onCrateFocus, onKeeperClick, nowPlaying, isVinylSpinning }) => {
     const u = (n) => n * scale;
     const cLeft = counterLeft(crates.length);
     const planks = [];
@@ -225,10 +222,16 @@ const ShopScenery = memo(({ crates, scale, worldW, nearId, onCrateClick, onCrate
                 );
             })}
 
-            {/* 櫃台後的店長（下半身被櫃台擋住） */}
-            <div className="shop-keeper" style={{ left: u(cLeft + COUNTER_W - 32), top: u(64 - 17), height: u(17) }}>
+            {/* 櫃台後的店長（下半身被櫃台擋住）：點他就走過去說話 */}
+            <button
+                type="button"
+                className="shop-keeper"
+                style={{ left: u(cLeft + COUNTER_W - 32), top: u(64 - 17), height: u(17) }}
+                onClick={(e) => { e.stopPropagation(); onKeeperClick(); }}
+                aria-label="跟店長說話"
+            >
                 <PixelSprite character={SHOPKEEPER} scale={scale} flip />
-            </div>
+            </button>
             <div className={'shop-turntable ' + (isVinylSpinning ? 'shop-turntable--spinning' : '')} style={{ left: u(cLeft + 11), top: u(40), width: u(20), height: u(20) }}>
                 <PixelDisc size={20} label={isVinylSpinning ? '#c8a048' : '#7a3b2e'} />
             </div>
@@ -249,14 +252,14 @@ const ShopScenery = memo(({ crates, scale, worldW, nearId, onCrateClick, onCrate
 });
 ShopScenery.displayName = 'ShopScenery';
 
-export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onChangeCharacter, nowPlaying, isVinylSpinning }) => {
+export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onTalk, onChangeCharacter, nowPlaying, isVinylSpinning }) => {
     const viewportRef = useRef(null);
     const worldRef = useRef(null);
     const [viewportW, setViewportW] = useState(0);
     const scale = viewportW && viewportW < 560 ? 3 : 4;
     const worldW = worldWidth(crates.length);
 
-    const { x, facing, moving, hold, walkTo } = usePlayerMovement(worldW, enabled, onOpenCrate);
+    const { x, facing, moving, hold, walkTo } = usePlayerMovement(worldW, enabled);
     const frame = useWalkCycle(moving);
 
     useEffect(() => {
@@ -275,7 +278,7 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onChangeCha
     const nearCrate = near?.crate || null;
     const atCounter = x > counterLeft(crates.length) - 8;
 
-    // 鍵盤：← → / A D 走路，↑ / W / Enter 翻眼前的唱片櫃
+    // 鍵盤：← → / A D 走路，↑ / W / Enter 翻眼前的唱片櫃，在櫃台前就是跟店長說話
     useEffect(() => {
         if (!enabled) return;
         const LEFT = ['ArrowLeft', 'a', 'A'];
@@ -288,6 +291,7 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onChangeCha
                 // 焦點在按鈕上時讓 Enter 照常按下那顆按鈕
                 if (e.key === 'Enter' && e.target.closest?.('button, a')) return;
                 if (nearCrate) { e.preventDefault(); onOpenCrate(nearCrate); }
+                else if (atCounter) { e.preventDefault(); onTalk(); }
             }
         };
         const onUp = (e) => {
@@ -302,9 +306,10 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onChangeCha
             window.removeEventListener('keyup', onUp);
             window.removeEventListener('blur', onBlur);
         };
-    }, [enabled, hold, nearCrate, onOpenCrate]);
+    }, [enabled, hold, nearCrate, atCounter, onOpenCrate, onTalk]);
 
-    const handleCrateClick = useCallback((i) => walkTo(crateCenter(i), crates[i]), [walkTo, crates]);
+    const handleCrateClick = useCallback((i) => walkTo(crateCenter(i), () => onOpenCrate(crates[i])), [walkTo, crates, onOpenCrate]);
+    const handleKeeperClick = useCallback(() => walkTo(counterLeft(crates.length) + 24, onTalk), [walkTo, crates.length, onTalk]);
     // 用 Tab 移到畫面外的櫃子時，角色走過去、鏡頭跟著走
     const handleCrateFocus = useCallback((i) => walkTo(crateCenter(i)), [walkTo]);
 
@@ -350,6 +355,7 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onChangeCha
                         nearId={nearCrate?.id}
                         onCrateClick={handleCrateClick}
                         onCrateFocus={handleCrateFocus}
+                        onKeeperClick={handleKeeperClick}
                         nowPlaying={nowPlaying}
                         isVinylSpinning={isVinylSpinning}
                     />
@@ -370,9 +376,14 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onChangeCha
                         </button>
                     )}
                     {atCounter && !nearCrate && enabled && !moving && (
-                        <span className="shop-bubble shop-bubble--talk" style={{ left: bubbleLeft, top: u(FEET_Y - 24) - 8 }}>
-                            店長：慢慢挑，喜歡就放上唱盤聽聽看
-                        </span>
+                        <button
+                            type="button"
+                            className="shop-bubble"
+                            style={{ left: bubbleLeft, top: u(FEET_Y - 24) - 8 }}
+                            onClick={(e) => { e.stopPropagation(); onTalk(); }}
+                        >
+                            跟店長聊聊 <span className="shop-bubble__key">↑</span>
+                        </button>
                     )}
                 </div>
             </div>
@@ -384,12 +395,16 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onChangeCha
                 </div>
                 <p className="shop-hud__where">
                     {nearCrate ? `${nearCrate.title} · ${nearCrate.records.length} 張` : atCounter ? '櫃台' : x < CRATE_START - 4 ? '門口' : '走道'}
-                    <span className="shop-hud__keys">← → 走路 · ↑ 翻唱片</span>
+                    <span className="shop-hud__keys">{atCounter ? '← → 走路 · ↑ 跟店長聊聊' : '← → 走路 · ↑ 翻唱片'}</span>
                 </p>
                 <div className="shop-hud__actions">
-                    <button type="button" className="shop-btn shop-btn--primary" disabled={!nearCrate} onClick={() => nearCrate && onOpenCrate(nearCrate)}>
-                        翻唱片
-                    </button>
+                    {atCounter && !nearCrate ? (
+                        <button type="button" className="shop-btn shop-btn--primary" onClick={onTalk}>跟店長聊聊</button>
+                    ) : (
+                        <button type="button" className="shop-btn shop-btn--primary" disabled={!nearCrate} onClick={() => nearCrate && onOpenCrate(nearCrate)}>
+                            翻唱片
+                        </button>
+                    )}
                     <button type="button" className="shop-btn" onClick={onChangeCharacter}>換角色</button>
                 </div>
             </div>

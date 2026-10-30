@@ -22,8 +22,11 @@ export const coverSrc = (record) => {
     return yt ? `https://img.youtube.com/vi/${yt}/hqdefault.jpg` : null;
 };
 
+/** 所有唱片，由新到舊 */
+export const sortNewestFirst = (data) => Object.keys(data).sort().reverse().map(date => ({ ...data[date], date }));
+
 export const buildCrates = (data) => {
-    const newestFirst = Object.keys(data).sort().reverse().map(date => ({ ...data[date], date }));
+    const newestFirst = sortNewestFirst(data);
     if (newestFirst.length === 0) return [];
 
     const crates = [
