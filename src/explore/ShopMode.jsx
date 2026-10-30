@@ -1,11 +1,14 @@
-// 探索模式「唱片行」：選角色 → 在店裡走動 → 翻唱片櫃 → 放上唱盤，停在像素唱盤畫面播放
+// 探索模式「唱片行」：選角色 → 在店裡走動 → 翻唱片櫃（或跟櫃台的店長說話，讓他遞一張）→ 放上唱盤，停在像素唱盤畫面播放
 // 連續播放開著時，一張播完自動換同一櫃的下一張：在唱盤畫面上會演「拿走舊唱片、放上新唱片」，回到店裡逛時只換歌
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { findCharacter } from './sprites';
-import { buildCrates, shuffled, getYouTubeId } from './crates';
+import { buildCrates, shuffled, getYouTubeId, sortNewestFirst } from './crates';
+import { talkFor, todayRecord, recommend } from './shopkeeper';
+import { formatDateString } from '../utils/dateUtils';
 import { CharacterSelect } from './CharacterSelect';
 import { ShopFloor } from './ShopFloor';
 import { CrateBrowser } from './CrateBrowser';
+import { ShopTalk } from './ShopTalk';
 import { ShopDeck } from './ShopDeck';
 
 const CHARACTER_KEY = 'jazz365_shop_character';
@@ -52,8 +55,10 @@ const ShopMode = ({
     const [autoNext, setAutoNext] = useState(loadAutoNext);
     const [chain, setChain] = useState({ date: null, auto: false, fails: 0 }); // 目前這張是不是自動換上來的、前面連續幾張放不出來
     const [stalled, setStalled] = useState(false);
+    const [talk, setTalk] = useState(null); // 跟店長說話：{ record, line, quoteLabel, quote }
     const takeRef = useRef(0);
     const crates = useMemo(() => buildCrates(data), [data]);
+    const allRecords = useMemo(() => sortNewestFirst(data), [data]);
     const character = findCharacter(characterId);
     const nowDate = nowPlaying?.date ?? null;
 
@@ -71,6 +76,29 @@ const ShopMode = ({
         const on = !autoNext;
         setAutoNext(on);
         try { localStorage.setItem(AUTO_NEXT_KEY, on ? '1' : '0'); } catch { /* 記不住就下次再設 */ }
+    };
+
+    // 店長這次逛店推薦過什麼：每次走進唱片行重來（第一次說話遞今天的唱片，之後推薦的不重複）
+    const talkMemoRef = useRef({ todayDone: false, picked: new Set() });
+    useEffect(() => {
+        if (!active) talkMemoRef.current = { todayDone: false, picked: new Set() };
+    }, [active]);
+    const canRecommend = allRecords.some(r => r.editorNote?.trim() || r.albumNotes?.trim());
+    const startTalk = useCallback(() => {
+        const memo = talkMemoRef.current;
+        const today = memo.todayDone ? null : todayRecord(allRecords, formatDateString(new Date()));
+        if (today) {
+            memo.todayDone = true;
+            memo.picked.add(today.date); // 之後的推薦不再遞同一張
+            setTalk({ record: today, ...talkFor(today, 'today') });
+            return;
+        }
+        const pick = recommend(allRecords, memo.picked, null);
+        if (pick) setTalk({ record: pick, ...talkFor(pick, 'pick') });
+    }, [allRecords]);
+    const recommendAnother = () => {
+        const pick = recommend(allRecords, talkMemoRef.current.picked, talk?.record.date);
+        if (pick) setTalk({ record: pick, ...talkFor(pick, 'pick') });
     };
 
     // 唱盤畫面上就是正在播的唱片時，App 把底部迷你播放器藏起來（控制都在唱盤畫面上）；
@@ -159,6 +187,8 @@ const ShopMode = ({
         return () => clearTimeout(timer);
     }, [skipping, nowDate]);
 
+    const closeTalk = useCallback(() => setTalk(null), []);
+
     const togglePlay = () => {
         setStalled(false);
         onTogglePlay();
@@ -197,8 +227,9 @@ const ShopMode = ({
             <ShopFloor
                 character={character}
                 crates={crates}
-                enabled={interactive && !open}
+                enabled={interactive && !open && !talk}
                 onOpenCrate={openCrate}
+                onTalk={startTalk}
                 onChangeCharacter={() => setChoosing(true)}
                 nowPlaying={nowPlaying}
                 isVinylSpinning={isVinylSpinning}
@@ -215,6 +246,19 @@ const ShopMode = ({
                     onClose={() => setOpen(null)}
                     onPlay={(record) => placeRecord(record, { list: open.records })}
                     onRead={onRead}
+                />
+            )}
+            {/* 店長遞的唱片不屬於哪個唱片櫃：上一張／下一張和連續播放照日期由新往舊 */}
+            {talk && (
+                <ShopTalk
+                    talk={talk}
+                    enabled={interactive && !deck}
+                    nowPlayingDate={nowDate}
+                    canRecommend={canRecommend}
+                    onPlay={(record) => { setTalk(null); placeRecord(record, { list: allRecords }); }}
+                    onRead={(record) => { setTalk(null); onRead(record); }}
+                    onAnother={recommendAnother}
+                    onClose={closeTalk}
                 />
             )}
             {deck && (
