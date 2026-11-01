@@ -3,7 +3,8 @@
 AdminPanel（`#admin`）背後的 Cloudflare Worker，負責：
 
 - **帳號密碼登入**：驗證成功後發一張 12 小時有效的登入憑證。
-- **代為讀寫 `public/data/` 裡的資料（每年一個檔案）、讀取流量**：GitHub 金鑰只存在 Worker 裡，前端拿不到。
+- **代為讀寫 `public/data/` 裡的資料（每年一個檔案）**：GitHub 金鑰只存在 Worker 裡，前端拿不到。
+- **網站流量**：前台每次開啟網站會打一次 `POST /hit`，記進 Cloudflare D1 資料庫 `jazz365-traffic`（綁定名稱 `TRAFFIC_DB`），後台「流量」分頁顯示近 30 天的瀏覽次數與不重複訪客。只存 IP + 瀏覽器資訊的雜湊值，不存原始 IP；機器人、本機測試、在該裝置登入過後台的網站主人都不算。
 - **拍照辨識**：呼叫 Claude Vision 辨識日曆照片，再去 YouTube / Spotify 搜尋串流連結。
 - **專輯資訊補充草稿**：根據樂手、專輯與內容介紹，讓 Claude 上網查證後寫出「專輯資訊補充」（用同一把 `ANTHROPIC_API_KEY`，網路搜尋每次另計費用）。
 
@@ -23,7 +24,7 @@ AdminPanel（`#admin`）背後的 Cloudflare Worker，負責：
 
    ```bash
    # GitHub 金鑰：建議用 Fine-grained token，只授權 afroisgood.github.io 這個 repo，
-   # 權限勾 Contents: Read and write、Administration: Read-only（流量頁要用）
+   # 權限勾 Contents: Read and write 就夠了
    npx wrangler secret put GITHUB_TOKEN
 
    # 後台帳號
@@ -48,6 +49,9 @@ AdminPanel（`#admin`）背後的 Cloudflare Worker，負責：
    ```bash
    npm run deploy
    ```
+
+   流量用的 D1 資料庫不用自己建：第一次部署時 wrangler 會自動建立 `jazz365-traffic`，
+   之後的部署會沿用同一個；資料表也會在第一筆瀏覽進來時自動建立。
 
    部署完成後 wrangler 會印出這支 Worker 的網址，例如：
    `https://afroisgood-admin-worker.<你的子網域>.workers.dev`
@@ -87,3 +91,5 @@ npm run dev
 - 同一個 IP 每分鐘最多嘗試登入 5 次（`wrangler.toml` 的 `LOGIN_LIMITER`）。
 - `/data`、`/traffic`、`/recognize`、`/album-notes` 都要帶有效的登入憑證才會放行；
   Worker 只開放這幾個固定動作，不能拿來對 GitHub 做其他事。
+- 唯一不用登入的是 `/hit`（記一次瀏覽）：只接受 `ALLOWED_ORIGINS` 裡的正式網域，
+  同一個 IP 每分鐘最多算 30 次（`wrangler.toml` 的 `HIT_LIMITER`）。

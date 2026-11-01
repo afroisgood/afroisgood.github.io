@@ -24,3 +24,18 @@ namespace_id = "1001"
   [ratelimits.simple]
   limit = 5
   period = 60
+
+# 前台回報瀏覽次數：同一個 IP 每 60 秒最多算 30 次，避免被人灌水。
+[[ratelimits]]
+name = "HIT_LIMITER"
+namespace_id = "1002"
+
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
+# 網站流量資料庫（Cloudflare D1）。不用填 database_id：
+# 第一次 npm run deploy 時 wrangler 會自動建立這個資料庫，之後的部署會沿用同一個。
+[[d1_databases]]
+binding = "TRAFFIC_DB"
+database_name = "jazz365-traffic"

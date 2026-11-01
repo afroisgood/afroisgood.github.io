@@ -1,5 +1,5 @@
 // 代為呼叫 GitHub API：金鑰只存在 Worker 的 GITHUB_TOKEN，前端拿不到
-// 只開放後台用得到的三件事（讀資料、寫資料、看流量），不做通用代理
+// 只開放後台用得到的兩件事（讀資料、寫資料），不做通用代理
 // 資料放在 DATA_DIR 底下：每年一個 2026.json、2027.json…，更新日誌是 changelog.json
 
 const githubFetch = (env, path, init = {}) => fetch('https://api.github.com/repos/' + env.GITHUB_OWNER + '/' + env.GITHUB_REPO + path, {
@@ -61,10 +61,4 @@ export const writeData = async (env, { file, content, sha, message }) => {
     if (!res.ok) await fail(res, '儲存');
     const json = await res.json();
     return { sha: json.content.sha };
-};
-
-export const readTraffic = async (env) => {
-    const res = await githubFetch(env, '/traffic/views');
-    if (!res.ok) await fail(res, '讀取流量');
-    return res.json();
 };
