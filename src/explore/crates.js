@@ -1,5 +1,5 @@
 // 唱片行的唱片櫃：從已公開的每日推薦排出來。
-// 由門口往裡走：新進唱片 → 店長精選 → 各月份（越往裡越早）→ 最裡面的盲抽箱。
+// 由門口往裡走（櫃台在門口）：新進唱片 → 店長精選 → 盲抽箱 → 各月份（越往裡越早）。
 
 const MONTH_LABELS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
@@ -38,6 +38,9 @@ export const buildCrates = (data) => {
         crates.push({ id: 'picks', label: 'PICK', sub: 'STAFF', title: '店長精選', desc: '有石編的話或專輯補充的唱片', records: picks });
     }
 
+    // 盲抽箱排第三個（沒有店長精選時就是第二個），一進門就找得到
+    crates.push({ id: 'random', label: '???', sub: 'LUCKY', title: '盲抽箱', desc: '每次打開都重新洗牌', records: newestFirst, shuffle: true });
+
     const byMonth = new Map();
     newestFirst.forEach(r => {
         const ym = r.date.slice(0, 7);
@@ -56,7 +59,6 @@ export const buildCrates = (data) => {
         });
     });
 
-    crates.push({ id: 'random', label: '???', sub: 'LUCKY', title: '盲抽箱', desc: '每次打開都重新洗牌', records: newestFirst, shuffle: true });
     return crates;
 };
 
