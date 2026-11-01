@@ -1,4 +1,4 @@
-// 唱片行店內：橫向捲動的一條走道。門口在最左邊，唱片櫃沿牆排開，最裡面是櫃台和唱盤。
+// 唱片行店內：橫向捲動的一條走道。門口在最左邊，一進門就是櫃台（店長和唱盤），再往裡是沿牆排開的唱片櫃。
 // 座標都用「像素格」計算，畫面上一格 = scale 個螢幕像素（手機 3、桌機 4）。
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { PixelSprite } from './PixelSprite';
@@ -10,10 +10,11 @@ import { useWalkCycle } from './useWalkCycle';
 const H = 120;           // 場景高度
 const FLOOR_Y = 92;      // 牆與地板的交界
 const FEET_Y = 114;      // 角色腳底
-const CRATE_START = 64;
+const COUNTER_LEFT = 54;
+const COUNTER_W = 84;
+const CRATE_START = COUNTER_LEFT + COUNTER_W + 16;
 const CRATE_W = 40;
 const CRATE_STEP = 54;
-const COUNTER_W = 84;
 const START_X = 30;
 const MIN_X = 10;
 const SPEED = 84;        // 每秒走幾格
@@ -22,8 +23,7 @@ const REACH = 22;        // 離唱片櫃中心多近算站在櫃子前
 const SLEEVES = ['#2f4a5c', '#c8a048', '#7a3b2e', '#d9cbb4', '#3d5a40', '#b4513a', '#5b4a6e'];
 
 const crateCenter = (i) => CRATE_START + i * CRATE_STEP + CRATE_W / 2;
-const counterLeft = (crateCount) => CRATE_START + crateCount * CRATE_STEP + 12;
-const worldWidth = (crateCount) => counterLeft(crateCount) + COUNTER_W + 20;
+const worldWidth = (crateCount) => CRATE_START + crateCount * CRATE_STEP + 6;
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
@@ -120,7 +120,7 @@ const PixelDisc = ({ size, label }) => {
 // 牆、地板、門、燈、唱片櫃、櫃台：角色走動時不用重畫，所以包成 memo
 const ShopScenery = memo(({ crates, scale, worldW, nearId, onCrateClick, onCrateFocus, onKeeperClick, nowPlaying, isVinylSpinning }) => {
     const u = (n) => n * scale;
-    const cLeft = counterLeft(crates.length);
+    const cLeft = COUNTER_LEFT;
     const planks = [];
     for (let px = 0; px < worldW; px += 12) planks.push(<rect key={px} x={px} y={4} width={1} height={FLOOR_Y - 7} fill="#3d261b" />);
     const tiles = [];
@@ -276,7 +276,7 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onTalk, onC
         if (d < REACH && (!near || d < near.d)) near = { crate, d };
     });
     const nearCrate = near?.crate || null;
-    const atCounter = x > counterLeft(crates.length) - 8;
+    const atCounter = !nearCrate && x > COUNTER_LEFT - 8 && x < COUNTER_LEFT + COUNTER_W + 4;
 
     // 鍵盤：← → / A D 走路，↑ / W / Enter 翻眼前的唱片櫃，在櫃台前就是跟店長說話
     useEffect(() => {
@@ -309,7 +309,7 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onTalk, onC
     }, [enabled, hold, nearCrate, atCounter, onOpenCrate, onTalk]);
 
     const handleCrateClick = useCallback((i) => walkTo(crateCenter(i), () => onOpenCrate(crates[i])), [walkTo, crates, onOpenCrate]);
-    const handleKeeperClick = useCallback(() => walkTo(counterLeft(crates.length) + 24, onTalk), [walkTo, crates.length, onTalk]);
+    const handleKeeperClick = useCallback(() => walkTo(COUNTER_LEFT + COUNTER_W - 28, onTalk), [walkTo, onTalk]);
     // 用 Tab 移到畫面外的櫃子時，角色走過去、鏡頭跟著走
     const handleCrateFocus = useCallback((i) => walkTo(crateCenter(i)), [walkTo]);
 
@@ -394,7 +394,7 @@ export const ShopFloor = ({ character, crates, enabled, onOpenCrate, onTalk, onC
                     <button type="button" className="shop-btn shop-btn--square" aria-label="往右走" {...holdProps(1)}>▶</button>
                 </div>
                 <p className="shop-hud__where">
-                    {nearCrate ? `${nearCrate.title} · ${nearCrate.records.length} 張` : atCounter ? '櫃台' : x < CRATE_START - 4 ? '門口' : '走道'}
+                    {nearCrate ? `${nearCrate.title} · ${nearCrate.records.length} 張` : atCounter ? '櫃台' : x < COUNTER_LEFT - 8 ? '門口' : '走道'}
                     <span className="shop-hud__keys">{atCounter ? '← → 走路 · ↑ 跟店長聊聊' : '← → 走路 · ↑ 翻唱片'}</span>
                 </p>
                 <div className="shop-hud__actions">
