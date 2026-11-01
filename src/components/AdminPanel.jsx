@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { IconDisc } from './Icons';
 import { AdminEntryCalendar } from './AdminEntryCalendar';
 import { MOOD_OPTIONS, DEFAULT_MOOD_COLOR } from '../utils/moodColors';
+import { SKIP_TRACKING_KEY } from '../utils/trackVisit';
 
 // 後台服務網址（admin-worker）：登入、讀寫資料、流量、拍照辨識都經過它，
 // GitHub 金鑰只存在 Worker 裡。部署後填進 .env.local 與 GitHub repo 變數 VITE_ADMIN_WORKER_URL
@@ -166,6 +167,8 @@ export const AdminPanel = () => {
             const result = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(result.error || '登入失敗，請再試一次');
             sessionStorage.setItem(SESSION_KEY, JSON.stringify(result));
+            // 網站主人自己逛網站不算進流量
+            try { localStorage.setItem(SKIP_TRACKING_KEY, '1'); } catch { /* 讀寫不到就算了 */ }
             setSession(result.token);
             setPassword('');
             await loadData(result.token);
@@ -726,7 +729,7 @@ export const AdminPanel = () => {
                         <div className="max-w-2xl">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-white font-playfair font-bold text-lg tracking-widest">每日瀏覽人次</h2>
-                                <span className="text-zinc-600 text-[10px] font-mono">近 14 天・由 GitHub 提供</span>
+                                <span className="text-zinc-600 text-[10px] font-mono">近 {traffic?.days ?? 30} 天・臺灣時間</span>
                             </div>
 
                             {trafficError && (
@@ -740,24 +743,27 @@ export const AdminPanel = () => {
                             {traffic && !trafficLoading && (() => {
                                 const views = [...(traffic.views || [])].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
                                 const maxCount = Math.max(...views.map(v => v.count), 1);
+                                const cards = [
+                                    { label: '今天瀏覽', value: traffic.today?.count, unit: `次・${traffic.today?.uniques ?? 0} 人`, accent: true },
+                                    { label: `${traffic.days ?? 30} 天總瀏覽`, value: traffic.count, unit: '次瀏覽', accent: true },
+                                    { label: '不重複訪客', value: traffic.uniques, unit: `${traffic.days ?? 30} 天內` },
+                                ];
                                 return (
                                     <>
                                         {/* 總計卡片 */}
-                                        <div className="grid grid-cols-2 gap-4 mb-8">
-                                            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-5">
-                                                <p className="text-zinc-500 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">14 天總瀏覽</p>
-                                                <p className="text-amber-400 font-playfair font-bold text-3xl">{traffic.count?.toLocaleString() ?? '—'}</p>
-                                                <p className="text-zinc-600 text-[10px] mt-1">次瀏覽</p>
-                                            </div>
-                                            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-5">
-                                                <p className="text-zinc-500 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">不重複訪客</p>
-                                                <p className="text-white font-playfair font-bold text-3xl">{traffic.uniques?.toLocaleString() ?? '—'}</p>
-                                                <p className="text-zinc-600 text-[10px] mt-1">不重複訪客</p>
-                                            </div>
+                                        <div className="grid grid-cols-3 gap-4 mb-4">
+                                            {cards.map(card => (
+                                                <div key={card.label} className="bg-zinc-900 border border-zinc-800 rounded-sm p-5">
+                                                    <p className="text-zinc-500 text-[10px] tracking-[0.2em] uppercase font-bold mb-1">{card.label}</p>
+                                                    <p className={(card.accent ? 'text-amber-400' : 'text-white') + ' font-playfair font-bold text-3xl'}>{card.value?.toLocaleString() ?? '—'}</p>
+                                                    <p className="text-zinc-600 text-[10px] mt-1">{card.unit}</p>
+                                                </div>
+                                            ))}
                                         </div>
+                                        <p className="text-zinc-600 text-[10px] mb-8">每次開啟網站算一次瀏覽；搜尋引擎等機器人、以及在這台裝置登入過後台的你自己都不算。</p>
 
                                         {/* 每日長條圖 */}
-                                        {views.length === 0 ? (
+                                        {views.every(v => v.count === 0) ? (
                                             <p className="text-zinc-600 text-xs text-center py-10">近期尚無瀏覽紀錄</p>
                                         ) : (
                                             <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6">

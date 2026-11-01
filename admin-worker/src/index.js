@@ -2,7 +2,8 @@ import { recognizeCalendarPhoto } from './claudeVision.js';
 import { generateAlbumNotes } from './albumNotes.js';
 import { searchYouTube, searchSpotify } from './streamingSearch.js';
 import { verifyLogin, createSession, verifySession } from './auth.js';
-import { readData, writeData, readTraffic } from './github.js';
+import { readData, writeData } from './github.js';
+import { recordHit, readTraffic } from './traffic.js';
 
 const corsHeaders = (env, origin) => {
     const allowed = (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim());
@@ -79,7 +80,7 @@ const routes = {
 };
 
 export default {
-    async fetch(request, env) {
+    async fetch(request, env, ctx) {
         const origin = request.headers.get('Origin') || '';
         const headers = corsHeaders(env, origin);
 
@@ -91,6 +92,11 @@ export default {
 
         try {
             if (route === 'POST /login') return await handleLogin(request, env, headers);
+            // 前台開啟網站時回報一次瀏覽，不用登入；記錄失敗也不影響前台
+            if (route === 'POST /hit') {
+                await recordHit(request, env, ctx).catch(err => console.error('記錄瀏覽失敗', err));
+                return new Response(null, { status: 204, headers });
+            }
             if (!routes[route]) return json({ error: 'Not found' }, 404, headers);
 
             if (!(await verifySession(env, request.headers.get('Authorization')))) {
